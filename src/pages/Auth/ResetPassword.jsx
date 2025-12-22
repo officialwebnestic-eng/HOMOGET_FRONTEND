@@ -5,62 +5,54 @@ import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import bg1 from "../../assets/backgroundimage.jpg";
 
-
 import { useLocation, useNavigate } from "react-router-dom";
 import { http } from "../../axios/axios";
 import { useToast } from "../../model/SuccessToasNotification";
-
+import { navbarlogo } from "../../ExportImages";
 const ResetPassword = () => {
   const { theme } = useTheme();
+  const { addToast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [currentBg, setCurrentBg] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const location = useLocation()
-   const {addToast}=useToast()
 
   const email = location.state?.email;
   const otp = location.state?.otp;
 
-
-  const backgrounds = [bg1]
-  const navigate = useNavigate()
+  const backgrounds = [bg1];
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
     watch,
+    formState: { errors },
   } = useForm();
 
-
-
   const onSubmit = async (data) => {
-     console.log(data)
     try {
       setIsSubmitting(true);
       const params = new URLSearchParams({ email, otp }).toString();
       const response = await http.post(`/reset-password?${params}`, {
         newPassword: data.newPassword,
       });
-      console.log(response)
 
       if (response.data?.success) {
-      addToast("Password reset successfully!","success");
+        addToast("Password reset successfully!", "success");
         navigate("/login");
       } else {
-      addToast(response.data.message || "Failed to reset password","error");
+        addToast(response.data.message || "Failed to reset password", "error");
       }
-
     } catch (error) {
-    addToast(
-        error.response?.data?.message || error.message || "Something went wrong","error"
+      addToast(
+        error.response?.data?.message || error.message || "Something went wrong",
+        "error"
       );
     } finally {
       setIsSubmitting(false);
     }
   };
-
-
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -71,16 +63,13 @@ const ResetPassword = () => {
 
   return (
     <div className="relative flex items-center justify-center min-h-screen p-4 overflow-hidden">
-
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 z-0">
         {backgrounds.map((bg, index) => (
           <motion.div
             key={index}
-            className="absolute top-0 left-0 w-full h-full bg-cover bg-center"
-            style={{
-              backgroundImage: `url(${bg})`,
-              zIndex: 0,
-            }}
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${bg})` }}
             initial={{ opacity: 0 }}
             animate={{
               opacity: currentBg === index ? 1 : 0,
@@ -89,54 +78,47 @@ const ResetPassword = () => {
             transition={{ duration: 1.5, ease: "easeInOut" }}
           />
         ))}
-        <div className="absolute top-0 left-0 w-full h-full bg-black/40"></div>
+        <div className="absolute inset-0 bg-black/40" />
       </div>
 
+      {/* Card */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, type: "spring" }}
-        className={`relative w-full max-w-md rounded-3xl p-8 shadow-2xl backdrop-blur-sm bg-white/15 border-2 border-white/40 ${theme === "dark" ? "bg-gray-900/40" : "bg-white/20"
-          }`}
+        className={`relative w-full max-w-md sm:max-w-lg p-6 sm:p-8 rounded-3xl 
+        backdrop-blur-lg border border-white/20 shadow-2xl 
+        ${theme === "dark" ? "bg-gray-900/80 text-white" : "bg-white/90 text-gray-900"}`}
       >
-
-        <motion.div
-          initial={{ scale: 0.9 }}
-          animate={{ scale: 1 }}
-          transition={{
-            type: "spring",
-            stiffness: 500,
-            damping: 15
-          }}
-          className="text-center mb-8"
-        >
-          <h2 className="text-4xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <img src={navbarlogo} alt="Logo" className="w-20 h-20 mx-auto mb-4" />
+          <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent mb-2">
             Reset Password
           </h2>
-          <p className="text-white/80">Enter your New Password  And Back to Login</p>
-        </motion.div>
+          <p className=" text-sm sm:text-base">
+            Enter your new password and back to login
+          </p>
+        </div>
 
+        {/* Form */}
         <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
+          {/* New Password */}
+          <div>
             <label className="block text-sm font-medium mb-2" htmlFor="password">
-              Password
+              New Password
             </label>
             <input
-              className="w-full p-3 rounded-xl bg-white/25 border-2 border-white/40 placeholder-white/60 text-white focus:ring-2 focus:ring-cyan-400 focus:outline-none transition-all"
               id="password"
               type="password"
-              placeholder="Abichal@123"
+              placeholder="••••••••"
+              className="w-full p-3 rounded-xl  focus:ring-2 focus:ring-cyan-400 focus:outline-none transition-all"
               {...register("newPassword", {
-                required: "password  is required",
+                required: "Password is required",
                 pattern: {
                   value: /^[A-Z][a-zA-Z@0-9]{7,15}$/,
                   message:
-                    "newPassword must start with an uppercase letter, contain '@', a number, and be 8-16 characters long",
+                    "Password must start with uppercase, include '@', a number, and be 8-16 characters",
                 },
               })}
             />
@@ -149,23 +131,18 @@ const ResetPassword = () => {
                 {errors.newPassword.message}
               </motion.p>
             )}
-          </motion.div>
+          </div>
 
-
-
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            <label className="block text-sm font-medium mb-1" htmlFor="confirmPassword">
+          {/* Confirm Password */}
+          <div>
+            <label className="block text-sm font-medium mb-2" htmlFor="confirmPassword">
               Confirm Password
             </label>
             <input
-              className="w-full p-3 rounded-xl bg-white/25 border-2 border-white/40 placeholder-white/60 text-white focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all"
               id="confirmPassword"
               type="password"
               placeholder="••••••••"
+              className="w-full p-3 rounded-xl   focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all"
               {...register("confirmPassword", {
                 required: "Please confirm password",
                 validate: (value) =>
@@ -181,48 +158,40 @@ const ResetPassword = () => {
                 {errors.confirmPassword.message}
               </motion.p>
             )}
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
+          {/* Submit Button */}
+          <div>
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               disabled={isSubmitting}
-
-              className={`w-full py-3 px-4 rounded-xl font-bold text-white shadow-lg transition-all duration-300 ${isSubmitting
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500"
+              className={`w-full py-3 px-4 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 ${isSubmitting
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-blue-500"
                 }`}
               type="submit"
             >
               {isSubmitting ? "Sending Link..." : "Reset Password"}
             </motion.button>
-          </motion.div>
+          </div>
         </form>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="text-center mt-6 text-sm"
-        >
-          <p className="text-white/70">
-            Remember your password?{' '}
+        {/* Footer */}
+        <div className="text-center mt-6 text-sm opacity-70">
+          <p>
+            Remember your password?{" "}
             <a
               href="/login"
-              className="text-cyan-300 hover:text-blue-300 font-medium hover:underline transition"
+              className="text-amber-300 hover:text-amber-300 font-medium hover:underline transition"
             >
               Sign In
             </a>
           </p>
-          <p className="text-xs mt-4 text-white/50">
+          <p className="mt-4 text-xs text-white/50">
             © {new Date().getFullYear()} Cartoon Network. All rights reserved.
           </p>
-        </motion.div>
+        </div>
       </motion.div>
     </div>
   );

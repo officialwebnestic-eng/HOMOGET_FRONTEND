@@ -1,23 +1,21 @@
 import { motion } from "framer-motion";
 import { useTheme } from "../../context/ThemeContext";
 import { useForm } from "react-hook-form";
-import { useAuth } from "../../hooks/useAuth";
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import bg1 from "../../assets/backgroundimage.jpg";
-
-
 import { useNavigate } from "react-router-dom";
 import { http } from "../../axios/axios";
 import { useToast } from "../../model/SuccessToasNotification";
 
+import bg1 from "../../assets/backgroundimage.jpg";
+import { navbarlogo } from "../../ExportImages";
+
 const ResetPasswordRequest = () => {
   const { theme } = useTheme();
+  const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const [currentBg, setCurrentBg] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate()
-  const { addToast } = useToast()
 
   const backgrounds = [bg1];
 
@@ -26,159 +24,118 @@ const ResetPasswordRequest = () => {
     handleSubmit,
     formState: { errors },
   } = useForm();
+
   const onSubmit = async (data) => {
     setIsSubmitting(true);
-
     try {
-      const response = await http.post('/forgot-password', {
-        email: data.email
+      const res = await http.post("/forgot-password", {
+        email: data.email,
       });
 
-      if (response.data?.success) {
+      if (res.data?.success) {
         addToast("Password reset link sent to your email!", "success");
         navigate("/verify-otp", { state: { email: data.email } });
-
       } else {
-        addToast(response.data?.message || "Something went wrong", "error");
+        addToast(res.data?.message || "Something went wrong", "error");
       }
-
     } catch (error) {
-      console.error("Forgot Password Error:", error);
       addToast(
-        error.response?.data?.message || "Failed to send reset link", "error"
+        error.response?.data?.message || "Failed to send reset link",
+        "error"
       );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentBg((prev) => (prev + 1) % backgrounds.length);
-    }, 6000);
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen p-4 overflow-hidden">
+    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
 
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 z-0">
         {backgrounds.map((bg, index) => (
           <motion.div
             key={index}
-            className="absolute top-0 left-0 w-full h-full bg-cover bg-center"
-            style={{
-              backgroundImage: `url(${bg})`,
-              zIndex: 0,
-            }}
-            initial={{ opacity: 0 }}
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${bg})` }}
             animate={{
               opacity: currentBg === index ? 1 : 0,
               scale: currentBg === index ? 1 : 1.05,
             }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
+            transition={{ duration: 1.5 }}
           />
         ))}
-        <div className="absolute top-0 left-0 w-full h-full bg-black/40"></div>
+        <div className="absolute inset-0 bg-black/60" />
       </div>
 
+      {/* Card */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, type: "spring" }}
-        className={`relative w-full max-w-md rounded-3xl p-8 shadow-2xl backdrop-blur-sm bg-white/15 border-2 border-white/40 ${theme === "dark" ? "bg-gray-900/40" : "bg-white/20"
-          }`}
+        transition={{ duration: 0.7 }}
+        className={`relative z-10 w-full max-w-md sm:max-w-lg p-6 sm:p-8 rounded-3xl
+        backdrop-blur-lg border border-white/20 shadow-2xl
+        ${theme === "dark" ? "bg-gray-900/80 text-white" : "bg-white/90 text-gray-900"}`}
       >
-
-        <motion.div
-          initial={{ scale: 0.9 }}
-          animate={{ scale: 1 }}
-          transition={{
-            type: "spring",
-            stiffness: 500,
-            damping: 15
-          }}
-          className="text-center mb-8"
-        >
-          <h2 className="text-4xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+        {/* Header */}
+        <div className="text-center mb-8">
+           <img src={navbarlogo} alt="Logo" className="w-20 h-20 mx-auto mb-4" />
+          <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-400 to-amber-600 text-transparent bg-clip-text">
             Reset Password
           </h2>
-          <p className="text-white/80">We'll send you a link to reset your password</p>
-        </motion.div>
+          <p className="text-sm sm:text-base opacity-80 mt-2">
+            We’ll send a reset otp to your email
+          </p>
+        </div>
 
-        <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <label className="block text-sm font-medium mb-2" htmlFor="email">
-              Email Address
-            </label>
+        {/* Form */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <div>
             <input
-              className="w-full p-3 rounded-xl bg-white/25 border-2 border-white/40 placeholder-white/60 text-white focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all"
-              id="email"
               type="email"
-              placeholder="your@email.com"
+              placeholder="Email address"
+              className="w-full p-3 rounded-xl border focus:ring-2 focus:ring-purple-500 focus:outline-none"
               {...register("email", {
                 required: "Email is required",
                 pattern: {
-                  value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                  message: "Please enter a valid email address",
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Invalid email address",
                 },
               })}
             />
             {errors.email && (
-              <motion.p
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="text-pink-300 mt-2 text-sm"
-              >
+              <p className="text-red-500 text-xs mt-1">
                 {errors.email.message}
-              </motion.p>
+              </p>
             )}
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            disabled={isSubmitting}
+            className="w-full py-3 rounded-xl font-semibold text-white
+            bg-gradient-to-r from-amber-500 to-amber-600
+            hover:from-amber-600 hover:to-amber-700 transition-all disabled:opacity-70"
           >
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={isSubmitting}
-              className={`w-full py-3 px-4 rounded-xl font-bold text-white shadow-lg transition-all duration-300 ${isSubmitting
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500"
-                }`}
-              type="submit"
-            >
-              {isSubmitting ? "Sending Link..." : "Send Reset Link"}
-            </motion.button>
-          </motion.div>
+            {isSubmitting ? "Sending Link..." : "Send Reset Link"}
+          </motion.button>
         </form>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="text-center mt-6 text-sm"
-        >
-          <p className="text-white/70">
-            Remember your password?{' '}
-            <a
-              href="/login"
-              className="text-purple-300 hover:text-pink-300 font-medium hover:underline transition"
-            >
-              Sign In
-            </a>
-          </p>
-          <p className="text-xs mt-4 text-white/50">
-            © {new Date().getFullYear()} Cartoon Network. All rights reserved.
-          </p>
-        </motion.div>
+        {/* Footer */}
+        <p className="text-center text-sm mt-6 opacity-80">
+          Remember your password?{" "}
+          <a href="/login" className="text-amber-400 hover:underline">
+            Sign In
+          </a>
+        </p>
       </motion.div>
     </div>
   );

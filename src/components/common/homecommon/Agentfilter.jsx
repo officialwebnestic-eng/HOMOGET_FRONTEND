@@ -176,8 +176,9 @@ const Agentfilter = () => {
 <div className="w-full lg:w-1/2 px-4">
   {/* Heading */}
   <div className="flex items-start gap-3 mb-6">
-    <HomeIcon className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-yellow-400 dark:text-pink-500 flex-shrink-0" />
-    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight tracking-tight">
+
+     
+      <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight tracking-tight">
       <RadialGradient
         gradient={["circle, rgba(251,191,36,1) 0%, rgba(244,63,94,1) 100%"]}
       >

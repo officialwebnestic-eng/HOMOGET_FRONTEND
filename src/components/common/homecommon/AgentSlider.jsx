@@ -339,7 +339,7 @@ const getSliderSettings = () => {
                     {/* Profile Photo */}
                     <div className="flex flex-col items-center text-center mb-6">
                       <div className="relative mb-4">
-                        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gradient-to-r from-purple-400 to-pink-400 p-1 bg-gradient-to-r from-purple-500 to-pink-500">
+                        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gradient-to-r from-amber-400 to-amber-400 p-1 bg-gradient-to-r from-purple-500 to-pink-500">
                           <img
                             src={
                               agent.profilePhoto ||
@@ -456,7 +456,7 @@ const getSliderSettings = () => {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => openModal(agent)}
-                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg transition-all duration-300 flex items-center justify-center gap-2 group"
+                      className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg transition-all duration-300 flex items-center justify-center gap-2 group"
                       aria-label={`Contact ${agent.name}`}
                     >
                       <Phone className="w-4 h-4 group-hover:rotate-12 transition-transform duration-200" />

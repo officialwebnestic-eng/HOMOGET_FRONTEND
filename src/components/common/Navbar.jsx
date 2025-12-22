@@ -23,7 +23,7 @@ import {
   Settings,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { navbarlogo } from "../../ExportImages"; 
+import { navbarlogo } from "../../ExportImages";
 import { useSidebar } from "../../context/SidebarContext";
 
 
@@ -33,7 +33,7 @@ const commonNavigation = [
   { name: "AboutUs", href: "/about", icon: Info, current: true },
   { name: "ContactUs", href: "/contactus", icon: Mail, current: true },
   {
-    name: "Information", 
+    name: "Information",
     href: "#",
     icon: Info,
     current: false,
@@ -71,11 +71,11 @@ export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { logoutUser, user, isAuthenticated } = useContext(AuthContext);
   const navigate = useNavigate();
-  const dropdownRefs = useRef({}); 
+  const dropdownRefs = useRef({});
   const profileDropdownRef = useRef();
-  const {isOpen} = useSidebar(); 
+  const { isOpen } = useSidebar();
 
- 
+
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
@@ -141,7 +141,7 @@ export default function Navbar() {
   useEffect(() => {
     function handleClickOutside(event) {
       // Check all dynamic dropdown refs ('Information' and 'Services')
-      const isOutsideDropdown = Object.values(dropdownRefs.current).every(ref => 
+      const isOutsideDropdown = Object.values(dropdownRefs.current).every(ref =>
         ref && !ref.contains(event.target)
       );
 
@@ -178,7 +178,7 @@ export default function Navbar() {
           <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">
             {/* Main flex container */}
             <div className="flex h-16 lg:h-20 items-center justify-between relative">
-              
+
               {/* Logo / Brand - Mobile & Desktop */}
               <motion.div whileHover={{ scale: 1.05 }} className="flex items-center flex-shrink-0">
                 <Link to="/">
@@ -191,17 +191,17 @@ export default function Navbar() {
                   </div>
                 </Link>
               </motion.div>
-          
+
               {/* Desktop Navigation & CTA Wrapper */}
               <div className="hidden md:flex items-center justify-center flex-1">
                 {/* Navigation Links */}
                 <div className="flex items-center space-x-2 lg:space-x-4">
                   {navigation.map((item) => (
-                    <div 
-                      key={item.name} 
-                      className="relative group" 
+                    <div
+                      key={item.name}
+                      className="relative group"
                       // Assign ref dynamically for each dropdown
-                      ref={item.dropdown ? el => dropdownRefs.current[item.name] = el : null} 
+                      ref={item.dropdown ? el => dropdownRefs.current[item.name] = el : null}
                     >
                       {item.dropdown ? (
                         <>
@@ -261,7 +261,7 @@ export default function Navbar() {
                                     <div>
                                       <div className="font-medium">{subItem.name}</div>
                                       <div className={`text-xs ${currentTheme.profileText}`}>
-                                         {subItem.description}
+                                        {subItem.description}
                                       </div>
                                     </div>
                                   </motion.button>
@@ -287,7 +287,7 @@ export default function Navbar() {
                     </div>
                   ))}
                 </div>
-                
+
                 {/* CTA Button for user role */}
                 {isAuthenticated && user.role === "user" && (
                   <div className="hidden lg:block ml-8 flex-shrink-0">

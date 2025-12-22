@@ -4,23 +4,24 @@ import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { useToast } from "../../model/SuccessToasNotification";
 import { useLocation, useNavigate } from "react-router-dom";
-import bg1 from "../../assets/backgroundimage.jpg";
-
-
 import { http } from "../../axios/axios";
+
+import bg1 from "../../assets/backgroundimage.jpg";
+ import {navbarlogo} from "../../ExportImages";
 
 const VerifyOtp = () => {
   const { theme } = useTheme();
-  const [currentBg, setCurrentBg] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [countdown, setCountdown] = useState(30);
   const navigate = useNavigate();
-  const location = useLocation()
-  const { addToast } = useToast()
+  const location = useLocation();
+  const { addToast } = useToast();
 
   const email = location.state?.email;
 
-  const backgrounds = [bg1, bg2];
+  const [currentBg, setCurrentBg] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [countdown, setCountdown] = useState(30);
+
+  const backgrounds = [bg1];
 
   const {
     register,
@@ -28,43 +29,50 @@ const VerifyOtp = () => {
     formState: { errors },
   } = useForm();
 
+  useEffect(() => {
+    if (!email) navigate("/login");
+  }, [email, navigate]);
 
   const onSubmit = async (data) => {
     try {
       setIsSubmitting(true);
 
-      const response = await http.post(`/verifytoken?email=${encodeURIComponent(email)}`, {
-        otp: data.otp
-      });
-      if (response.data?.success) {
-        addToast("OTP verified successfully!", "success");
-        navigate("/forget-password", { state: { email: response.data.data.email, otp: response.data.otp } });
-      } else {
-        addToast(response.data?.message || "Invalid OTP. Please try again.", "error");
-      }
+      const res = await http.post(
+        `/verifytoken?email=${encodeURIComponent(email)}`,
+        { otp: data.otp }
+      );
 
+      if (res.data?.success) {
+        addToast("OTP verified successfully!", "success");
+        navigate("/forget-password", {
+          state: { email, otp: data.otp },
+        });
+      } else {
+        addToast(res.data?.message || "Invalid OTP", "error");
+      }
     } catch (error) {
-      console.error("OTP verification error:", error);
       addToast(
-        error.response?.data?.message || "Failed to verify OTP. Please try again.", "error"
+        error.response?.data?.message || "OTP verification failed",
+        "error"
       );
     } finally {
       setIsSubmitting(false);
     }
-  };  
+  };
+
   const handleResendOtp = async () => {
     try {
-
       setCountdown(30);
       addToast("New OTP sent to your email!", "success");
-    } catch (error) {
-
-      addToast(error.message || "Failed to resend OTP", "error");
+    } catch {
+      addToast("Failed to resend OTP", "error");
     }
   };
+
   useEffect(() => {
-    const timer = countdown > 0 && setInterval(() => {
-      setCountdown(countdown - 1);
+    if (countdown === 0) return;
+    const timer = setInterval(() => {
+      setCountdown((prev) => prev - 1);
     }, 1000);
     return () => clearInterval(timer);
   }, [countdown]);
@@ -77,145 +85,105 @@ const VerifyOtp = () => {
   }, []);
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen p-4 overflow-hidden">
-      {/* Animated background slider */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
-        {backgrounds.map((bg, index) => (
+    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
+
+      {/* Background */}
+      <div className="absolute inset-0 z-0">
+        {backgrounds.map((bg, i) => (
           <motion.div
-            key={index}
-            className="absolute top-0 left-0 w-full h-full bg-cover bg-center"
-            style={{
-              backgroundImage: `url(${bg})`,
-              zIndex: 0,
-            }}
-            initial={{ opacity: 0 }}
+            key={i}
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${bg})` }}
             animate={{
-              opacity: currentBg === index ? 1 : 0,
-              scale: currentBg === index ? 1 : 1.05,
+              opacity: currentBg === i ? 1 : 0,
+              scale: currentBg === i ? 1 : 1.05,
             }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
+            transition={{ duration: 1.5 }}
           />
         ))}
-        <div className="absolute top-0 left-0 w-full h-full bg-black/40"></div>
+        <div className="absolute inset-0 bg-black/60" />
       </div>
 
+      {/* Card */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, type: "spring" }}
-        className={`relative w-full max-w-md rounded-3xl p-8 shadow-2xl backdrop-blur-sm bg-white/15 border-2 border-white/40 ${theme === "dark" ? "bg-gray-900/40" : "bg-white/20"
-          }`}
+        transition={{ duration: 0.7 }}
+        className={`relative z-10 w-full max-w-md p-6 sm:p-8 rounded-3xl
+        backdrop-blur-lg border border-white/20 shadow-2xl
+        ${theme === "dark" ? "bg-gray-900/80 text-white" : "bg-white/90 text-gray-900"}`}
       >
-        <motion.div
-          initial={{ scale: 0.9 }}
-          animate={{ scale: 1 }}
-          transition={{
-            type: "spring",
-            stiffness: 500,
-            damping: 15
-          }}
-          className="text-center mb-8"
-        >
-          <h2 className="text-4xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+
+        {/* Header */}
+        <div className="text-center mb-8">
+          <img src={navbarlogo} alt="Logo" className="w-20 h-20 mx-auto mb-4" />
+          <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-500 to-amber-600 text-transparent bg-clip-text">
             Verify OTP
           </h2>
-          <p className="text-white/80">Enter the 6-digit code sent to your email</p>
-        </motion.div>
+          <p className="text-sm opacity-80 mt-2">
+            Enter the 6-digit code sent to your email
+          </p>
+        </div>
 
-        <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <label className="block text-sm font-medium mb-2" htmlFor="otp">
-              OTP Code
-            </label>
+        {/* Form */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <div>
             <input
-              className="w-full p-3 rounded-xl bg-white/25 border-2 border-white/40 placeholder-white/60 text-white focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all text-center text-2xl tracking-widest"
-              id="otp"
               type="text"
-              placeholder="••••••"
               maxLength="6"
+              placeholder="••••••"
+              className="w-full p-4 rounded-xl text-center text-2xl tracking-widest border focus:ring-2 focus:ring-purple-500 focus:outline-none"
               {...register("otp", {
                 required: "OTP is required",
                 pattern: {
                   value: /^[0-9]{6}$/,
-                  message: "Please enter a valid 6-digit OTP",
+                  message: "Enter a valid 6-digit OTP",
                 },
               })}
             />
             {errors.otp && (
-              <motion.p
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="text-pink-300 mt-2 text-sm"
-              >
+              <p className="text-red-500 text-xs mt-1">
                 {errors.otp.message}
-              </motion.p>
+              </p>
             )}
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-center"
-          >
+          {/* Resend */}
+          <div className="text-center text-sm">
             {countdown > 0 ? (
-              <p className="text-white/70 text-sm">
-                Resend OTP in {countdown} seconds
+              <p className="opacity-70">
+                Resend OTP in {countdown}s
               </p>
             ) : (
               <button
                 type="button"
                 onClick={handleResendOtp}
-                className="text-purple-300 hover:text-pink-300 font-medium text-sm hover:underline transition"
+                className="text-black hover:underline"
               >
                 Resend OTP
               </button>
             )}
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            disabled={isSubmitting}
+            className="w-full py-3 rounded-xl font-semibold text-white
+            bg-gradient-to-r from-amber-500 to-amber-600
+            hover:from-amber-600 hover:to-amber-700 transition-all disabled:opacity-70"
           >
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={isSubmitting}
-              className={`w-full py-3 px-4 rounded-xl font-bold text-white shadow-lg transition-all duration-300 ${isSubmitting
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500"
-                }`}
-              type="submit"
-            >
-              {isSubmitting ? "Verifying..." : "Verify OTP"}
-            </motion.button>
-          </motion.div>
+            {isSubmitting ? "Verifying..." : "Verify OTP"}
+          </motion.button>
         </form>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="text-center mt-6 text-sm"
-        >
-          <p className="text-white/70">
-            Remember your password?{' '}
-            <a
-              href="/login"
-              className="text-purple-300 hover:text-pink-300 font-medium hover:underline transition"
-            >
-              Sign In
-            </a>
-          </p>
-          <p className="text-xs mt-4 text-white/50">
-            © {new Date().getFullYear()} Cartoon Network. All rights reserved.
-          </p>
-        </motion.div>
+        {/* Footer */}
+        <p className="text-center text-sm mt-6 opacity-80">
+          Back to{" "}
+          <a href="/login" className="text-amber-400 hover:underline">
+            Sign In
+          </a>
+        </p>
       </motion.div>
     </div>
   );

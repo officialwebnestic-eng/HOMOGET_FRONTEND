@@ -66,6 +66,7 @@ import ProtectRoutes from "./ProtectedRouter";
 import UserProfile from "../pages/UserProfile";
 import UpdateAgent from "../components/admin/Agent/UpdateAgent";
 import ViewHomeLoan from "../components/HomeLoan/ViewHomeLoan";
+ import MainLayout from "./MainLayout";
 
 export const AdminRoutes = () => {
 
@@ -173,7 +174,6 @@ export const ProfileRoutes = () => {
         </Route>
     )
 }
-
 export const PropertyRoutes = () => {
     return (
 
@@ -370,7 +370,9 @@ export const AgentCallSupport = () => {
 export const PublicRoutes = () => {
     return (
         <>
-            <Route path="/" element={<HomePage />} />
+             <Route element={<MainLayout />}>
+
+             <Route path="/" element={<HomePage />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/projects" element={<Projects />} />
@@ -388,6 +390,7 @@ export const PublicRoutes = () => {
             <Route path="/showuserappoinment" element={<ShowUserAppoinment />} />
             <Route path="/testimonials" element={<UserTestimonial />} />
             <Route path="/helpcenter" element={<HelpCenter />} />
+             </Route>
         </>
     );
 };
