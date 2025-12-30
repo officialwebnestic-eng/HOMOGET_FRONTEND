@@ -377,21 +377,6 @@ const Agentfilter = () => {
   </div>
 </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
-
       {/* Property Listing Section */}
       <div className="w-full py-4 px-2 sm:px-4 lg:px-6 max-w-7xl mx-auto">
         <motion.div
