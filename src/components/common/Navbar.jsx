@@ -175,7 +175,7 @@ export default function Navbar() {
                     <img
                       src={navbarlogo}
                       alt="Logo"
-                      className="h-9 w-auto object-contain"
+                      className="h-30 w-auto object-contain"
                     />
                 </Link>
               </motion.div>
