@@ -4,13 +4,14 @@ import {
   ChevronRight,
   X,
   Check,
-  Home,
   Mail,
-  Phone,
   MapPin,
   Award,
   Send,
-  Loader2
+  Loader2,
+  Phone,
+  MessageCircle,
+  ShieldCheck
 } from "lucide-react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
@@ -19,7 +20,6 @@ import { useTheme } from "../../../context/ThemeContext";
 import { useState, useRef, useCallback } from "react";
 import { http } from "../../../axios/axios";
 import useGetAllAgent from "../../../hooks/useGetAllAgent";
-import { NavLink } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "../../../model/SuccessToasNotification";
 import EmptyStateModel from "../../../model/EmptyStateModel";
@@ -29,86 +29,61 @@ const AgentSlider = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [formSuccess, setFormSuccess] = useState(false);
-  const { agentList = [], loading, error } = useGetAllAgent();
-  const sliderRef = useRef(null);
+  const { agentList = [], loading } = useGetAllAgent();
   const { addToast } = useToast();
 
   const isDark = theme === "dark";
 
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    message: ""
-  });
-  const [formErrors, setFormErrors] = useState({});
+  const [formData, setFormData] = useState({ firstName: "", lastName: "", email: "", phone: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Theme-based Styles
+  // Smooth UI Theme Config
   const ct = {
-    card: isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-100 shadow-xl shadow-slate-200/50",
+    card: isDark ? "bg-slate-900/40 border-slate-800/60" : "bg-white border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)]",
     text: isDark ? "text-slate-50" : "text-slate-900",
     subText: isDark ? "text-slate-400" : "text-slate-500",
-    input: isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900",
+    input: isDark ? "bg-slate-800/50 border-slate-700/50 focus:border-yellow-500" : "bg-slate-50 border-slate-200 focus:border-yellow-500",
   };
 
-  const getAvatarFallback = useCallback((name, id) => {
+  const getAvatarFallback = useCallback((name) => {
     const initials = name?.split(" ").map((n) => n[0]).join("").toUpperCase() || "A";
-    return `https://ui-avatars.com/api/?name=${initials}&background=EAB308&color=fff&bold=true`;
+    return `https://ui-avatars.com/api/?name=${initials}&background=f59e0b&color=fff&bold=true`;
   }, []);
 
-  const NextArrow = ({ onClick }) => (
+  // Custom Navigation Arrows
+  const Arrow = ({ onClick, direction }) => (
     <motion.button
-      whileHover={{ scale: 1.1 }}
+      whileHover={{ scale: 1.1, backgroundColor: isDark ? "#1e293b" : "#ffffff" }}
       whileTap={{ scale: 0.9 }}
       onClick={onClick}
-      className={`absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md border ${isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-white/80 border-slate-200 shadow-lg'} transition-all`}
+      className={`absolute ${direction === 'next' ? '-right-6' : '-left-6'} top-1/2 -translate-y-1/2 z-20 w-14 h-14 rounded-full flex items-center justify-center backdrop-blur-xl border border-white/10 shadow-2xl transition-all ${isDark ? 'bg-slate-900/80' : 'bg-white/90'}`}
     >
-      <ChevronRight className={isDark ? "text-white" : "text-slate-900"} />
-    </motion.button>
-  );
-
-  const PrevArrow = ({ onClick }) => (
-    <motion.button
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
-      onClick={onClick}
-      className={`absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md border ${isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-white/80 border-slate-200 shadow-lg'} transition-all`}
-    >
-      <ChevronLeft className={isDark ? "text-white" : "text-slate-900"} />
+      {direction === 'next' ? <ChevronRight size={24} className={ct.text} /> : <ChevronLeft size={24} className={ct.text} />}
     </motion.button>
   );
 
   const openModal = (agent) => {
     setSelectedAgent(agent);
     setIsModalOpen(true);
-    document.body.style.overflow = "hidden";
+    setFormSuccess(false);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setFormSuccess(false);
-    setFormData({ firstName: "", lastName: "", email: "", phone: "", message: "" });
     document.body.style.overflow = "auto";
-  };
-
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (formErrors[e.target.name]) setFormErrors({ ...formErrors, [e.target.name]: null });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const response = await http.post("/createrequest", { ...formData, agentId: selectedAgent._id });
-      if (response.data.success) {
+      const res = await http.post("/createrequest", { ...formData, agentId: selectedAgent._id });
+      if (res.data.success) {
         setFormSuccess(true);
-        addToast("Message Sent!", "success");
+        addToast("Message Sent Successfully", "success");
       }
     } catch (err) {
-      addToast("Failed to send message", "error");
+      addToast("Failed to send", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -116,89 +91,94 @@ const AgentSlider = () => {
 
   const settings = {
     dots: true,
-    infinite: agentList.length > 3,
-    speed: 600,
+    infinite: agentList.length > 2,
+    speed: 800,
     slidesToShow: 3,
     slidesToScroll: 1,
-    nextArrow: <NextArrow />,
-    prevArrow: <PrevArrow />,
+    nextArrow: <Arrow direction="next" />,
+    prevArrow: <Arrow direction="prev" />,
     responsive: [
-      { breakpoint: 1024, settings: { slidesToShow: 2 } },
+      { breakpoint: 1280, settings: { slidesToShow: 2 } },
       { breakpoint: 768, settings: { slidesToShow: 1, arrows: false } }
     ]
   };
 
   return (
-    <div className={`py-24 px-6 ${isDark ? 'bg-slate-950' : 'bg-slate-50/50'}`}>
+    <section className={`py-28 px-6 transition-colors duration-700 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-20 space-y-4">
-          <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-400 font-bold text-xs uppercase tracking-widest">
-            <Award size={14} /> Certified Partners
-          </motion.div>
-          <h2 className={`text-4xl md:text-6xl font-black tracking-tight ${ct.text}`}>
-            Meet Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-600">Experts</span>
-          </h2>
-          <p className={`max-w-2xl mx-auto text-lg ${ct.subText}`}>
-            Our elite agents bring decades of experience to help you find the perfect sanctuary.
+        
+        {/* Modern Header */}
+        <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
+          <div className="space-y-4">
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }}
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-500 text-[10px] font-black uppercase tracking-[0.3em]"
+            >
+              <ShieldCheck size={12} /> Elite Partners
+            </motion.div>
+            <h2 className={`text-5xl md:text-7xl font-serif italic ${isDark ? 'text-white' : 'text-slate-950'}`}>
+              Trust the <span className="font-sans not-italic font-black block md:inline uppercase tracking-tighter">Experts.</span>
+            </h2>
+          </div>
+          <p className={`max-w-sm text-lg font-medium leading-relaxed ${ct.subText}`}>
+            Connected with the industry's most successful property advisors across the country.
           </p>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             {[1, 2, 3].map((i) => (
-              <div key={i} className={`h-[450px] rounded-[2.5rem] animate-pulse ${isDark ? 'bg-slate-900' : 'bg-white'}`} />
+              <div key={i} className={`h-[500px] rounded-[3rem] animate-pulse ${isDark ? 'bg-slate-900/50' : 'bg-white'}`} />
             ))}
           </div>
         ) : agentList.length === 0 ? (
-          <EmptyStateModel title="No Agents Available" message="Check back later for our new expert partners." />
+          <EmptyStateModel title="No Agents Found" />
         ) : (
-          <Slider {...settings} className="agent-slider">
+          <Slider {...settings} className="agent-slider pb-12">
             {agentList.map((agent) => (
-              <div key={agent._id} className="px-4 py-10">
+              <div key={agent._id} className="px-5 py-12">
                 <motion.div
-                  whileHover={{ y: -10 }}
-                  className={`relative p-8 rounded-[2.5rem] border transition-all ${ct.card}`}
+                  whileHover={{ y: -15 }}
+                  className={`group relative pt-16 pb-10 px-8 rounded-[3.5rem] border transition-all duration-500 ${ct.card}`}
                 >
-                  <div className="flex flex-col items-center">
-                    {/* Avatar */}
-                    <div className="relative mb-6">
-                      <div className="w-28 h-28 rounded-full p-1 bg-gradient-to-tr from-yellow-400 via-orange-500 to-pink-500">
-                        <img 
-                          src={agent.profilePhoto || getAvatarFallback(agent.name)} 
-                          className="w-full h-full object-cover rounded-full border-4 border-white dark:border-slate-900"
-                          alt={agent.name}
-                        />
+                  {/* Floating Avatar */}
+                  <div className="absolute -top-12 left-1/2 -translate-x-1/2">
+                    <div className="relative p-1.5 rounded-[2.5rem] bg-gradient-to-b from-yellow-400 to-orange-600 shadow-2xl">
+                      <img 
+                        src={agent.profilePhoto || getAvatarFallback(agent.name)} 
+                        className="w-24 h-24 object-cover rounded-[2.2rem] border-4 border-slate-900 group-hover:scale-105 transition-transform duration-500"
+                        alt={agent.name}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="text-center">
+                    <h3 className={`text-2xl font-bold tracking-tight mb-1 ${ct.text}`}>{agent.name}</h3>
+                    <div className="flex items-center justify-center gap-1 mb-8">
+                      <div className="flex gap-0.5">
+                        {[...Array(5)].map((_, i) => <Star key={i} size={14} className="fill-yellow-500 text-yellow-500" />)}
                       </div>
-                      <div className="absolute bottom-1 right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-white dark:border-slate-900" />
+                      <span className={`text-xs font-black ml-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>5.0 / 5.0</span>
                     </div>
 
-                    <h3 className={`text-2xl font-bold mb-1 ${ct.text}`}>{agent.name}</h3>
-                    <div className="flex items-center gap-1 mb-6">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={16} className="fill-yellow-400 text-yellow-400" />
-                      ))}
-                      <span className={`text-sm font-bold ml-2 ${ct.text}`}>5.0</span>
-                    </div>
-
-                    <div className="w-full space-y-4 mb-8">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500"><MapPin size={18} /></div>
-                        <span className={`text-sm font-medium ${ct.subText}`}>{agent.city || "Mumbai, India"}</span>
+                    <div className="space-y-3 mb-10 text-left">
+                      <div className={`flex items-center gap-3 p-3 rounded-2xl ${isDark ? 'bg-slate-800/30' : 'bg-slate-50'}`}>
+                        <MapPin size={16} className="text-yellow-500" />
+                        <span className={`text-xs font-bold uppercase tracking-widest ${ct.subText}`}>{agent.city || "Strategic Locations"}</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-orange-500/10 text-orange-500"><Mail size={18} /></div>
-                        <span className={`text-sm font-medium truncate ${ct.subText}`}>{agent.email}</span>
+                      <div className={`flex items-center gap-3 p-3 rounded-2xl ${isDark ? 'bg-slate-800/30' : 'bg-slate-50'}`}>
+                        <Mail size={16} className="text-yellow-500" />
+                        <span className={`text-xs font-bold truncate ${ct.subText}`}>{agent.email}</span>
                       </div>
                     </div>
 
                     <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => openModal(agent)}
-                      className="w-full py-4 rounded-2xl bg-slate-900 dark:bg-yellow-500 text-white dark:text-slate-950 font-bold flex items-center justify-center gap-2 hover:shadow-lg transition-all"
+                      className="w-full py-5 rounded-[2rem] bg-slate-950 dark:bg-white text-white dark:text-slate-950 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl hover:shadow-yellow-500/20 transition-all"
                     >
-                      <Phone size={18} /> Contact Expert
+                      <MessageCircle size={18} /> Inquire Now
                     </motion.button>
                   </div>
                 </motion.div>
@@ -208,52 +188,47 @@ const AgentSlider = () => {
         )}
       </div>
 
-      {/* Modern Contact Modal */}
+      {/* Luxury Contact Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={closeModal}
-              className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
-            />
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeModal} className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl" />
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className={`relative w-full max-w-lg rounded-[3rem] overflow-hidden border ${ct.card} p-8 md:p-12`}
+              initial={{ opacity: 0, y: 50, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 50, scale: 0.9 }}
+              className={`relative w-full max-w-xl rounded-[4rem] overflow-hidden border ${ct.card} p-10 md:p-16`}
             >
-              <button onClick={closeModal} className="absolute top-8 right-8 text-slate-400 hover:text-white"><X /></button>
+              <button onClick={closeModal} className={`absolute top-10 right-10 ${isDark ? 'text-slate-600 hover:text-white' : 'text-slate-300 hover:text-black'} transition-colors`}><X size={32} /></button>
 
               {formSuccess ? (
-                <div className="text-center py-10 space-y-6">
-                  <div className="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto">
-                    <Check size={40} />
-                  </div>
-                  <h2 className={`text-3xl font-bold ${ct.text}`}>Request Received</h2>
-                  <p className={ct.subText}>Our expert will get back to you within 24 hours.</p>
-                  <button onClick={closeModal} className="px-8 py-3 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl font-bold">Done</button>
+                <div className="text-center py-10 space-y-8">
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-24 h-24 bg-green-500 text-white rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-green-500/40">
+                    <Check size={48} />
+                  </motion.div>
+                  <h2 className={`text-4xl font-black italic tracking-tighter ${ct.text}`}>Sent Successfully</h2>
+                  <p className={`text-lg ${ct.subText}`}>We've notified {selectedAgent?.name}. Expect a call shortly.</p>
+                  <button onClick={closeModal} className="px-12 py-4 bg-slate-950 dark:bg-white text-white dark:text-slate-950 rounded-full font-black uppercase tracking-widest text-xs">Close</button>
                 </div>
               ) : (
                 <>
-                  <h2 className={`text-3xl font-black mb-2 ${ct.text}`}>Get in Touch</h2>
-                  <p className={`mb-8 ${ct.subText}`}>Inquire about properties with {selectedAgent?.name}</p>
+                  <div className="mb-12">
+                    <h2 className={`text-4xl font-black tracking-tighter uppercase mb-2 ${ct.text}`}>Private Inquiry</h2>
+                    <p className={`text-sm font-medium ${ct.subText}`}>Consult with <span className="text-yellow-500 font-bold">{selectedAgent?.name}</span></p>
+                  </div>
 
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      <input name="firstName" placeholder="First Name" onChange={handleInputChange} required className={`p-4 rounded-2xl border outline-none focus:ring-2 focus:ring-yellow-500 transition-all ${ct.input}`} />
-                      <input name="lastName" placeholder="Last Name" onChange={handleInputChange} required className={`p-4 rounded-2xl border outline-none focus:ring-2 focus:ring-yellow-500 transition-all ${ct.input}`} />
+                      <input name="firstName" placeholder="First Name" onChange={(e) => setFormData({...formData, firstName: e.target.value})} required className={`p-5 rounded-3xl border-2 outline-none transition-all text-sm font-bold ${ct.input}`} />
+                      <input name="lastName" placeholder="Last Name" onChange={(e) => setFormData({...formData, lastName: e.target.value})} required className={`p-5 rounded-3xl border-2 outline-none transition-all text-sm font-bold ${ct.input}`} />
                     </div>
-                    <input name="email" type="email" placeholder="Email Address" onChange={handleInputChange} required className={`w-full p-4 rounded-2xl border outline-none focus:ring-2 focus:ring-yellow-500 transition-all ${ct.input}`} />
-                    <input name="phone" type="tel" placeholder="Phone Number" onChange={handleInputChange} required className={`w-full p-4 rounded-2xl border outline-none focus:ring-2 focus:ring-yellow-500 transition-all ${ct.input}`} />
-                    <textarea name="message" rows="4" placeholder="Your Message" onChange={handleInputChange} required className={`w-full p-4 rounded-2xl border outline-none focus:ring-2 focus:ring-yellow-500 transition-all ${ct.input}`} />
+                    <input name="email" type="email" placeholder="Professional Email" onChange={(e) => setFormData({...formData, email: e.target.value})} required className={`w-full p-5 rounded-3xl border-2 outline-none transition-all text-sm font-bold ${ct.input}`} />
+                    <textarea name="message" rows="3" placeholder="How can we help?" onChange={(e) => setFormData({...formData, message: e.target.value})} required className={`w-full p-6 rounded-[2.5rem] border-2 outline-none transition-all text-sm font-bold ${ct.input}`} />
                     
                     <motion.button
                       disabled={isSubmitting}
-                      whileTap={{ scale: 0.95 }}
-                      className="w-full py-4 bg-gradient-to-r from-yellow-500 to-orange-600 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20"
+                      whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                      className="w-full py-6 bg-gradient-to-r from-yellow-500 to-orange-600 text-white font-black text-xs uppercase tracking-[0.3em] rounded-full flex items-center justify-center gap-3 shadow-2xl shadow-orange-500/30"
                     >
-                      {isSubmitting ? <Loader2 className="animate-spin" /> : <><Send size={18} /> Send Inquiry</>}
+                      {isSubmitting ? <Loader2 className="animate-spin" /> : <><Send size={18} /> Connect Privately</>}
                     </motion.button>
                   </form>
                 </>
@@ -262,7 +237,7 @@ const AgentSlider = () => {
           </div>
         )}
       </AnimatePresence>
-    </div>
+    </section>
   );
 };
 

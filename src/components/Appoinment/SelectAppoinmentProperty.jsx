@@ -1,505 +1,273 @@
-import React, { useRef, useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   Ruler, Bed, Bath, MapPin, IndianRupee, Home, Building2, Barcode, Wrench,
-  Search, ArrowRight, X, ChevronDown
+  Search, ArrowRight, X, ChevronDown, Filter, Sparkles
 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination } from "swiper/modules";
+import { Autoplay, Pagination, EffectFade } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
+import "swiper/css/effect-fade";
+
 import { useTheme } from "../../context/ThemeContext";
 import useGetAllProperty from "../../hooks/useGetAllProperty";
-import { AnimatePresence } from "framer-motion";
 import { useLoading } from "../../model/LoadingModel";
 
-// Utility to get unique options for filters
-const getUniqueValues = (data, key) => {
-  return [...new Set(data.map((item) => item[key]).filter(Boolean))];
-};
-
 const SelectAppointmentProperty = () => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const navigate = useNavigate();
+  
   const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState({
-    propertyname: "", price: "", bedroom: "", bathroom: "",
-    squarefoot: "", floor: "", zipcode: "", propertytype: "",
-    listingtype: "", state: "", city: "", aminities: "",
-  });
-
+  const [filters, setFilters] = useState({ city: "", propertytype: "", listingtype: "" });
   const [searchQuery, setSearchQuery] = useState("");
-
-  const [expandedFilters, setExpandedFilters] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
 
-  const { theme } = useTheme();
-  const navigate = useNavigate();
   const limit = 6;
-  const LoadingModel = useLoading({ type: "table", count: 1, rows: 5, columns: 4 });
-
   const { propertyList, loading, pagination } = useGetAllProperty(currentPage, limit, filters);
+  const LoadingModel = useLoading({ type: "cards", count: 3 });
 
-  // Handle filter change
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters({ ...filters, [name]: value });
-    setCurrentPage(1);
+  // Luxury Theme Palette
+  const colors = {
+    brand: "#C5A059", // Dubai Gold
+    bg: isDark ? "bg-slate-950" : "bg-slate-50",
+    card: isDark ? "bg-slate-900/40 border-slate-800" : "bg-white border-slate-200",
+    text: isDark ? "text-slate-100" : "text-slate-900",
+    sub: isDark ? "text-slate-400" : "text-slate-500",
+    accent: "from-amber-600 to-amber-400"
   };
 
-  // Search handlers
-  const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
-    setShowSuggestions(false);
-  };
-
-  const handleSubmitSearch = () => {
-    setFilters((prev) => ({ ...prev, city: searchQuery }));
-    setCurrentPage(1);
-  };
-
-  // Navigation
-  const handleBuyNow = (property) => {
-    navigate("/createappoinment", { state: { property } });
-  };
-
-  // Modal handlers
-  const openModal = (property) => setSelectedProperty(property);
-  const closeModal = () => setSelectedProperty(null);
-
-  // Theme styles
-  const themeClasses = {
-    dark: {
-      bg: "bg-gray-800",
-      text: "text-white",
-      card: "bg-gray-700",
-      input: "bg-gray-600 text-white placeholder-gray-400",
-      border: "border-gray-600",
-      button: "bg-blue-600 hover:bg-blue-700",
-      modal: "bg-gray-700 text-white",
-      paginationDisabled: "bg-gray-700 text-gray-500 cursor-not-allowed",
-      paginationHover: "hover:bg-gray-700",
-      paginationActive: "bg-blue-500 text-white",
-    },
-    light: {
-      bg: "bg-gray-50",
-      text: "text-gray-800",
-      card: "bg-white",
-      input: "bg-white text-gray-800 placeholder-gray-500",
-      border: "border-gray-300",
-      button: "bg-blue-600 hover:bg-blue-700",
-      modal: "bg-white text-gray-800",
-      paginationDisabled: "bg-gray-200 text-gray-400 cursor-not-allowed",
-      paginationHover: "hover:bg-gray-100",
-      paginationActive: "bg-blue-500 text-white",
-    },
-  };
-  const currentTheme = themeClasses[theme] || themeClasses.light;
-
-  // Filter options
-  const filterOptions = [
-    {
-      name: "state",
-      label: "Location",
-      icon: <MapPin size={16} className="text-red-500" />,
-    },
-    {
-      name: "listingtype",
-      label: "Category",
-      icon: <Barcode size={16} className="text-green-500" />,
-    },
-    {
-      name: "propertytype",
-      label: "Property Type",
-      icon: <Home size={16} className="text-blue-500" />,
-    },
-    {
-      name: "price",
-      label: "Price",
-      icon: <IndianRupee size={16} className="text-yellow-500" />,
-    },
-    {
-      name: "squarefoot",
-      label: "Area (sq ft)",
-      icon: <Ruler size={16} className="text-purple-500" />,
-    },
-    {
-      name: "bedroom",
-      label: "Bedrooms",
-      icon: <Bed size={16} className="text-pink-500" />,
-    },
-    {
-      name: "bathroom",
-      label: "Bathrooms",
-      icon: <Bath size={16} className="text-indigo-500" />,
-    },
-    {
-      name: "floor",
-      label: "Floor",
-      icon: <Building2 size={16} className="text-gray-500" />,
-    },
-    {
-      name: "city",
-      label: "City",
-      icon: <MapPin size={16} className="text-orange-500" />,
-    },
-    {
-      name: "aminities",
-      label: "Amenities",
-      icon: <Wrench size={16} className="text-lime-500" />,
-    },
-  ];
+  const handleBuyNow = (property) => navigate("/createappoinment", { state: { property } });
 
   return (
-    <div className={`w-full py-8 ${currentTheme.bg} transition-colors duration-300`}>
+    <div className={`min-h-screen ${colors.bg} transition-colors duration-500 pb-20`}>
       
-      {/* Header & Search */}
-      <div className="max-w-7xl mx-auto px-4  mt-10  lg:mt-14 md:mt-12 mb-6">
-        <h1 className={`text-3xl font-bold mb-2 ${currentTheme.text} text-center`}>
-          Select Property for Appointment
-        </h1>
-        <p className={`text-center ${currentTheme.text} opacity-80`}>
-          Find your perfect property and schedule a viewing
-        </p>
-      </div>
+      {/* --- HERO HEADER --- */}
+      <section className="relative pt-32 pb-20 overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-amber-500/10 to-transparent pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-black uppercase tracking-[0.3em]">
+              <Sparkles size={12} /> Personalized Viewings
+            </span>
+            <h1 className={`text-5xl md:text-7xl font-black tracking-tighter ${colors.text}`}>
+              Pick Your <span className="italic font-serif font-light text-amber-600">Sanctuary.</span>
+            </h1>
+            <p className={`max-w-xl mx-auto text-lg ${colors.sub}`}>
+              Select a property from our signature collection to schedule your private tour.
+            </p>
+          </motion.div>
+        </div>
+      </section>
 
-      {/* Search Bar */}
-      <div className="max-w-7xl mx-auto px-4 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <input
-          type="text"
-          placeholder="Search by ID, name, email, or status..."
-          value={searchQuery}
-          onChange={handleSearch}
-          className={`w-full md:flex-1 p-3 rounded-lg ${currentTheme.input} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-        />
-        <button
-          onClick={handleSubmitSearch}
-          className={`px-4 py-3 rounded-lg ${currentTheme.button} font-semibold`}
-        >
-          Search
-        </button>
-      </div>
-
-      {/* Show/Hide Filters Button */}
-      <div className="max-w-7xl mx-auto px-4 mb-4">
-        <button
-          onClick={() => setExpandedFilters(!expandedFilters)}
-          className={`flex items-center gap-2 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}
-        >
-          <ChevronDown
-            className={`transition-transform duration-300 ${expandedFilters ? 'rotate-180' : ''}`}
-            size={18}
-          />
-          {expandedFilters ? "Hide Filters" : "Show All Filters"}
-        </button>
-      </div>
-
-      {/* Filters Section */}
-      <div
-        className={`max-w-7xl mx-auto px-4 mb-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 transition-all duration-300 ${
-          expandedFilters ? 'opacity-100' : 'opacity-0 max-h-0 overflow-hidden'
-        }`}
-      >
-        {filterOptions.map(({ name, label, icon }) => {
-          const options = getUniqueValues(propertyList, name);
-          return (
-            <div key={name} className="relative rounded-lg p-3 shadow hover:shadow-lg transition-shadow duration-200">
-              <label className={`absolute -top-2 left-3 px-2 text-xs ${currentTheme.text}`}>
-                {label}
-              </label>
-              <select
-                name={name}
-                value={filters[name] || ""}
-                onChange={handleFilterChange}
-                className={`w-full p-3 rounded-lg ${currentTheme.border} ${currentTheme.input} appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 pr-8`}
-              >
-                <option value="">All {label}</option>
-                {options.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {name === "price" ? `₹${opt}` : opt}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">{icon}</div>
-            </div>
-          );
-        })}
-      </div>
-
-
-      {loading ? (
-          <LoadingModel loading={true} />
-      ) : (
-        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {propertyList.map((property) => (
-            <motion.div
-              key={property.id}
-              className={`${currentTheme.card} rounded-2xl shadow-xl overflow-hidden relative transition-transform hover:scale-105`}
-              whileHover={{ y: -5 }}
+      {/* --- SEARCH & FILTER COMMAND CENTER --- */}
+      <div className="max-w-5xl mx-auto px-6 mb-16 sticky top-24 z-30">
+        <div className={`p-2 rounded-[2rem] border backdrop-blur-xl shadow-2xl ${colors.card} flex flex-col md:flex-row gap-2`}>
+          <div className="flex-1 flex items-center px-4 gap-3">
+            <Search className="text-slate-500" size={20} />
+            <input
+              type="text"
+              placeholder="Search by city or property name..."
+              className="w-full bg-transparent py-4 outline-none text-sm font-medium"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2 p-1">
+            <button 
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className={`px-6 py-3 rounded-2xl border ${isFilterOpen ? 'bg-amber-600 border-amber-600 text-white' : colors.card} text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-all`}
             >
-              {/* Image Carousel */}
-              <div
-                className="relative cursor-pointer"
-                onClick={() => openModal(property)}
-              >
-                <Swiper
-                  spaceBetween={10}
-                  pagination={{ clickable: true }}
-                  autoplay={{ delay: 3000 }}
-                  loop
-                  modules={[Autoplay, Pagination]}
-                  className="w-full h-48"
-                >
-                  {property.image?.map((img, i) => (
-                    <SwiperSlide key={i}>
-                      <img src={img} alt="Property" className="w-full h-48 object-cover" />
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
-                <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
-                  <span className= {` text-lg font-semibold">View Details ${currentTheme.text}` }></span>
-                </div>
-              </div>
-              
-              {/* Property Info */}
-              <div className="p-4 space-y-3">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-red-400 bg-clip-text text-transparent">
-                  {property.propertyname}
-                </h2>
-                <div className={`flex justify-between items-center text-sm ${currentTheme.text}`}>
-                  <div className="flex items-center gap-1">
-                    <Home size={16} /> {property.propertytype}
-                  </div>
-                  <div className="flex items-center gap-1 font-semibold">
-                    <IndianRupee size={16} /> {property.price}
-                  </div>
-                </div>
-                   <div className={`flex justify-between items-center text-sm ${currentTheme.text}`}>
+              <Filter size={14} /> Filters
+            </button>
+            <button 
+              onClick={() => setFilters({ ...filters, city: searchQuery })}
+              className="px-8 py-3 rounded-2xl bg-amber-600 text-white text-xs font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-900/20"
+            >
+              Find
+            </button>
+          </div>
+        </div>
 
-                  <div className="flex items-center gap-1">
-                    <MapPin size={16} /> {property.state}
+        {/* Extended Filters Drawer */}
+        <AnimatePresence>
+          {isFilterOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className={`mt-4 overflow-hidden rounded-[2rem] border ${colors.card} p-8 shadow-2xl`}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {['propertytype', 'listingtype', 'state'].map((key) => (
+                  <div key={key} className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-amber-600">{key.replace('type', ' Type')}</label>
+                    <select 
+                      onChange={(e) => setFilters({...filters, [key]: e.target.value})}
+                      className={`w-full p-4 rounded-xl border outline-none ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'} text-sm`}
+                    >
+                      <option value="">All {key.replace('type', 's')}</option>
+                      {/* Mapping unique values here */}
+                    </select>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <MapPin size={16} /> {property.city}
-                  </div>
-                </div>
-                      <div className={`flex justify-between items-center text-sm ${currentTheme.text}`}>
-
-                  <div className="flex items-center gap-1">
-                    <Bed size={16} /> {property.bedroom} Beds
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Bath size={16} /> {property.bathroom} Baths
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Ruler size={16} /> {property.squarefoot} sqft
-                  </div>
-                </div>
-                {/* Select Button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleBuyNow(property);
-                  }}
-                  className="w-full bg-gradient-to-r from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 text-white py-3 rounded-lg flex justify-center items-center gap-2 font-semibold"
-                >
-                  Select Property <ArrowRight size={18} />
-                </button>
+                ))}
               </div>
             </motion.div>
-          ))}
-        </div>
-      )}
+          )}
+        </AnimatePresence>
+      </div>
 
-      {/* Modal for property details */}
-      <AnimatePresence>
-        {selectedProperty && (
-          <motion.div
-            className="fixed inset-0 bg-black/70 flex justify-center items-center z-50 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={closeModal}
-          >
-            <motion.div
-              className={`max-w-4xl w-full  ${currentTheme.bg} rounded-xl p-6 overflow-y-auto max-h-[90vh] relative shadow-2xl`}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Close Button */}
-              <button
-                onClick={closeModal}
-                className={`absolute top-4 right-4 text-xl ${theme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
+      {/* --- PROPERTY GRID --- */}
+      <div className="max-w-7xl mx-auto px-6">
+        {loading ? (
+          <LoadingModel loading={true} />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {propertyList.map((property, idx) => (
+              <motion.div
+                key={property.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                viewport={{ once: true }}
+                className={`group relative rounded-[2.5rem] border overflow-hidden transition-all duration-500 ${colors.card} hover:shadow-2xl hover:shadow-amber-900/10`}
               >
-                <X />
-              </button>
-              
-              {/* Property Details Header */}
-              <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-teal-600 to-red-400 bg-clip-text text-transparent">{selectedProperty.propertyname}</h2>
-              
-              {/* Image Carousel */}
-              <Swiper
-                spaceBetween={10}
-                pagination={{ clickable: true }}
-                autoplay={{ delay: 3000 }}
-                loop
-                modules={[Autoplay, Pagination]}
-                className="w-full h-64 mb-6 rounded-lg"
-              >
-                {selectedProperty.image?.map((img, i) => (
-                  <SwiperSlide key={i}>
-                    <img src={img} alt={`Slide ${i}`} className="w-full h-64 object-cover rounded-lg" />
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-
-              {/* Property Info */}
-              <div className={`p-4 rounded-xl shadow-md ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-50'}`}>
-                {/* Price & Type */}
-                <div className="flex justify-between items-center mb-4">
-                  <span className="flex items-center gap-2 font-bold text-lg text-red-600">
-                    <IndianRupee size={20} /> {selectedProperty.price}
-                  </span>
-                  <div className={`px-3 py-1 rounded-full text-sm ${theme === 'dark' ? 'bg-gray-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
-                    {selectedProperty.listingtype}
-                  </div>
-                </div>
-
-                {/* Details Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div className="flex items-center gap-2">
-                    <Home className="text-blue-500" size={18} />
-                    <span>{selectedProperty.propertytype}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="text-blue-500" size={18} />
-                    <span>
-                      {selectedProperty.city}, {selectedProperty.state}
+                {/* Media Section */}
+                <div className="h-72 relative overflow-hidden">
+                  <Swiper
+                    modules={[Autoplay, Pagination, EffectFade]}
+                    effect="fade"
+                    autoplay={{ delay: 3000 + idx * 500 }}
+                    pagination={{ clickable: true }}
+                    className="h-full"
+                  >
+                    {property.image?.map((img, i) => (
+                      <SwiperSlide key={i}>
+                        <img src={img} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="property" />
+                      </SwiperSlide>
+                    ))}
+                  </Swiper>
+                  <div className="absolute top-6 left-6 z-10">
+                    <span className="px-4 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-black text-[10px] font-black uppercase tracking-widest shadow-lg">
+                      {property.listingtype}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Bed className="text-blue-500" size={18} />
-                    <span>{selectedProperty.bedroom} Bedrooms</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Bath className="text-blue-500" size={18} />
-                    <span>{selectedProperty.bathroom} Bathrooms</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Ruler className="text-blue-500" size={18} />
-                    <span>{selectedProperty.squarefoot} sqft</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Building2 className="text-blue-500" size={18} />
-                    <span>Floor {selectedProperty.floor}</span>
+                  <div className="absolute bottom-6 right-6 z-10">
+                    <div className="px-4 py-2 rounded-xl bg-amber-600 text-white font-black text-sm flex items-center gap-1 shadow-xl">
+                      <IndianRupee size={14} /> {property.price}
+                    </div>
                   </div>
                 </div>
 
-                {/* Address */}
-                <div className="mb-4">
-                  <h3 className="font-semibold mb-2">Address</h3>
-                  <p>{selectedProperty.address}</p>
-                </div>
+                {/* Content Section */}
+                <div className="p-8 space-y-6">
+                  <div>
+                    <h3 className={`text-2xl font-bold tracking-tight mb-2 group-hover:text-amber-600 transition-colors ${colors.text}`}>
+                      {property.propertyname}
+                    </h3>
+                    <div className={`flex items-center gap-1 text-xs font-medium ${colors.sub}`}>
+                      <MapPin size={14} className="text-amber-600" /> {property.city}, {property.state}
+                    </div>
+                  </div>
 
-                {/* Amenities */}
-           <div className="flex flex-wrap gap-2 mb-4">
-                  {selectedProperty.aminities &&
-                    Array.isArray(selectedProperty.aminities) &&
-                    selectedProperty.aminities.map((item, index) => {
-                      try {
-                        const parsed = JSON.parse(item);
-                        const list = Array.isArray(parsed) ? parsed : [parsed];
-                        return list.map((val, i) => (
-                          <span
-                            key={`${index}-${i}`}
-                            className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
-                          >
-                            {val}
-                          </span>
-                        ));
-                      } catch {
-                        return (
-                          <span
-                            key={index}
-                            className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
-                          >
-                            {item}
-                          </span>
-                        );
-                      }
-                    })}
-                </div>
+                  <div className="grid grid-cols-3 gap-4 py-6 border-y border-slate-800/50">
+                    <div className="text-center">
+                      <Bed size={16} className="mx-auto mb-1 text-amber-600" />
+                      <p className={`text-[10px] font-black uppercase tracking-tighter ${colors.text}`}>{property.bedroom} Bed</p>
+                    </div>
+                    <div className="text-center">
+                      <Bath size={16} className="mx-auto mb-1 text-amber-600" />
+                      <p className={`text-[10px] font-black uppercase tracking-tighter ${colors.text}`}>{property.bathroom} Bath</p>
+                    </div>
+                    <div className="text-center">
+                      <Ruler size={16} className="mx-auto mb-1 text-amber-600" />
+                      <p className={`text-[10px] font-black uppercase tracking-tighter ${colors.text}`}>{property.squarefoot} ft²</p>
+                    </div>
+                  </div>
 
-                {/* Action Button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleBuyNow(selectedProperty);
-                    closeModal();
-                  }}
-                  className="w-full mt-6 bg-gradient-to-r from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 text-white py-3 rounded-lg flex justify-center items-center gap-2 font-semibold"
-                >
-                  Select This Property
-                </button>
-              </div>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => setSelectedProperty(property)}
+                      className={`flex-1 py-4 rounded-2xl border ${colors.card} text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all`}
+                    >
+                      Details
+                    </button>
+                    <button 
+                      onClick={() => handleBuyNow(property)}
+                      className="flex-[2] py-4 rounded-2xl bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-amber-700 transition-all shadow-lg shadow-amber-900/20"
+                    >
+                      Schedule viewing <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* --- DETAILED OVERLAY MODAL --- */}
+      <AnimatePresence>
+        {selectedProperty && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10"
+          >
+            <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-xl" onClick={() => setSelectedProperty(null)} />
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+              className={`relative w-full max-w-6xl h-full ${colors.card} border rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row`}
+            >
+               {/* Left Media (60%) */}
+               <div className="md:w-3/5 h-64 md:h-auto relative">
+                 <img src={selectedProperty.image[0]} className="w-full h-full object-cover" alt="hero" />
+                 <button onClick={() => setSelectedProperty(null)} className="absolute top-8 left-8 p-4 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-amber-600 transition-all">
+                   <X size={20} />
+                 </button>
+               </div>
+
+               {/* Right Info (40%) */}
+               <div className="md:w-2/5 p-12 overflow-y-auto custom-scrollbar flex flex-col justify-between">
+                 <div>
+                    <span className="text-amber-600 font-black uppercase tracking-widest text-[10px]">{selectedProperty.propertytype}</span>
+                    <h2 className={`text-4xl font-black tracking-tighter mt-2 mb-8 ${colors.text}`}>{selectedProperty.propertyname}</h2>
+                    
+                    <div className="space-y-8">
+                       <div className="flex justify-between items-end border-b border-slate-800 pb-4">
+                          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Pricing</p>
+                          <p className="text-2xl font-black text-amber-500">₹{selectedProperty.price}</p>
+                       </div>
+                       <div className="grid grid-cols-2 gap-6">
+                          <div>
+                            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Location</p>
+                            <p className={`text-sm font-bold ${colors.text}`}>{selectedProperty.city}, {selectedProperty.state}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Floor</p>
+                            <p className={`text-sm font-bold ${colors.text}`}>{selectedProperty.floor} of 20</p>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+
+                 <button 
+                   onClick={() => { handleBuyNow(selectedProperty); setSelectedProperty(null); }}
+                   className="mt-12 w-full py-5 rounded-2xl bg-amber-600 text-white text-xs font-black uppercase tracking-[0.3em] shadow-2xl shadow-amber-900/40 hover:bg-amber-700 transition-all"
+                 >
+                    Confirm Tour
+                 </button>
+               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Pagination */}
-      {pagination?.totalPages > 1 && (
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between mt-8 space-y-4 md:space-y-0">
-          <div className={`text-sm ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`}>
-            Showing <span className="font-medium">{(currentPage - 1) * limit + 1}</span> to{" "}
-            <span className="font-medium">{Math.min(currentPage * limit, pagination.totalCount)}</span> of{" "}
-            <span className="font-medium">{pagination.totalCount}</span> results
-          </div>
-          
-          {/* Pagination Controls */}
-          <div className="flex flex-wrap gap-2 justify-center md:justify-end">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className={`px-4 py-2 border rounded-md ${currentPage === 1 ? currentTheme.paginationDisabled : currentTheme.paginationHover}`}
-            >
-              Previous
-            </button>
-            {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-              let pageNum;
-              if (pagination.totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (currentPage <= 3) {
-                pageNum = i + 1;
-              } else if (currentPage >= pagination.totalPages - 2) {
-                pageNum = pagination.totalPages - 4 + i;
-              } else {
-                pageNum = currentPage - 2 + i;
-              }
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`px-4 py-2 border rounded-md ${currentPage === pageNum ? currentTheme.paginationActive : currentTheme.paginationHover}`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-            {pagination.totalPages > 5 && (
-              <span className="px-4 py-2">...</span>
-            )}
-            <button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, pagination.totalPages))}
-              disabled={currentPage === pagination.totalPages}
-              className={`px-4 py-2 border rounded-md ${currentPage === pagination.totalPages ? currentTheme.paginationDisabled : currentTheme.paginationHover}`}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

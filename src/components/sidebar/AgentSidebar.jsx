@@ -1,18 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
-  Menu,
-  X,
-  ChevronDown,
-  ChevronUp,
-  Home,
-  ShoppingCart,
-  Users,
-  Package,
-  Star,
-  MessageSquare,
-  Calendar,
-  FileText,
- 
+   ChevronDown,  ShoppingCart, Users,
+  Package, Star, MessageSquare, Calendar, FileText, LayoutDashboard,
+  ShieldCheck, Banknote, Briefcase
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { useSidebar } from "../../context/SidebarContext";
@@ -22,371 +12,244 @@ import PermissionProtectedAction from "../../Authorization/PermissionProtectedAc
 export default function AgentSidebar() {
   const [openDropdown, setOpenDropdown] = useState(null);
   const { theme } = useTheme();
-  const { toggleSidebar, isOpen } = useSidebar();
+  const {isOpen } = useSidebar();
+  const isDark = theme === 'dark';
 
   const toggleDropdown = (menu) => {
     setOpenDropdown(openDropdown === menu ? null : menu);
   };
 
+  const sidebarClasses = useMemo(() => {
+    return `fixed top-0 left-0 z-40 h-screen transition-all duration-300 ease-in-out border-r
+    ${isOpen ? "w-72" : "w-0"} overflow-hidden backdrop-blur-xl shadow-2xl
+    ${isDark 
+      ? 'bg-slate-900/95 border-slate-800 text-slate-100' 
+      : 'bg-white/95 border-gray-200 text-gray-800'}`;
+  }, [isOpen, isDark]);
+
   return (
     <div className="relative">
-      {/* Toggle Button with Theme Support */}
-      <button
-        onClick={toggleSidebar}
-        className={`fixed top-6 left-6 z-50 p-3 rounded-xl backdrop-blur-lg border transition-all duration-300 shadow-lg hover:scale-105 ${isOpen
-          ? `left-[17rem] ${theme === 'dark'
-            ? 'bg-slate-800/90 border-slate-700 text-white hover:bg-slate-700/90'
-            : 'bg-white/90 border-gray-200 text-gray-700 hover:bg-gray-50/90'
-          }`
-          : theme === 'dark'
-            ? 'bg-slate-800/90 border-slate-700 text-white hover:bg-slate-700/90'
-            : 'bg-white/90 border-gray-200 text-gray-700 hover:bg-gray-50/90'
-          }`}
-      >
-        {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-      </button>
+      {/* Dynamic Toggle Button */}
+    
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed top-0 left-0 z-40 h-screen font-inter transition-all duration-300 ease-in-out
-        ${isOpen ? "w-72" : "w-0"} overflow-hidden ${theme === 'dark'
-            ? 'bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 border-r border-slate-700/50'
-            : 'bg-gradient-to-b from-white via-gray-50 to-gray-100 border-r border-gray-200/50'
-          } backdrop-blur-xl shadow-2xl`}
-      >
+      <aside className={sidebarClasses}>
         {isOpen && (
-          <>
-            {/* Logo Section */}
-            <div className={`flex items-center justify-center h-20 border-b ${theme === 'dark' ? 'border-slate-700/50' : 'border-gray-200/50'
-              } bg-gradient-to-r ${theme === 'dark'
-                ? 'from-blue-900/20 to-purple-900/20'
-                : 'from-blue-50 to-purple-50'
-              }`}>
-              <a href="/" className="flex items-center space-x-3 group">
-                <div className="relative">
-                  <img
-                    src={navbarlogo}
-                    alt="Company Logo"
-                    className="h-12 w-auto object-contain transition-all duration-300 group-hover:scale-105"
-                  />
-                  <div className={`absolute inset-0 rounded-lg opacity-0 group-hover:opacity-20 transition-opacity ${theme === 'dark' ? 'bg-blue-400' : 'bg-blue-600'
-                    }`}></div>
-                </div>
+          <div className="flex flex-col h-full">
+            {/* Branding */}
+            <div className={`flex items-center justify-center h-24 border-b ${isDark ? 'border-slate-800' : 'border-gray-100'}`}>
+              <a href="/" className="hover:scale-105 transition-transform duration-300">
+                <img src={navbarlogo} alt="Logo" className="h-12 w-auto object-contain" />
               </a>
             </div>
 
-            {/* Navigation Content */}
-            <div className="h-[calc(100vh-5rem)] overflow-y-auto py-6 px-4 custom-scrollbar">
-              <ul className="space-y-2 font-medium">
-                <NavItem
-                  href="agent-dashboard"
-                  icon={<Home className="w-5 h-5" />}
-                  label="Dashboard"
-                  isActive={true}
-                  theme={theme}
-                />
+            {/* Nav Items */}
+            <div className="flex-1 overflow-y-auto py-6 px-4 custom-scrollbar space-y-8">
+              {/* SECTION: Overview */}
+              <div>
+                <p className={`px-4 mb-4 text-[10px] font-bold uppercase tracking-[0.2em] ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>
+                  Overview
+                </p>
+                <ul className="space-y-1">
+                  <NavItem href="/agent-dashboard" icon={<LayoutDashboard size={20}/>} label="Dashboard" isActive={true} theme={theme} />
+                  
+                  <PermissionProtectedAction action="view" module="CustomerSupport Management">
+                    <NavItem href="/viewallinquary" icon={<FileText size={20}/>} label="Customer Support" theme={theme} />
+                  </PermissionProtectedAction>
 
-                <PermissionProtectedAction action="view" module="CustomerSupport Management">
-                  <NavItem
-                    href="/viewallinquary"
-                    icon={<FileText className="w-5 h-5" />}
-                    label="Customer Support"
+                  <PermissionProtectedAction action="view" module="AgentSupport Management">
+                    <NavItem href="/getresquset" icon={<MessageSquare size={20}/>} label="Requests" theme={theme} />
+                  </PermissionProtectedAction>
+                </ul>
+              </div>
+
+              {/* SECTION: Operations */}
+              <div>
+                <p className={`px-4 mb-4 text-[10px] font-bold uppercase tracking-[0.2em] ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>
+                  Management
+                </p>
+                <ul className="space-y-1">
+                  <DropdownMenu
+                    icon={<Users size={20} />}
+                    label="Staffing"
+                    menuKey="UserManagement"
                     theme={theme}
+                    openDropdown={openDropdown}
+                    toggleDropdown={toggleDropdown}
+                    items={[
+                      { href: "/addagent", label: "Add Staff", permission: { action: "create", module: "Team Management" } },
+                      { href: "/viewallagentlist", label: "View Staff List", permission: { action: "view", module: "Team Management" } },
+                    ]}
                   />
-                </PermissionProtectedAction>
 
-                <PermissionProtectedAction action="view" module="AgentSupport Management">
-                  <NavItem
-                    href="/getresquset"
-                    icon={<MessageSquare className="w-5 h-5" />}
-                    label="Requests"
+                  <DropdownMenu
+                    icon={<ShoppingCart size={20} />}
+                    label="Bookings"
+                    menuKey="Bookings"
+                    openDropdown={openDropdown}
+                    toggleDropdown={toggleDropdown}
                     theme={theme}
+                    items={[
+                      { href: "/viewallbookings", label: "All Bookings", permission: { action: "view", module: "Booking Management" } },
+                      { href: "/createbookingByAgent", label: "New Booking", permission: { action: "create", module: "Booking Management" } },
+                    ]}
                   />
 
-                </PermissionProtectedAction>
-                <DropdownMenu
-                  icon={<Users className="w-5 h-5" />}
-                  label="User Management"
-                  menuKey="UserManagement"
-                  theme={theme}
-                  openDropdown={openDropdown}
-                  toggleDropdown={toggleDropdown}
-                  items={[
-                    {
+                  <DropdownMenu
+                    icon={<Package size={20} />}
+                    label="Property"
+                    menuKey="Property"
+                    openDropdown={openDropdown}
+                    toggleDropdown={toggleDropdown}
+                    theme={theme}
+                    items={[
+                      { href: "/addproperty", label: "Add New", permission: { action: "create", module: "Property Management" } },
+                      { href: "/propertydetailsagent", label: "Details", permission: { action: "view", module: "Property Management" } }
+                    ]}
+                  />
 
-                      href: "/addagent", label: "Add Staff",
-                      permission: { action: "create", module: "Team Management" }
-                    },
-                    {
-                      href: "/viewallagentlist",
-                      label: "View Staff List",
-                      permission: { action: "view", module: "Team Management" }
-                    },
-                    {
-                      href: "/agentdetails", label: "Staff Details",
-                      permission: { action: "view", module: "Team Management" }
-                    },
-                  ]}
-                />
+                  <DropdownMenu
+                    icon={<Banknote size={20} />}
+                    label="Home Loans"
+                    menuKey="homeloan"
+                    openDropdown={openDropdown}
+                    toggleDropdown={toggleDropdown}
+                    theme={theme}
+                    items={[
+                      { href: "/viewhomeloanrequest", label: "View Request", permission: { action: "view", module: "Home Loan Management" } },
+                      { href: "/homeloanrequestform", label: "Apply for Loan", permission: { action: "create", module: "Home Loan Management" } }
+                    ]}
+                  />
 
-                <DropdownMenu
-                  icon={<ShoppingCart className="w-5 h-5" />}
-                  label="Bookings"
-                  menuKey="Bookings"
-                  openDropdown={openDropdown}
-                  toggleDropdown={toggleDropdown}
-                  theme={theme}
-                  items={[
-                    {
-                      href: "/viewallbookings",
-                      label: "View Bookings",
-                      permission: { action: "view", module: "Booking Management" }
-                    },
-                    {
-                      href: "/createbookingByAgent",
-                      label: "Create Booking",
-                      permission: { action: "create", module: "Booking Management" }
-                    },
-                    {
-                      href: "/viewallbookingdetails",
-                      label: "Booking Details",
-                      permission: { action: "view", module: "Booking Management" }
-                    }
-                  ]}
-                />
+                  <DropdownMenu
+                    icon={<Calendar size={20} />}
+                    label="Appointments"
+                    menuKey="Appointment"
+                    openDropdown={openDropdown}
+                    toggleDropdown={toggleDropdown}
+                    theme={theme}
+                    items={[
+                      { href: "/selectappoinmentproperty", label: "Schedule New", permission: { action: "create", module: "Appoinment Management" } },
+                      { href: "/getappoinment", label: "View Schedule", permission: { action: "view", module: "Appoinment Management" } }
+                    ]}
+                  />
 
-                <DropdownMenu
-                  icon={<Package className="w-5 h-5" />}
-                  label="Property"
-                  menuKey="Property"
-                  openDropdown={openDropdown}
-                  toggleDropdown={toggleDropdown}
-                  theme={theme}
-                  items={[
-                    {
-                      href: "/addproperty",
-                      label: "Add Property",
-                      permission: { action: "create", module: "Property Management" }
-                    },
-                    {
-                      href: "/propertydetailsagent",
-                      label: "Property Details",
-                      permission: { action: "view", module: "Property Management" }
-                    }
-                  ]}
-                />
-                <DropdownMenu
-                  icon={<Users className="w-5 h-5" />}
-                  label="Home Loan Management"
-                  menuKey="homeloan"
-                  openDropdown={openDropdown}
-                  toggleDropdown={toggleDropdown}
-                  theme={theme}
-                  items={[
-                    {
-                      href: "/viewhomeloanrequest", label: "View Request",
-                      permission: { action: "view", module: "Home Loan Managementt" }
-                    },
-                    { href: "/homeloanrequestform", label: "Request Loan", permission: { action: "create", module: "Home Loan Management" } }
-                  ]}
-                />
+                  <DropdownMenu
+                    icon={<Briefcase size={20} />}
+                    label="Sessions"
+                    menuKey="ManageSession"
+                    openDropdown={openDropdown}
+                    toggleDropdown={toggleDropdown}
+                    theme={theme}
+                    items={[
+                      { href: "/viewallsession", label: "All Sessions", permission: { action: "view", module: "Session Management" } },
+                      { href: "/createsession", label: "Create Session", permission: { action: "create", module: "Session Management" } }
+                    ]}
+                  />
+                </ul>
+              </div>
 
-                <DropdownMenu
-                  icon={<Calendar className="w-5 h-5" />}
-                  label="Appointments"
-                  menuKey="Appointment"
-                  openDropdown={openDropdown}
-                  toggleDropdown={toggleDropdown}
-                  theme={theme}
-                  items={[
-                    {
-                      href: "/selectappoinmentproperty",
-                      label: "Create Appointment",
-                      permission: { action: "create", module: "Appoinment Management" }
-                    },
-                    {
-                      href: "/getappoinment",
-                      label: "View Appointments",
-                      permission: { action: "view", module: "Appoinment Management" }
-                    }
-                  ]}
-                />
-
-                <DropdownMenu
-                  icon={<Users className="w-5 h-5" />}
-                  label="Manage Session"
-                  menuKey="ManageSession"
-                  openDropdown={openDropdown}
-                  toggleDropdown={toggleDropdown}
-                  theme={theme}
-                  items={[
-                    {
-                      href: "/viewallsession", label: "All Sessions",
-                      permission: { action: "view", module: "Session Management" }
-                    },
-                    { href: "/createsession", label: "Create Session", permission: { action: "create", module: "Session Management" } }
-                  ]}
-                />
-
+              {/* SECTION: Social */}
+              <div className="pt-4 border-t border-slate-800/10 dark:border-slate-800/50">
                 <PermissionProtectedAction action="view" module="Review Management">
-                  <NavItem
-                    href="/customerreviews"
-                    icon={<Star className="w-5 h-5" />}
-                    label="Reviews"
-                    theme={theme}
-                  />
+                  <NavItem href="/customerreviews" icon={<Star size={20}/>} label="Reviews" theme={theme} />
                 </PermissionProtectedAction>
-              </ul>
+              </div>
             </div>
-          </>
+
+            {/* Footer / Profile Placeholder */}
+            <div className={`p-4 border-t ${isDark ? 'border-slate-800' : 'border-gray-100'}`}>
+               <div className={`flex items-center gap-3 p-3 rounded-xl ${isDark ? 'bg-slate-800/50' : 'bg-gray-50'}`}>
+                  <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs">A</div>
+                  <div className="flex-1 overflow-hidden">
+                    <p className="text-xs font-bold truncate">Agent Portal</p>
+                    <p className="text-[10px] opacity-50 truncate">Support Staff</p>
+                  </div>
+                  <ShieldCheck size={16} className="text-blue-500" />
+               </div>
+            </div>
+          </div>
         )}
       </aside>
 
-      {/* Custom Scrollbar Styles */}
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: ${theme === 'dark' ? '#1e293b' : '#f1f5f9'};
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: ${theme === 'dark' ? '#475569' : '#cbd5e1'};
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: ${theme === 'dark' ? '#64748b' : '#94a3b8'};
+      {/* Global CSS for Custom Scrollbar */}
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { 
+          background: ${isDark ? '#334155' : '#cbd5e1'}; 
+          border-radius: 10px; 
         }
       `}</style>
     </div>
   );
 }
 
+// Sub-component: NavItem
 function NavItem({ href, icon, label, isActive = false, theme }) {
+  const isDark = theme === 'dark';
   return (
     <li>
       <a
         href={href}
-        className={`flex items-center p-3 rounded-xl transition-all duration-200 group relative overflow-hidden ${isActive
-          ? theme === 'dark'
-            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/25"
-            : "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/25"
-          : theme === 'dark'
-            ? "hover:bg-slate-800/60 text-slate-300 hover:text-white hover:shadow-md"
-            : "hover:bg-white/60 text-gray-600 hover:text-gray-900 hover:shadow-md"
-          }`}
+        className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 group relative
+        ${isActive
+          ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+          : isDark 
+            ? "hover:bg-slate-800/80 text-slate-400 hover:text-white" 
+            : "hover:bg-gray-100 text-gray-600 hover:text-blue-600"
+        }`}
       >
-        {/* Active Indicator */}
-        {isActive && (
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full"></div>
-        )}
-
-        {/* Icon with Animation */}
-        <span className={`transition-all duration-200 group-hover:scale-110 ${isActive
-          ? "text-white"
-          : theme === 'dark'
-            ? "text-blue-400"
-            : "text-blue-500"
-          }`}>
+        <span className={`transition-transform duration-200 group-hover:scale-110 ${isActive ? 'text-white' : 'text-blue-500'}`}>
           {icon}
         </span>
-
-        {/* Label */}
-        <span className="ml-4 font-medium tracking-wide">{label}</span>
-
-        {/* Hover Effect Background */}
-        <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity rounded-xl ${theme === 'dark' ? 'bg-blue-400' : 'bg-blue-600'
-          }`}></div>
+        <span className="ml-3 text-sm font-semibold tracking-wide">{label}</span>
       </a>
     </li>
   );
 }
 
-function DropdownMenu({
-  icon,
-  label,
-  menuKey,
-  openDropdown,
-  toggleDropdown,
-  items,
-  theme,
-}) {
+// Sub-component: DropdownMenu
+function DropdownMenu({ icon, label, menuKey, openDropdown, toggleDropdown, items, theme }) {
   const isOpen = openDropdown === menuKey;
+  const isDark = theme === 'dark';
 
   return (
     <li>
       <button
         onClick={() => toggleDropdown(menuKey)}
-        className={`flex items-center w-full p-3 rounded-xl transition-all duration-200 group relative overflow-hidden ${isOpen
-          ? theme === 'dark'
-            ? "bg-slate-800/60 text-white shadow-md"
-            : "bg-white/60 text-gray-900 shadow-md"
-          : theme === 'dark'
-            ? "hover:bg-slate-800/60 text-slate-300 hover:text-white hover:shadow-md"
-            : "hover:bg-white/60 text-gray-600 hover:text-gray-900 hover:shadow-md"
-          }`}
+        className={`flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 group
+        ${isOpen 
+          ? isDark ? "bg-slate-800 text-white" : "bg-blue-50 text-blue-600"
+          : isDark ? "hover:bg-slate-800 text-slate-400 hover:text-white" : "hover:bg-gray-100 text-gray-600"}`}
       >
-        {/* Icon with Animation */}
-        <span className={`transition-all duration-200 group-hover:scale-110 ${theme === 'dark' ? "text-blue-400" : "text-blue-500"
-          }`}>
+        <span className={`transition-transform duration-200 group-hover:scale-110 ${isOpen ? 'text-blue-500' : 'text-blue-500/70'}`}>
           {icon}
         </span>
-
-        {/* Label */}
-        <span className="ml-4 font-medium tracking-wide">{label}</span>
-
-        {/* Chevron with Rotation */}
-        <span className={`ml-auto transition-transform duration-200 ${isOpen ? "rotate-180" : ""
-          } ${theme === 'dark' ? "text-slate-400" : "text-gray-400"}`}>
-          {isOpen ? (
-            <ChevronUp className="w-4 h-4" />
-          ) : (
-            <ChevronDown className="w-4 h-4" />
-          )}
-        </span>
-
-        {/* Hover Effect Background */}
-        <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity rounded-xl ${theme === 'dark' ? 'bg-blue-400' : 'bg-blue-600'
-          }`}></div>
+        <span className="ml-3 text-sm font-semibold tracking-wide flex-1 text-left">{label}</span>
+        <ChevronDown size={14} className={`transition-transform duration-300 ${isOpen ? "rotate-180 text-blue-500" : "opacity-40"}`} />
       </button>
 
-      {/* Dropdown Items with Slide Animation */}
-      <div className={`overflow-hidden transition-all duration-300 ${isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-        }`}>
-        <ul className={`ml-6 mt-2 space-y-1 border-l-2 border-opacity-30 pl-4 ${theme === 'dark' ? 'border-blue-400' : 'border-blue-500'
-          }`}>
+      <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? "max-h-96 py-2" : "max-h-0"}`}>
+        <ul className={`ml-6 border-l-2 ${isDark ? 'border-slate-800' : 'border-gray-100'} space-y-1`}>
           {items.map((item, idx) => {
             const content = (
               <a
                 href={item.href}
-                className={`block py-2.5 px-4 text-sm rounded-lg transition-all duration-200 group relative ${theme === 'dark'
-                  ? "text-slate-400 hover:text-white hover:bg-slate-800/40"
-                  : "text-gray-500 hover:text-gray-900 hover:bg-white/40"
-                  } hover:shadow-sm hover:translate-x-1`}
+                className={`flex items-center py-2 px-5 text-xs font-medium rounded-r-lg transition-all duration-200
+                ${isDark ? "text-slate-500 hover:text-blue-400 hover:bg-blue-400/5" : "text-gray-500 hover:text-blue-600 hover:bg-blue-50"}`}
               >
-                {/* Bullet Point */}
-                <span className={`inline-block w-1.5 h-1.5 rounded-full mr-3 transition-colors ${theme === 'dark'
-                  ? "bg-slate-600 group-hover:bg-blue-400"
-                  : "bg-gray-400 group-hover:bg-blue-500"
-                  }`}></span>
+                <span className={`w-1.5 h-1.5 rounded-full mr-3 ${isDark ? 'bg-slate-700' : 'bg-gray-300'}`}></span>
                 {item.label}
               </a>
             );
 
-
             return (
               <li key={idx}>
                 {item.permission ? (
-                  <PermissionProtectedAction
-                    action={item.permission.action}
-                    module={item.permission.module}
-                  >
+                  <PermissionProtectedAction action={item.permission.action} module={item.permission.module}>
                     {content}
                   </PermissionProtectedAction>
-                ) : (
-                  content
-                )}
+                ) : content}
               </li>
             );
           })}

@@ -2,81 +2,45 @@ import React, { useCallback, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { User, Briefcase, GraduationCap, FileText, Moon, Sun, Image } from "lucide-react";
+import { User, Briefcase, Image, Check, ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
 import { http } from "../../../axios/axios";
 import useGetRole from "../../../hooks/useGetRole";
 import { useTheme } from "../../../context/ThemeContext";
 import { useToast } from "../../../model/SuccessToasNotification";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Validation schemas for each step
+// Validation schemas remain as you defined them
 const stepSchemas = [
   yup.object({
     name: yup.string().required("Full Name is required"),
-    email: yup.string().email().required("Email is required"),
-    password: yup.string().required("Password is required").min(6, "Password must be at least 6 characters"),
-    phone: yup.string().required("Phone number is required").matches(/^[0-9]{10}$/, "Phone number must be 10 digits"),
-    address: yup.string().required("Address is required"),
-    state: yup.string().required("State is required"),
-    city: yup.string().required("City is required"),
-    dateOfBirth: yup.date().required("Date of birth is required").max(new Date(), "Date cannot be in the future"),
-    profilePhoto: yup.mixed()
-      .required("Profile photo is required")
-      .test("fileType", "Only image files are accepted (JPEG, PNG)", (value) => {
-        if (!value) return false;
-        if (value instanceof File) {
-          return value.type.startsWith("image/");
-        }
-        return false;
-      }),
-    aadharNumber: yup
-      .string()
-      .required("Aadhar number is required")
-      .matches(/^\d{12}$/, "Aadhar must be 12 digits"),
-    panNumber: yup
-      .string()
-      .required("PAN number is required")
-      .matches(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format"),
+    email: yup.string().email("Invalid email").required("Email is required"),
+    password: yup.string().required("Password is required").min(6, "Min 6 characters"),
+    phone: yup.string().required("Required").matches(/^[0-9]{10}$/, "Must be 10 digits"),
+    address: yup.string().required("Address required"),
+    state: yup.string().required("State required"),
+    city: yup.string().required("City required"),
+    dateOfBirth: yup.date().required("DOB required").max(new Date(), "Invalid date"),
+    profilePhoto: yup.mixed().required("Photo required"),
+    aadharNumber: yup.string().required("Aadhar required").matches(/^\d{12}$/, "12 digits"),
+    panNumber: yup.string().required("PAN required").matches(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid format"),
   }),
   yup.object({
-    previousCompany: yup.string().required("Previous Company is required"),
-    role: yup.string().required("Designation is required"),
-    experienceYears: yup
-      .number()
-      .typeError("Must be a number")
-      .required("Experience is required")
-      .min(0, "Experience cannot be negative"),
-    previousSalary: yup
-      .number()
-      .typeError("Must be a number")
-      .required("Previous salary is required")
-      .min(0, "Salary cannot be negative"),
-    currentSalary: yup
-      .number()
-      .typeError("Must be a number")
-      .required("Current salary is required")
-      .min(0, "Salary cannot be negative"),
-    joiningDate: yup.date().required("Joining date is required"),
-    skills: yup
-      .string()
-      .required("Skills are required")
-      .test("is-valid-array", "Please enter at least one skill", (value) => {
-        return value && value.split(",").map(s => s.trim()).filter(Boolean).length > 0;
-      }),
+    previousCompany: yup.string().required("Required"),
+    role: yup.string().required("Required"),
+    experienceYears: yup.number().typeError("Number required").required().min(0),
+    previousSalary: yup.number().typeError("Number required").required().min(0),
+    currentSalary: yup.number().typeError("Number required").required().min(0),
+    joiningDate: yup.date().required("Required"),
+    skills: yup.string().required("Required"),
   }),
 ];
 
-
-
-
-
 const AddAgent = () => {
   const { theme } = useTheme();
-  const totalSteps = 2; // update to match actual number of steps
+  const isDark = theme === "dark";
   const [currentStep, setCurrentStep] = useState(0);
   const [filePreviews, setFilePreviews] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
   const { RolesPermessionData } = useGetRole();
   const { addToast } = useToast();
 
@@ -84,7 +48,6 @@ const AddAgent = () => {
     register,
     handleSubmit,
     trigger,
-    watch,
     setValue,
     formState: { errors },
     reset,
@@ -93,418 +56,210 @@ const AddAgent = () => {
     mode: "onTouched",
   });
 
-  const watchedFiles = watch();
-
-  // Effect to show toast on success or error
-  useEffect(() => {
-    if (submitSuccess) {
-      addToast("Agent added successfully!", "success");
-    }
-  }, [submitSuccess, addToast]);
-
-  useEffect(() => {
-    if (submitError) {
-      addToast(submitError, "error");
-    }
-  }, [submitError, addToast]);
-
   const onSubmit = async (data) => {
-    const isValid = await trigger();
-    if (!isValid) return;
-
-    if (currentStep < totalSteps - 1) {
-      setCurrentStep(prev => prev + 1);
+    if (currentStep < stepSchemas.length - 1) {
+      const isStepValid = await trigger();
+      if (isStepValid) setCurrentStep((prev) => prev + 1);
       return;
     }
 
     setIsSubmitting(true);
-    setSubmitError(null);
-    setSubmitSuccess(false);
-
     try {
       const formData = new FormData();
-
-      // Append all form data to FormData
-      for (const key in data) {
+      Object.keys(data).forEach((key) => {
         if (data[key] instanceof File) {
           formData.append(key, data[key]);
-        } else if (data[key] !== null && data[key] !== undefined) {
-          if (data[key] instanceof Date) {
-            formData.append(key, data[key].toISOString());
-          } else {
-            formData.append(key, data[key]);
-          }
+        } else if (data[key] instanceof Date) {
+          formData.append(key, data[key].toISOString());
+        } else {
+          formData.append(key, data[key]);
         }
-      }
+      });
 
-      const response = await http.post("/addagent", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      await http.post("/addagent", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
         withCredentials: true,
       });
 
-      if (response.status !== 200 && response.status !== 201) {
-        setSubmitError(`Error: ${response.status} - ${response.data?.message || "Failed to add agent"}`);
-        return;
-      }
-
+      addToast("Agent onboarded successfully!", "success");
       reset();
       setCurrentStep(0);
       setFilePreviews({});
-      setSubmitSuccess(true);
     } catch (error) {
-      setSubmitError(error.response?.data?.message || error.message || "Failed to submit form");
+      addToast(error.response?.data?.message || "Submission failed", "error");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const onBack = () => {
-    if (currentStep > 0) setCurrentStep(prev => prev - 1);
-  };
-
-  const Input = useCallback(
-    ({ name, label, type = "text", placeholder, options }) => {
-      if (type === "select" && options) {
-        return (
-          <div className="">
-            <label className={`block text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-              {label}
-            </label>
-            <select
-              {...register(name)}
-              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${theme === 'dark'
-                ? 'bg-gray-700 border-gray-600 text-white'
-                : 'border-gray-300'
-                }`}
-            >
-              <option value="">Select {label}</option>
-              {options.map((option, index) => (
-                <option key={index} value={option.value || option}>
-                  {option.label || option}
-                </option>
-              ))}
-            </select>
-            {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]?.message}</p>}
-          </div>
-        );
-      }
-      return (
-        <div className="">
-          <label className={`block text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-            {label}
-          </label>
-          <input
-            type={type}
-            {...register(name)}
-            placeholder={placeholder}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${theme === 'dark'
-              ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-              : 'border-gray-300 placeholder-gray-500'
-              }`}
-          />
-          {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]?.message}</p>}
-        </div>
-      );
-    },
-    [register, errors, theme]
+  // Reusable Input Component
+  const FormField = ({ name, label, type = "text", placeholder, options }) => (
+    <div className="flex flex-col gap-1.5">
+      <label className={`text-sm font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+        {label}
+      </label>
+      {type === "select" ? (
+        <select
+          {...register(name)}
+          className={`px-4 py-3 rounded-xl border transition-all ${
+            isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-slate-200"
+          } focus:ring-2 focus:ring-indigo-500 outline-none`}
+        >
+          <option value="">Choose {label}</option>
+          {options?.map((opt, i) => (
+            <option key={i} value={opt.value || opt}>{opt.label || opt}</option>
+          ))}
+        </select>
+      ) : (
+        <input
+          type={type}
+          {...register(name)}
+          placeholder={placeholder}
+          className={`px-4 py-3 rounded-xl border transition-all ${
+            isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-slate-200"
+          } focus:ring-2 focus:ring-indigo-500 outline-none`}
+        />
+      )}
+      {errors[name] && <span className="text-rose-500 text-[10px] font-bold uppercase tracking-wider">{errors[name].message}</span>}
+    </div>
   );
 
-  const FileInput = useCallback(({ name, label, required = false }) => {
-    const handleFileChange = (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        setValue(name, file, { shouldValidate: true });
-        const previewUrl = URL.createObjectURL(file);
-        setFilePreviews(prev => ({ ...prev, [name]: { url: previewUrl, name: file.name, type: file.type } }));
-      } else {
-        setFilePreviews(prev => {
-          const newPreviews = { ...prev };
-          delete newPreviews[name];
-          return newPreviews;
-        });
-        setValue(name, null, { shouldValidate: true });
-      }
-    };
-
-    return (
-      <div className="">
-        <label className={`block text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
-        <div className={`flex items-center justify-center w-full border-2 border-dashed rounded-xl p-6 ${theme === 'dark' ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50'}`}>
-          <label className="flex flex-col items-center justify-center w-full cursor-pointer">
-            <div className="flex flex-col items-center justify-center">
-              <Image className={`w-8 h-8 mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-              <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                Click to upload image (JPEG, PNG)
-              </p>
-            </div>
-            <input
-              type="file"
-              onChange={handleFileChange}
-              accept="image/*"
-              className="hidden"
-            />
-          </label>
-        </div>
-        {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]?.message}</p>}
-        {filePreviews[name] && (
-          <div className="mt-4">
-            <p className={`text-xs mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              Preview of {filePreviews[name].name}:
-            </p>
-            <img
-              src={filePreviews[name].url}
-              alt="Preview"
-              className="w-full max-w-xs h-auto object-contain rounded-lg border"
-              onLoad={() => URL.revokeObjectURL(filePreviews[name].url)}
-            />
-          </div>
-        )}
-      </div>
-    );
-  }, [setValue, filePreviews, errors, theme]);
-
-  // Render current step form
-  const renderStep = () => {
-    switch (currentStep) {
-      case 0:
-        return (
-          <div className={`rounded-2xl shadow-lg p-8 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-            {/* Personal Info */}
-            <div className="flex flex-col sm:flex-row sm:items-center mb-6 text-center sm:text-left">
-              {/* Icon Section */}
-              <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto sm:mx-0 sm:mr-4 mb-3 sm:mb-0 ${theme === "dark" ? "bg-blue-900" : "bg-blue-100"
-                  }`}
-              >
-                <User
-                  className={`w-6 h-6 ${theme === "dark" ? "text-blue-300" : "text-blue-600"
-                    }`}
-                />
-              </div>
-
-              {/* Text Section */}
-              <div>
-                <h2
-                  className={`text-xl sm:text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-800"
-                    }`}
-                >
-                  Personal Info
-                </h2>
-                <p className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>
-                  Basic agent details
-                </p>
-              </div>
-            </div>
-
-            {/* Inputs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Input name="name" label="Full Name" placeholder="John Doe" />
-              <Input name="email" type="email" label="Email" placeholder="john@example.com" />
-              <Input name="password" type="password" label="Password" placeholder="At least 6 characters" />
-              <Input name="phone" type="tel" label="Phone" placeholder="10 digits" />
-              <Input name="dateOfBirth" type="date" label="Date of Birth" />
-              <Input name="address" label="Address" placeholder="Full address" />
-
-              <Input
-                name="state"
-                label="State"
-                type="select"
-                options={[
-                  { value: "Maharashtra", label: "Maharashtra" },
-                  { value: "Uttar Pradesh", label: "Uttar Pradesh" },
-                  { value: "Karnataka", label: "Karnataka" },
-                  { value: "Tamil Nadu", label: "Tamil Nadu" },
-                  { value: "Delhi", label: "Delhi" },
-                  { value: "West Bengal", label: "West Bengal" },
-                  { value: "Gujarat", label: "Gujarat" },
-                  { value: "Rajasthan", label: "Rajasthan" }
-                ]}
-              />
-              <Input
-                name="city"
-                label="City"
-                type="select"
-                options={[
-                  { value: "Mumbai", label: "Mumbai" },
-                  { value: "Pune", label: "Pune" },
-                  { value: "Nagpur", label: "Nagpur" },
-                  { value: "Nashik", label: "Nashik" },
-                  { value: "Ahmedabad", label: "Ahmedabad" },
-                  { value: "Surat", label: "Surat" },
-                  { value: "Vadodara", label: "Vadodara" },
-                  { value: "Jaipur", label: "Jaipur" },
-                  { value: "Udaipur", label: "Udaipur" },
-                  { value: "Jodhpur", label: "Jodhpur" },
-                  { value: "Kolkata", label: "Kolkata" },
-                  { value: "Howrah", label: "Howrah" },
-                  { value: "Darjeeling", label: "Darjeeling" }
-                ]}
-              />
-
-              <Input name="aadharNumber" label="Aadhar Number" placeholder="123412341234" />
-              <Input name="panNumber" label="PAN Number" placeholder="ABCDE1234F" />
-              <FileInput
-                name="profilePhoto"
-                label="Profile Photo"
-                required
-              />
-            </div>
-          </div>
-        );
-      case 1:
-        return (
-          <div className={`rounded-2xl shadow-lg p-8 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-            {/* Professional Info */}
-            <div className="flex items-center mb-6 flex-wrap sm:flex-nowrap">
-              {/* Icon Box */}
-              <div
-                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mr-3 sm:mr-4 mb-2 sm:mb-0 ${theme === "dark" ? "bg-green-900" : "bg-green-100"
-                  }`}
-              >
-                <Briefcase
-                  className={`w-5 h-5 sm:w-6 sm:h-6 ${theme === "dark" ? "text-green-300" : "text-green-600"
-                    }`}
-                />
-              </div>
-
-              {/* Text Section */}
-              <div>
-                <h2
-                  className={`text-lg sm:text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-800"
-                    }`}
-                >
-                  Professional Info
-                </h2>
-                <p
-                  className={`text-sm sm:text-base ${theme === "dark" ? "text-gray-400" : "text-gray-600"
-                    }`}
-                >
-                  Work experience details
-                </p>
-              </div>
-            </div>
-
-            {/* Inputs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Input name="previousCompany" label="Previous Company" placeholder="Company name" />
-
-              <Input
-                name="role"
-                label="Role"
-                type="select"
-                options={RolesPermessionData.map(role => ({
-                  value: role.roleName,
-                  label: role.roleName
-                }))}
-              />
-
-              <Input name="experienceYears" label="Experience (Years)" type="number" placeholder="e.g. 5" />
-              <Input name="previousSalary" label="Previous Salary" type="number" placeholder="In inr" />
-              <Input name="currentSalary" label="Expected Salary" type="number" placeholder="In Inr" />
-              <Input name="joiningDate" label="Joining Date" type="date" />
-            </div>
-            {/* Skills */}
-            <div className="mt-6">
-              <label className={`block text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                Skills
-              </label>
-              <textarea
-                {...register("skills")}
-                rows={4}
-                placeholder="Comma-separated skills (e.g., JavaScript, React, Node.js)"
-                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${theme === 'dark'
-                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                  : 'border-gray-300 placeholder-gray-500'
-                  }`}
-              />
-              {errors.skills && <p className="text-red-500 text-xs mt-1">{errors.skills.message}</p>}
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div className={`min-h-screen py-10 px-6 ${theme === 'dark' ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-50 to-indigo-50'}`}>
-      <div className="max-w-6xl mx-auto relative">
-        {/* Success & Error handled via useEffect */}
+    <div className={`min-h-screen p-6 md:p-12 ${isDark ? "bg-slate-950" : "bg-slate-50"}`}>
+      <div className="max-w-5xl mx-auto">
+        
+        {/* Stepper Header */}
+        <div className="mb-12 flex justify-between items-center max-w-2xl mx-auto">
+          {[
+            { label: "Personal", icon: <User size={18} /> },
+            { label: "Professional", icon: <Briefcase size={18} /> }
+          ].map((step, i) => (
+            <React.Fragment key={i}>
+              <div className="flex flex-col items-center gap-2">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${
+                  currentStep >= i 
+                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30" 
+                  : isDark ? "bg-slate-800 text-slate-500" : "bg-white text-slate-300"
+                }`}>
+                  {currentStep > i ? <Check size={20} /> : step.icon}
+                </div>
+                <span className={`text-[10px] font-black uppercase tracking-widest ${currentStep >= i ? "text-indigo-500" : "text-slate-400"}`}>
+                  {step.label}
+                </span>
+              </div>
+              {i < 1 && <div className={`flex-1 h-[2px] mx-4 rounded-full ${currentStep > i ? "bg-indigo-600" : isDark ? "bg-slate-800" : "bg-slate-200"}`} />}
+            </React.Fragment>
+          ))}
+        </div>
 
-        {/* Form */}
+        
+
+        {/* Form Container */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          {renderStep()}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStep}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className={`p-8 md:p-10 rounded-[2.5rem] border shadow-2xl ${
+                isDark ? "bg-slate-900 border-slate-800 shadow-black/40" : "bg-white border-white shadow-slate-200/50"
+              }`}
+            >
+              {currentStep === 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-3 mb-4">
+                    <h2 className="text-2xl font-black">Identity Details</h2>
+                    <p className="text-slate-500 text-sm">Please provide the agent's legal information as per government IDs.</p>
+                  </div>
+                  <FormField name="name" label="Full Name" placeholder="John Doe" />
+                  <FormField name="email" label="Work Email" type="email" />
+                  <FormField name="password" label="Portal Password" type="password" />
+                  <FormField name="phone" label="Phone Number" />
+                  <FormField name="dateOfBirth" label="Date of Birth" type="date" />
+                  <FormField name="aadharNumber" label="Aadhar (12 Digits)" />
+                  <FormField name="panNumber" label="PAN Number" />
+                  <FormField name="state" label="State" type="select" options={["Maharashtra", "Delhi", "Karnataka", "Gujarat"]} />
+                  <FormField name="city" label="City" type="select" options={["Mumbai", "Pune", "Bangalore", "Ahmedabad"]} />
+                  
+                  {/* Styled File Input */}
+                  <div className="lg:col-span-3 mt-4">
+                    <label className={`text-sm font-bold mb-2 block ${isDark ? "text-slate-400" : "text-slate-600"}`}>Profile Photo</label>
+                    <div className={`relative group h-40 rounded-3xl border-2 border-dashed flex items-center justify-center transition-all ${
+                      isDark ? "bg-slate-800/50 border-slate-700 hover:border-indigo-500" : "bg-slate-50 border-slate-200 hover:border-indigo-500"
+                    }`}>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            setValue("profilePhoto", file, { shouldValidate: true });
+                            setFilePreviews({ profilePhoto: URL.createObjectURL(file) });
+                          }
+                        }}
+                      />
+                      {filePreviews.profilePhoto ? (
+                        <img src={filePreviews.profilePhoto} className="h-full w-full object-cover rounded-[1.4rem]" alt="Preview" />
+                      ) : (
+                        <div className="text-center">
+                          <Image className="mx-auto mb-2 text-slate-400" />
+                          <p className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Click to upload photo</p>
+                        </div>
+                      )}
+                    </div>
+                    {errors.profilePhoto && <span className="text-rose-500 text-[10px] font-bold">{errors.profilePhoto.message}</span>}
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-3 mb-4">
+                    <h2 className="text-2xl font-black">Professional Profile</h2>
+                    <p className="text-slate-500 text-sm">Experience, salary expectations, and core competencies.</p>
+                  </div>
+                  <FormField name="previousCompany" label="Last Organization" />
+                  <FormField 
+                    name="role" 
+                    label="Designation" 
+                    type="select" 
+                    options={RolesPermessionData?.map(r => r.roleName)} 
+                  />
+                  <FormField name="experienceYears" label="Years of Experience" type="number" />
+                  <FormField name="previousSalary" label="Last Salary (LPA)" type="number" />
+                  <FormField name="currentSalary" label="Expected Salary (LPA)" type="number" />
+                  <FormField name="joiningDate" label="Proposed Joining" type="date" />
+                  <div className="lg:col-span-3">
+                    <FormField name="skills" label="Core Skills" placeholder="React, Node.js, Sales, Negotiation..." />
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
 
-          {/* Progress indicator */}
-          <div className="flex justify-center mb-6">
-            <div className="flex space-x-2">
-              {Array.from({ length: totalSteps }).map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-3 h-3 rounded-full ${index === currentStep
-                    ? theme === 'dark' ? 'bg-blue-400' : 'bg-blue-600'
-                    : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'
-                    }`}
-                />
-              ))}
-            </div>
-          </div>
+          {/* Navigation Controls */}
+          <div className="flex justify-between items-center pt-6">
+            <button
+              type="button"
+              onClick={() => setCurrentStep(0)}
+              className={`flex items-center gap-2 px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all ${
+                currentStep === 0 ? "opacity-0 pointer-events-none" : isDark ? "bg-slate-800 text-white" : "bg-white text-slate-600 shadow-md"
+              }`}
+            >
+              <ChevronLeft size={16} /> Previous
+            </button>
 
-          {/* Buttons */}
-          <div className="flex justify-between max-w-xl mx-auto mt-6">
-            {currentStep > 0 && (
-              <button
-                type="button"
-                onClick={onBack}
-                disabled={isSubmitting}
-                className={`font-semibold py-2 px-6 rounded-lg disabled:opacity-50 ${theme === 'dark'
-                  ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                  : 'bg-gray-300 hover:bg-gray-400 text-gray-800'
-                  }`}
-              >
-                Previous
-              </button>
-            )}
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`font-semibold py-2 px-6 rounded-lg disabled:opacity-50 ${theme === 'dark'
-                ? 'bg-blue-700 hover:bg-blue-600 text-white'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
+              className="flex items-center gap-2 px-10 py-4 rounded-2xl bg-indigo-600 text-white font-black uppercase text-xs tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/40 disabled:opacity-70"
             >
               {isSubmitting ? (
-                <span className="flex items-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  {currentStep === totalSteps - 1 ? "Submitting..." : "Loading..."}
-                </span>
-              ) : currentStep === totalSteps - 1 ? (
-                "Submit"
+                <Loader2 className="animate-spin" size={16} />
               ) : (
-                "Next"
+                <>
+                  {currentStep === 1 ? "Complete Onboarding" : "Next Step"} <ChevronRight size={16} />
+                </>
               )}
             </button>
           </div>

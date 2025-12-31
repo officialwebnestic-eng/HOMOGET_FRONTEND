@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Star, Plus, X, Loader2 } from 'lucide-react'
+import { Star, Plus, X, Loader2, Quote, MessageSquare, Building2, CheckCircle2 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { http } from '../../../axios/axios'
 import { useToast } from '../../../model/SuccessToasNotification'
 import { useTheme } from '../../../context/ThemeContext' 
-import { AnimatePresence,motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { notfound } from '../../../ExportImages'
 
 export default function UserTestimonial() {
@@ -14,42 +14,17 @@ export default function UserTestimonial() {
     const [isLoading, setIsLoading] = useState(false)
     const { addToast } = useToast()
     const { theme } = useTheme()
+    const isDark = theme === 'dark'
 
+    const { register, handleSubmit, reset, setValue, watch, formState: { errors, isSubmitting } } = useForm()
 
-    const {
-        register,
-        handleSubmit,
-        reset,
-        setValue,
-        watch,
-        formState: { errors, isSubmitting }
-    } = useForm()
-
-   
-    const themeClasses = {
-        dark: {
-            bg: "bg-gray-900",
-            card: "bg-gray-800 border-gray-700",
-            text: "text-gray-100",
-            textSecondary: "text-gray-400",
-            input: "bg-gray-700 border-gray-600 text-white placeholder-gray-400",
-            button: "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700",
-            modal: "bg-gray-800 border-gray-700",
-            divider: "border-gray-700"
-        },
-        light: {
-            bg: "bg-gradient-to-br from-gray-50 to-blue-50",
-            card: "bg-white border-gray-200",
-            text: "text-gray-900",
-            textSecondary: "text-gray-600",
-            input: "bg-white border-gray-200 text-gray-800 placeholder-gray-500",
-            button: "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600",
-            modal: "bg-white border-gray-200",
-            divider: "border-gray-200"
-        }
+    const colors = {
+        brand: "#C5A059", // Dubai Gold
+        bg: isDark ? "bg-slate-950" : "bg-slate-50",
+        card: isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200",
+        text: isDark ? "text-slate-100" : "text-slate-900",
+        sub: isDark ? "text-slate-400" : "text-slate-500",
     }
-
-    const currentTheme = themeClasses[theme] || themeClasses.light
 
     useEffect(() => {
         const fetchData = async () => {
@@ -59,11 +34,9 @@ export default function UserTestimonial() {
                     http.get('/getreviews'),
                     http.get('/getproperty'),
                 ])
-            
                 setReviews(reviewsRes.data.data || [])
                 setReviewsPropertyData(propertiesRes.data.data || [])
             } catch (error) {
-                console.error('Error fetching data:', error)
                 addToast("Failed to load reviews", "error")
             } finally {
                 setIsLoading(false)
@@ -74,241 +47,169 @@ export default function UserTestimonial() {
 
     const onSubmit = async (data) => {
         try {
-            const res = await http.post(
-                '/createreviews',
-                {
-                    ...data,
-                    rating: Number(data.rating)
-                },
-                { withCredentials: true }
-            )
-
+            const res = await http.post('/createreviews', { ...data, rating: Number(data.rating) }, { withCredentials: true })
             if (res.data.success) {
-                addToast("Review submitted successfully!", "success")
+                addToast("Your review has been published", "success")
                 setReviews((prev) => [res.data.review, ...prev])
                 setIsFormOpen(false)
                 reset()
             }
         } catch (error) {
-            console.error('Error submitting review:', error)
-            addToast("Failed to submit review", "error")
+            addToast("Submission failed", "error")
         }
     }
 
-    const getInitials = (name) =>
-        name
-            ?.split(' ')
-            .map((n) => n[0])
-            .join('')
-            .toUpperCase()
-
     return (
-        <div className={`min-h-screen ${currentTheme.bg} py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300`}>
-            <div className="max-w-6xl mx-auto">
-                <div className="flex flex-col md:flex-row  mt-10  items-start md:items-center justify-between mb-12 gap-4">
-                    <div className=''>
-                        <h1 className={`text-3xl sm:text-4xl font-bold mt-7 ${currentTheme.text} mb-2`}>Customer Testimonials</h1>
-                        <p className={`text-lg ${currentTheme.textSecondary}`}>What our customers say about us</p>
+        <div className={`min-h-screen ${colors.bg} py-20 px-6 transition-colors duration-500`}>
+            <div className="max-w-7xl mx-auto">
+                
+                {/* --- HEADER SECTION --- */}
+                <div className="flex flex-col lg:flex-row justify-between items-end gap-8 mb-16">
+                    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+                        <div className="flex items-center gap-2 text-amber-600 mb-4">
+                            <MessageSquare size={18} />
+                            <span className="text-xs font-black uppercase tracking-[0.3em]">Client Voices</span>
+                        </div>
+                        <h1 className={`text-5xl md:text-6xl font-black tracking-tighter ${colors.text}`}>
+                            Trusted by <span className="italic font-serif font-light text-amber-600">Thousands.</span>
+                        </h1>
+                    </motion.div>
+
+                    <div className="flex items-center gap-6">
+                        <div className="text-right hidden sm:block">
+                            <div className="flex items-center justify-end gap-1 text-amber-500 mb-1">
+                                {[...Array(5)].map((_, i) => <Star key={i} size={14} fill="currentColor" />)}
+                            </div>
+                            <p className={`text-xs font-bold uppercase tracking-widest ${colors.sub}`}>Average 4.9/5 Rating</p>
+                        </div>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setIsFormOpen(true)}
+                            className="px-8 py-4 bg-amber-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-amber-900/20 flex items-center gap-2"
+                        >
+                            <Plus size={16} /> Write a Review
+                        </motion.button>
                     </div>
-                    <button
-                        onClick={() => setIsFormOpen(true)}
-                        className={`flex items-center px-6 py-3 ${currentTheme.button} text-white rounded-lg transition-all shadow-lg hover:shadow-xl min-w-fit`}
-                    >
-                        <Plus className="mr-2" size={20} /> Add Your Review
-                    </button>
                 </div>
 
-                {/* Loading State */}
-                {isLoading && (
-                    <div className="flex justify-center items-center h-64">
-                        <Loader2 className="animate-spin h-12 w-12 text-blue-500" />
+                {/* --- REVIEWS GRID --- */}
+                {isLoading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {[1, 2, 3].map(i => <div key={i} className={`h-64 rounded-3xl animate-pulse ${isDark ? 'bg-slate-900' : 'bg-slate-200'}`} />)}
                     </div>
-                )}
-
-                {/* Empty State */}
-                {!isLoading && reviews.length === 0 && (
-                    <div className={`text-center py-12 rounded-xl ${currentTheme.card} border ${currentTheme.divider}`}>
-                        <div className="mx-auto w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-6">
-                            <img  src={notfound} className="text-gray-400 w-80 dark:text-gray-500" />
-                        </div>
-                        <h3 className={`text-xl font-medium ${currentTheme.text} mb-2`}>No reviews yet</h3>
-                        <p className={`${currentTheme.textSecondary} mb-6`}>Be the first to share your experience!</p>
-                        <button
-                            onClick={() => setIsFormOpen(true)}
-                            className={`px-6 py-3 ${currentTheme.button} text-white rounded-lg transition-all shadow-lg hover:shadow-xl`}
-                        >
-                            <Plus className="inline mr-2" size={20} /> Add Your Review
-                        </button>
+                ) : reviews.length === 0 ? (
+                    <div className="text-center py-20">
+                        <img src={notfound} className="w-64 mx-auto opacity-20 grayscale" alt="No reviews" />
+                        <h3 className={`mt-8 text-2xl font-bold ${colors.text}`}>No Testimonials Yet</h3>
+                        <p className={`${colors.sub} mb-8`}>Be the first to share your Homoget experience.</p>
                     </div>
-                )}
-
-                {/* Reviews Grid */}
-                {!isLoading && reviews.length > 0 && (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {reviews.map((review) => (
-                            <div 
-                                key={review._id} 
-                                className={`p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border ${currentTheme.card} ${currentTheme.divider}`}
+                ) : (
+                    <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+                        {reviews.map((review, idx) => (
+                            <motion.div
+                                key={review._id}
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: idx * 0.1 }}
+                                className={`break-inside-avoid p-8 rounded-[2rem] border backdrop-blur-md ${colors.card} hover:border-amber-500/50 transition-all group`}
                             >
-                                <div className="flex items-center space-x-4 mb-4">
-                                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 text-white flex items-center justify-center rounded-full font-semibold text-lg">
-                                        {getInitials(review.name)}
-                                    </div>
-                                    <div>
-                                        <h3 className={`text-lg font-semibold ${currentTheme.text}`}>{review.name}</h3>
-                                        <p className="text-indigo-500 dark:text-indigo-400 text-sm font-medium">Property: {review.property}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center mb-4">
+                                <Quote className="text-amber-500/20 mb-4 group-hover:text-amber-500/40 transition-colors" size={40} />
+                                
+                                <div className="flex items-center gap-1 mb-4">
                                     {[...Array(5)].map((_, i) => (
                                         <Star
                                             key={i}
-                                            size={20}
-                                            className={i < review.rating ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}
+                                            size={14}
+                                            className={i < review.rating ? 'text-amber-500' : 'text-slate-700'}
                                             fill={i < review.rating ? 'currentColor' : 'none'}
-                                            strokeWidth={i < review.rating ? 0 : 1.5}
                                         />
                                     ))}
-                                    <span className={`ml-2 ${currentTheme.textSecondary} text-sm`}>{review.rating}/5</span>
                                 </div>
-                                <p className={`${currentTheme.textSecondary} leading-relaxed`}>{review.review}</p>
-                                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                                    <p className="text-xs text-gray-400 dark:text-gray-500">
-                                        Posted on {new Date(review.createdAt).toLocaleDateString('en-US', {
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric'
-                                        })}
-                                    </p>
+
+                                <p className={`text-lg leading-relaxed mb-8 italic font-serif ${colors.text}`}>
+                                    "{review.review}"
+                                </p>
+
+                                <div className="flex items-center justify-between pt-6 border-t border-slate-800/50">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-600 to-amber-400 flex items-center justify-center text-white font-black text-sm">
+                                            {review.name[0]}
+                                        </div>
+                                        <div>
+                                            <h4 className={`text-sm font-bold flex items-center gap-1 ${colors.text}`}>
+                                                {review.name} <CheckCircle2 size={12} className="text-blue-500" />
+                                            </h4>
+                                            <p className="text-[10px] uppercase tracking-widest text-amber-600 font-black">Verified Client</p>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                                <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-800/50 border border-slate-700 text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                                    <Building2 size={10} /> {review.property}
+                                </div>
+                            </motion.div>
                         ))}
                     </div>
                 )}
 
-                {/* Review Form Modal */}
+                {/* --- MODAL FORM --- */}
                 <AnimatePresence>
                     {isFormOpen && (
                         <motion.div
-                            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4"
                         >
                             <motion.div
-                                className={`rounded-2xl shadow-2xl w-full max-w-md relative overflow-hidden border ${currentTheme.modal} ${currentTheme.divider}`}
-                                initial={{ scale: 0.9, y: 20 }}
-                                animate={{ scale: 1, y: 0 }}
-                                exit={{ scale: 0.9, y: 20 }}
+                                initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+                                className={`w-full max-w-xl ${isDark ? 'bg-slate-900' : 'bg-white'} rounded-[3rem] border border-slate-800 shadow-2xl overflow-hidden`}
                             >
-                                <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
-                                <div className="p-6">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h2 className={`text-2xl font-bold ${currentTheme.text}`}>Share Your Experience</h2>
-                                        <button
-                                            onClick={() => {
-                                                setIsFormOpen(false)
-                                                reset()
-                                            }}
-                                            className={`${currentTheme.textSecondary} hover:text-gray-600 dark:hover:text-gray-300 transition`}
-                                        >
-                                            <X size={24} />
+                                <div className="p-10 md:p-12">
+                                    <div className="flex justify-between items-center mb-10">
+                                        <div>
+                                            <h2 className={`text-3xl font-black tracking-tight ${colors.text}`}>Share Experience</h2>
+                                            <p className="text-xs text-amber-600 font-bold uppercase tracking-widest mt-1">Homoget Quality Assurance</p>
+                                        </div>
+                                        <button onClick={() => setIsFormOpen(false)} className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white">
+                                            <X size={20} />
                                         </button>
                                     </div>
 
                                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                                        <div>
-                                            <label className={`block text-sm font-medium mb-2 ${currentTheme.textSecondary}`}>Your Name</label>
-                                            <input
-                                                {...register('name', { required: 'Name is required' })}
-                                                className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${currentTheme.input}`}
-                                                placeholder="John Doe"
-                                            />
-                                            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="flex flex-col gap-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Full Name</label>
+                                                <input {...register('name', { required: true })} className={`p-4 rounded-2xl border outline-none transition-all ${isDark ? 'bg-slate-950 border-slate-800 focus:border-amber-500' : 'bg-slate-50 border-slate-200 focus:border-amber-500'}`} placeholder="Your Name" />
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Property</label>
+                                                <select {...register('property', { required: true })} className={`p-4 rounded-2xl border outline-none appearance-none transition-all ${isDark ? 'bg-slate-950 border-slate-800 focus:border-amber-500 text-white' : 'bg-slate-50 border-slate-200 focus:border-amber-500 text-black'}`}>
+                                                    <option value="">Select Portfolio</option>
+                                                    {reviewsPropertyData.map(p => <option key={p._id} value={p.propertyname}>{p.propertyname}</option>)}
+                                                </select>
+                                            </div>
                                         </div>
 
-                                        <div>
-                                            <label className={`block text-sm font-medium mb-2 ${currentTheme.textSecondary}`}>Property</label>
-                                            <select
-                                                {...register('property', { required: 'Property is required' })}
-                                                className={`w-full border rounded-lg px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${currentTheme.input}`}
-                                            >
-                                                <option value="">Select a property</option>
-                                                {reviewsPropertyData.map((property) => (
-                                                    
-                                                    <option key={property._id} value={property.propertyname} className='text-black'>
-                                                        {property.propertyname}
-                                                        
-                                                    </option>
-                                                ))}
-                                                
-                                            </select>
-                                            {errors.property && <p className="text-red-500 text-sm mt-1">{errors.property.message}</p>}
-                                        </div>
-
-                                        <div>
-                                            <label className={`block text-sm font-medium mb-2 ${currentTheme.textSecondary}`}>Your Rating</label>
-                                            <div className="flex space-x-1">
+                                        <div className="flex flex-col gap-3 p-6 rounded-2xl bg-amber-600/5 border border-amber-600/20 text-center">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-amber-600">Your Overall Rating</label>
+                                            <div className="flex justify-center gap-2">
                                                 {[1, 2, 3, 4, 5].map((star) => (
-                                                    <button
-                                                        type="button"
-                                                        key={star}
-                                                        onClick={() => setValue('rating', star)}
-                                                        className="focus:outline-none transform hover:scale-110 transition"
-                                                    >
-                                                        <Star
-                                                            size={28}
-                                                            fill={star <= (watch('rating') || 0) ? 'currentColor' : 'none'}
-                                                            strokeWidth={star <= (watch('rating') || 0) ? 0 : 1.5}
-                                                            className={`${star <= (watch('rating') || 0) ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'} transition`}
-                                                        />
+                                                    <button type="button" key={star} onClick={() => setValue('rating', star)} className="hover:scale-125 transition-transform">
+                                                        <Star size={32} fill={star <= (watch('rating') || 0) ? '#C5A059' : 'none'} className={star <= (watch('rating') || 0) ? 'text-amber-500' : 'text-slate-700'} />
                                                     </button>
                                                 ))}
                                             </div>
-                                            <input type="hidden" {...register('rating', { required: 'Rating is required' })} />
-                                            {errors.rating && <p className="text-red-500 text-sm mt-1">{errors.rating.message}</p>}
+                                            <input type="hidden" {...register('rating', { required: true })} />
                                         </div>
 
-                                        <div>
-                                            <label className={`block text-sm font-medium mb-2 ${currentTheme.textSecondary}`}>Your Review</label>
-                                            <textarea
-                                                {...register('review', { 
-                                                    required: 'Review cannot be empty',
-                                                    minLength: {
-                                                        value: 20,
-                                                        message: 'Review should be at least 20 characters'
-                                                    }
-                                                })}
-                                                rows={4}
-                                                className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${currentTheme.input}`}
-                                                placeholder="Share your experience with this property..."
-                                            />
-                                            {errors.review && <p className="text-red-500 text-sm mt-1">{errors.review.message}</p>}
+                                        <div className="flex flex-col gap-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Your Narrative</label>
+                                            <textarea {...register('review', { required: true, minLength: 20 })} rows={4} className={`p-4 rounded-2xl border outline-none resize-none transition-all ${isDark ? 'bg-slate-950 border-slate-800 focus:border-amber-500' : 'bg-slate-50 border-slate-200 focus:border-amber-500'}`} placeholder="Tell us about the service and the property..." />
                                         </div>
 
-                                        <div className="flex justify-end space-x-3 pt-4">
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setIsFormOpen(false)
-                                                    reset()
-                                                }}
-                                                className={`px-5 py-2.5 border rounded-lg ${currentTheme.text} ${currentTheme.divider} hover:bg-gray-100 dark:hover:bg-gray-700 transition`}
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                disabled={isSubmitting}
-                                                className={`px-5 py-2.5 ${currentTheme.button} text-white rounded-lg transition shadow-md flex items-center justify-center min-w-[120px]`}
-                                            >
-                                                {isSubmitting ? (
-                                                    <Loader2 className="animate-spin h-5 w-5" />
-                                                ) : (
-                                                    'Submit Review'
-                                                )}
-                                            </button>
-                                        </div>
+                                        <button disabled={isSubmitting} className="w-full py-5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl transition-all disabled:opacity-50">
+                                            {isSubmitting ? <Loader2 className="animate-spin mx-auto" /> : 'Publish Testimonial'}
+                                        </button>
                                     </form>
                                 </div>
                             </motion.div>

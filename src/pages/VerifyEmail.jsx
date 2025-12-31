@@ -5,8 +5,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
 
-// Import cartoon background images
-import bg1 from "../assets/backgroundimage.jpg";
+
 
 
 import { http } from "../axios/axios";
@@ -23,8 +22,16 @@ const VerifyEmail = () => {
 
 
 
-  const backgrounds = [bg1, 
-     ];
+    const bg1 =
+    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+
+  const bg2 =
+    "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cHJvcGVydHl8ZW58MHx8MHx8fDA%3D";
+  const bg3 =
+    "https://images.unsplash.com/photo-1602941525421-8f8b81d3edbb?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvcGVydHl8ZW58MHx8MHx8fDA%3D";
+
+
+  const backgrounds = [bg1,bg2,bg3];
 
   const {
     register,

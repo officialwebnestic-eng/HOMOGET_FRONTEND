@@ -9,7 +9,6 @@ import AdminDashboard from "../components/Dashboard/AdminDashboard";
 import AgentDashboard from "../components/Dashboard/AgentDashboard";
 import AddProperty from "../components/admin/Property/AddProperty";
 
-import { AuthContext } from "../context/AuthContext";
 import ViewAllAgentList from "../components/admin/Agent/ViewAllAgentList";
 import AgentDetails from "../components/admin/Agent/AgentDetails";
 import ViewPropertyList from "../components/admin/Property/ViewPropertyList";
@@ -18,7 +17,6 @@ import VideoCallRoom from "../components/admin/VideoCallRoom";
 import ViewAllSession from "../components/admin/session/ViewAllSession";
 import CreateSession from "../components/admin/session/CreateSession";
 
-import { useNavigate } from "react-router-dom"
 import ViewAllInquary from "../components/agent/inquary/ViewAllInquary";
 import ViewBookingDetails from "../components/agent/Booking/ViewBookingDetails";
 import ViewAllBookings from "../components/agent/Booking/ViewAllBookings";
@@ -78,6 +76,7 @@ export const AdminRoutes = () => {
             <Route element={<BaseLayout />}>
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
                 <Route path="/addagent" element={<AddAgent />} />
+                <Route path="/user-profile" element={<UserProfile />} />
                 <Route path="/viewallagentlist" element={<ViewAllAgentList />} />
                 <Route path="/agentdetails/:id" element={<AgentDetails />} />
                 <Route path="/updateagent/:id" element={<UpdateAgent />} />

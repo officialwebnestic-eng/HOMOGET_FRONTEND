@@ -15,12 +15,12 @@ import PropertyRegistrationForm from "./components/ShellProperty/PropertyRegistr
 import ViewShellProperty from "./components/ShellProperty/ViewShellProperty";
 
 import MainLayout from "./routes/MainLayout";
-import BaseLayout from "./routes/BaseLayout";
 
 function App() {
   return (
     <Router>
       <ToastContainer />
+      
       <AllRoutes />
 
       

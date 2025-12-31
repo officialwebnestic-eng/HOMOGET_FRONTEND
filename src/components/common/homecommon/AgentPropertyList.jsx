@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { http } from "../../../axios/axios";
 import { useTheme } from "../../../context/ThemeContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
   MapPin, 
   BedDouble, 
@@ -9,6 +9,7 @@ import {
   Maximize, 
   ArrowUpRight, 
   Heart,
+  Navigation,
   Sparkles
 } from "lucide-react";
 
@@ -18,32 +19,6 @@ const AgentPropertyList = () => {
   const { theme } = useTheme();
 
   const isDark = theme === 'dark';
-
-  // Premium Real Estate Palette
-  const colors = {
-    light: {
-      background: "bg-slate-50",
-      card: "bg-white",
-      text: "text-slate-900",
-      subText: "text-slate-500",
-      border: "border-slate-200/60",
-      pill: "bg-slate-100 text-slate-600",
-      accent: "from-blue-600 to-indigo-600",
-      shadow: "hover:shadow-[0_32px_64px_-15px_rgba(0,0,0,0.1)]"
-    },
-    dark: {
-      background: "bg-slate-950",
-      card: "bg-slate-900/50",
-      text: "text-slate-50",
-      subText: "text-slate-400",
-      border: "border-slate-800",
-      pill: "bg-slate-800/50 text-slate-300",
-      accent: "from-indigo-500 to-purple-500",
-      shadow: "hover:shadow-[0_32px_64px_-15px_rgba(0,0,0,0.5)]"
-    }
-  };
-
-  const ct = colors[theme] || colors.light;
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -60,110 +35,146 @@ const AgentPropertyList = () => {
   }, []);
 
   if (loading) return (
-    <div className={`min-h-screen flex items-center justify-center ${ct.background}`}>
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
-        <p className={`font-medium animate-pulse ${ct.subText}`}>Curating Listings...</p>
+    <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
+      <div className="relative">
+        <div className="w-20 h-20 border-2 border-blue-500/20 rounded-full border-t-blue-500 animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-10 h-10 bg-blue-500/10 rounded-full animate-pulse" />
+        </div>
       </div>
     </div>
   );
 
   return (
-    <div className={`min-h-screen py-20 px-6 transition-colors duration-500 ${ct.background}`}>
+    <section className={`py-24 px-6 transition-colors duration-700 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
       <div className="max-w-7xl mx-auto">
         
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
-          <div className="space-y-4">
-            <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20`}>
-              <Sparkles size={16} className="text-blue-500" />
-              <span className="text-xs font-bold uppercase tracking-widest text-blue-500">Newly Added</span>
+        {/* Section Header */}
+        <div className="relative mb-20 overflow-hidden">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            className="flex flex-col gap-4"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-[1px] w-12 bg-blue-500" />
+              <span className="text-blue-500 font-bold tracking-[0.3em] text-xs uppercase">Curated Selection</span>
             </div>
-            <h2 className={`text-4xl md:text-5xl font-black tracking-tight ${ct.text}`}>
-              Featured <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">Properties</span>
+            <h2 className={`text-5xl md:text-7xl font-serif italic ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              Latest <span className="font-sans not-italic font-black uppercase tracking-tighter">Listings</span>
             </h2>
+          </motion.div>
+          
+          <div className={`absolute -right-20 -top-20 opacity-[0.03] pointer-events-none ${isDark ? 'text-white' : 'text-black'}`}>
+            <Navigation size={400} />
           </div>
-          <p className={`max-w-sm text-lg leading-relaxed ${ct.subText}`}>
-            Explore our most sought-after residences chosen for their architectural excellence.
-          </p>
         </div>
 
-        {/* Responsive Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {/* The Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           {latestProperty.map((property, idx) => (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: idx * 0.1 }}
-              className={`group relative flex flex-col ${ct.card} ${ct.border} border rounded-[2.5rem] overflow-hidden transition-all duration-500 ${ct.shadow}`}
+              transition={{ duration: 0.6, delay: idx * 0.1 }}
+              className={`group relative md:col-span-6 lg:col-span-4 rounded-3xl overflow-hidden border transition-all duration-500 ${
+                isDark ? 'bg-slate-900/40 border-slate-800' : 'bg-white border-slate-200'
+              } hover:border-blue-500/50`}
             >
-              {/* Image Section */}
-              <div className="relative h-80 overflow-hidden">
+              {/* Image Hero Container */}
+              <div className="relative h-[450px] overflow-hidden">
                 <img
-                  src={property.image?.[0] || property.image || "https://images.unsplash.com/photo-1600585154340-be6191da95b8?auto=format&fit=crop&w=800"}
+                  src={property.image?.[0] || "https://images.unsplash.com/photo-1600585154340-be6191da95b8?auto=format&fit=crop&w=800"}
                   alt={property.propertyname}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
                 />
                 
-                {/* Floating Tags */}
+                {/* Visual Overlays */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
+                
+                {/* Floating UI */}
                 <div className="absolute top-6 left-6 right-6 flex justify-between items-start">
-                  <div className="backdrop-blur-md bg-white/20 border border-white/30 px-4 py-1.5 rounded-full">
-                    <span className="text-white text-xs font-bold uppercase tracking-wider">{property.propertytype}</span>
+                  <div className="flex gap-2">
+                    <span className="px-3 py-1 bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold uppercase tracking-widest rounded">
+                      {property.listingtype || "Premier"}
+                    </span>
+                    {idx === 0 && (
+                      <span className="px-3 py-1 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded flex items-center gap-1">
+                        <Sparkles size={10} /> New
+                      </span>
+                    )}
                   </div>
-                  <button className="p-3 rounded-full backdrop-blur-md bg-black/20 text-white hover:bg-red-500 transition-colors border border-white/20">
+                  <button className="w-10 h-10 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-md border border-white/10 text-white hover:bg-white hover:text-black transition-all">
                     <Heart size={18} />
                   </button>
                 </div>
 
-                {/* Price Tag (Glassmorphism) */}
-                <div className="absolute bottom-6 left-6">
-                  <div className="backdrop-blur-xl bg-white/90 dark:bg-slate-900/90 px-5 py-2 rounded-2xl shadow-xl border border-white/20">
-                    <span className={`text-xl font-black ${ct.text}`}>
-                      ₹{new Intl.NumberFormat('en-IN').format(property.price)}
-                    </span>
-                  </div>
+                {/* Bottom Image Info */}
+                <div className="absolute bottom-8 left-8 right-8 text-white">
+                    <div className="mb-2">
+                         <span className="text-4xl font-black tracking-tighter">
+                            ₹{new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(property.price / 100000)}L
+                         </span>
+                         <span className="text-sm opacity-60 ml-2 font-medium">Starting from</span>
+                    </div>
+                    <h3 className="text-2xl font-bold leading-tight group-hover:text-blue-400 transition-colors uppercase tracking-tight">
+                        {property.propertyname}
+                    </h3>
                 </div>
               </div>
 
-              {/* Content Section */}
-              <div className="p-8 flex flex-col flex-1">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className={`text-2xl font-bold truncate ${ct.text}`}>
-                    {property.propertyname}
-                  </h3>
-                  <div className={`p-2 rounded-full bg-blue-500/10 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity`}>
-                    <ArrowUpRight size={20} />
-                  </div>
+              {/* Technical Detail Bar */}
+              <div className={`p-6 flex items-center justify-between border-t transition-colors ${
+                isDark ? 'border-slate-800 bg-slate-900/60' : 'border-slate-100 bg-slate-50/50'
+              }`}>
+                <div className="flex gap-6">
+                   <div className="flex flex-col">
+                        <span className={`text-[10px] font-bold uppercase tracking-tighter ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Beds</span>
+                        <span className={`font-mono font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{property.bedroom.toString().padStart(2, '0')}</span>
+                   </div>
+                   <div className="flex flex-col">
+                        <span className={`text-[10px] font-bold uppercase tracking-tighter ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Baths</span>
+                        <span className={`font-mono font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{property.bathroom.toString().padStart(2, '0')}</span>
+                   </div>
+                   <div className="flex flex-col">
+                        <span className={`text-[10px] font-bold uppercase tracking-tighter ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Area</span>
+                        <span className={`font-mono font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{property.squarefoot}</span>
+                   </div>
                 </div>
 
-                <div className={`flex items-center gap-1 mb-8 ${ct.subText}`}>
-                  <MapPin size={16} className="text-blue-500" />
-                  <span className="text-sm font-medium">{property.city}, {property.state}</span>
-                </div>
+                <motion.div 
+                    whileHover={{ scale: 1.1, rotate: 45 }}
+                    className="w-12 h-12 flex items-center justify-center bg-blue-600 rounded-full text-white cursor-pointer shadow-lg shadow-blue-500/20"
+                >
+                    <ArrowUpRight size={24} />
+                </motion.div>
+              </div>
 
-                {/* Metadata Grid */}
-                <div className="grid grid-cols-3 gap-3 mt-auto">
-                  <div className={`flex flex-col items-center justify-center p-3 rounded-3xl ${ct.pill} transition-colors group-hover:bg-blue-500/5`}>
-                    <BedDouble size={20} className="mb-1 text-blue-500" />
-                    <span className="text-xs font-bold">{property.bedroom} Beds</span>
-                  </div>
-                  <div className={`flex flex-col items-center justify-center p-3 rounded-3xl ${ct.pill} transition-colors group-hover:bg-blue-500/5`}>
-                    <Bath size={20} className="mb-1 text-blue-500" />
-                    <span className="text-xs font-bold">{property.bathroom} Baths</span>
-                  </div>
-                  <div className={`flex flex-col items-center justify-center p-3 rounded-3xl ${ct.pill} transition-colors group-hover:bg-blue-500/5`}>
-                    <Maximize size={20} className="mb-1 text-blue-500" />
-                    <span className="text-xs font-bold">{property.squareFeet} sqft</span>
-                  </div>
-                </div>
+              {/* Location Tag */}
+              <div className={`px-6 py-4 flex items-center gap-2 border-t ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
+                <MapPin size={14} className="text-blue-500" />
+                <span className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    {property.city}, {property.state}
+                </span>
               </div>
             </motion.div>
           ))}
         </div>
+        
+        {/* View All Button */}
+        <div className="mt-20 text-center">
+            <button className={`px-12 py-5 rounded-full border-2 font-bold uppercase tracking-[0.2em] text-sm transition-all ${
+                isDark 
+                ? 'border-white text-white hover:bg-white hover:text-black' 
+                : 'border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white'
+            }`}>
+                View Full Collection
+            </button>
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
 

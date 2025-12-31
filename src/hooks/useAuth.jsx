@@ -35,46 +35,57 @@ export const useAuth = () => {
   };
 
   const LoginUser = async (data) => {
-    try {
-      const response = await http.post("/loginuser", data, {
-        withCredentials: true,
+  try {
+    const response = await http.post("/loginuser", data, {
+      withCredentials: true,
+    });
+
+    if (response.status === 200 && response.data?.success) {
+      const { userData: user } = response.data;
+
+      // 1. Update Global Auth State
+      // Ensure we map the database fields (like _id) to your context fields
+      setUserDetails({
+        id: user._id,
+        role: user.role,
+        firstname: user.firstname || user.name || "", // Check both possible name fields
+        email: user.email,
       });
 
-      if (response.status === 200 && response.data?.success === true) {
-        const { userData: user } = response.data;
+      addToast("Login successful", "success");
 
-        // Save user details
-        setUserDetails({
-          id: user._id,
-          role: user.role,
-          firstname: user.name || "",
-          email: user.email,
-        });
+      // 2. Prepare for Navigation
+      const role = user.role?.trim().toLowerCase();
 
-        addToast("Login successful", "success");
-
-        // Trim role to avoid extra spaces
-        const role = user.role.trim().toLowerCase();
-
-        // Role-based navigation
-        if (role === "admin") {
-          navigate("/admin-dashboard");
-        } else if (role === "user") {
-          navigate("/"); // or your user-specific route
-        } else {
-          // For any other roles, go to agent-dashboard or default
-          navigate("/agent-dashboard");
+      // Use a small timeout or wait for state to propagate if using Protected Routes
+      // This ensures the AuthContext is fully updated before the new route mounts
+      setTimeout(() => {
+        switch (role) {
+          case "admin":
+            navigate("/admin-dashboard");
+            break;
+          case "user":
+            navigate("/");
+            break;
+          case "agent":
+            navigate("/agent-dashboard");
+            break;
+          default:
+            navigate("/"); // Safe fallback
+            break;
         }
-      } else {
-        addToast(response.data?.message || "Invalid credentials", "error");
-      }
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || "Login failed";
-      toast.error(errorMessage);
-      console.error("Login error:", err);
-    }
-  };
+      }, 100); 
 
+    } else {
+      addToast(response.data?.message || "Invalid credentials", "error");
+    }
+  } catch (err) {
+    // Standardize error message extraction
+    const errorMessage = err.response?.data?.message || "Something went wrong. Please try again.";
+    addToast(errorMessage, "error");
+    console.error("Login process error:", err);
+  }
+};
 
 
 

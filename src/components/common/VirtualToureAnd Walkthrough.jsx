@@ -1,172 +1,141 @@
-import React from 'react';
+import React, { useState } from 'react';
 import WalkThroughPage from './WalkThroughPage';
 import { NavLink } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
-import { motion } from "framer-motion";
-import { HomeModernIcon, ViewfinderCircleIcon, CalendarIcon } from "@heroicons/react/24/outline";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  HomeModernIcon, 
+  ViewfinderCircleIcon, 
+  CalendarIcon,
+  ArrowsPointingOutIcon 
+} from "@heroicons/react/24/outline";
 
 const VirtualTourAndWalkthrough = () => {
   const { theme } = useTheme();
+  // State to track which room the 3D canvas should focus on
+  const [activeRoom, setActiveRoom] = useState(null);
 
-  // Theme configuration
-  const themeClasses = {
-    dark: {
-      bg: "bg-gray-900",
-      text: "text-gray-100",
-      textSecondary: "text-gray-400",
-      card: "bg-gray-800 border-gray-700",
-      heading: "text-gray-50",
-      subCard: "bg-gray-700",
-      button: "bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700",
-      imageOverlay: "bg-gray-800/50"
-    },
-    light: {
-      bg: "bg-gray-50",
-      text: "text-gray-800",
-      textSecondary: "text-gray-600",
-      card: "bg-white border-gray-200",
-      heading: "text-gray-900",
-      subCard: "bg-gray-100",
-      button: "bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600",
-      imageOverlay: "bg-white/50"
-    }
-  };
-
-  const currentTheme = themeClasses[theme] || themeClasses.light;
+  const isDark = theme === "dark";
+  const activeColor = isDark ? "text-teal-400" : "text-blue-600";
 
   const rooms = [
     {
+      id: "living",
       name: "Living Room",
-      description: "Click on the hotspot in the living room to zoom in on the elegant fireplace and modern design.",
+      position: [2, 2, 5], // Coordinates for the 3D Camera
+      description: "Elegant fireplace and expansive modern design.",
       image: "https://images.pexels.com/photos/2425012/pexels-photo-2425012.jpeg?auto=compress&cs=tinysrgb&w=600"
     },
     {
-      name: "Bedroom",
-      description: "Use the interactive points to move around the bedroom and discover its spaciousness.",
+      id: "bedroom",
+      name: "Master Suite",
+      position: [-5, 2, -2],
+      description: "Spacious layout with premium interactive points.",
       image: "https://images.pexels.com/photos/1777023/pexels-photo-1777023.jpeg?auto=compress&cs=tinysrgb&w=600"
     },
     {
-      name: "Kitchen",
-      description: "Explore the modern appliances and spacious countertops in our fully equipped kitchen.",
+      id: "kitchen",
+      name: "Gourmet Kitchen",
+      position: [0, 2, -8],
+      description: "Modern appliances and chef-grade countertops.",
       image: "https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=600"
     },
     {
-      name: "Bathroom",
-      description: "Check out the premium finishes and luxurious amenities in each bathroom.",
+      id: "bathroom",
+      name: "Luxury Bath",
+      position: [4, 2, -4],
+      description: "Premium finishes and spa-like amenities.",
       image: "https://images.pexels.com/photos/1457842/pexels-photo-1457842.jpeg?auto=compress&cs=tinysrgb&w=600"
     }
   ];
 
   return (
-    <div className={`w-full min-h-screen transition-colors duration-300 ${currentTheme.bg}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="inline-block mb-6"
-          >
-            <HomeModernIcon className={`h-12 w-12 mx-auto ${theme === "dark" ? "text-teal-400" : "text-blue-600"}`} />
+    <div className={`w-full min-h-screen transition-all duration-500 ${isDark ? "bg-[#0f172a]" : "bg-slate-50"}`}>
+      <div className="max-w-7xl mx-auto px-6 py-16">
+        
+        {/* --- HEADER --- */}
+        <header className="text-center mb-20">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+            <div className={`inline-flex p-3 rounded-2xl mb-6 ${isDark ? "bg-teal-500/10" : "bg-blue-50"}`}>
+              <HomeModernIcon className={`h-10 w-10 ${activeColor}`} />
+            </div>
+            <h1 className={`text-5xl font-black tracking-tight mb-4 ${isDark ? "text-white" : "text-slate-900"}`}>
+              Digital <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500">Twin</span> Exploration
+            </h1>
+            <p className={`text-lg max-w-2xl mx-auto ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+              Experience a high-fidelity 3D reconstruction of the property. Use the controls below to jump between curated perspectives.
+            </p>
           </motion.div>
-          <h1 className={`text-4xl md:text-5xl font-bold ${currentTheme.heading} mb-4`}>
-            Explore Our Virtual Tour and 3D Walkthrough
-          </h1>
-          <p className={`text-xl ${currentTheme.textSecondary} max-w-3xl mx-auto`}>
-            Immerse yourself in our properties with interactive 360° views and detailed walkthroughs
-          </p>
-        </motion.div>
+        </header>
 
-        <motion.section 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className={`rounded-xl shadow-xl p-6 mb-12 border ${currentTheme.card} ${currentTheme.border}`}
-        >
-          <div className="flex items-center mb-6">
-            <ViewfinderCircleIcon className={`h-8 w-8 mr-3 ${theme === "dark" ? "text-teal-400" : "text-blue-600"}`} />
-            <h2 className={`text-3xl font-semibold ${currentTheme.heading}`}>
-              3D Property Walkthrough
-            </h2>
-          </div>
-          
-          <WalkThroughPage />
-          
-          <p className={`mt-6 ${currentTheme.text}`}>
-            Take a step inside and explore the property like never before with our immersive 3D walkthrough. 
-            Navigate through different rooms, zoom in on details, and experience the layout as if you're 
-            walking through the space.
-          </p>
-        </motion.section>
+        {/* --- MAIN 3D SHOWCASE --- */}
+        <div className="relative group mb-20">
+          <motion.div 
+            layout
+            className={`relative rounded-[2.5rem] overflow-hidden border-4 shadow-2xl transition-all
+              ${isDark ? "border-slate-800 bg-slate-900" : "border-white bg-white"}`}
+            style={{ height: '600px' }}
+          >
+            {/* The 3D Engine Component */}
+            <WalkThroughPage activeRoom={activeRoom} />
+            
+            {/* Overlay UI Controls */}
+            <div className="absolute top-6 left-6 flex flex-col gap-3">
+              <div className="bg-black/40 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 text-white text-xs font-bold border border-white/10">
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                LIVE 3D RENDER
+              </div>
+            </div>
 
-        {/* Interactive Tour Section */}
-        <section className="mb-12">
-          <h2 className={`text-3xl font-semibold ${currentTheme.heading} mb-8 text-center`}>
-            Interactive Virtual Tour
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {rooms.map((room, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className={`rounded-xl overflow-hidden shadow-lg ${currentTheme.subCard}`}
-                whileHover={{ y: -5 }}
-              >
-                <div className="relative h-48">
-                  <img
-                    src={room.image}
-                    alt={room.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className={`absolute inset-0 ${currentTheme.imageOverlay}`}></div>
-                </div>
-                <div className="p-4">
-                  <h3 className={`text-xl font-semibold mb-2 ${currentTheme.heading}`}>
-                    {room.name}
-                  </h3>
-                  <p className={currentTheme.textSecondary}>
-                    {room.description}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
+            <button className="absolute bottom-6 right-6 p-4 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-2xl border border-white/20 transition-all">
+              <ArrowsPointingOutIcon className="h-6 w-6 text-white" />
+            </button>
+          </motion.div>
+        </div>
 
-       
+        {/* --- ROOM NAVIGATION GRID --- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {rooms.map((room) => (
+            <motion.div
+              key={room.id}
+              whileHover={{ y: -10 }}
+              onClick={() => setActiveRoom(room)}
+              className={`cursor-pointer group relative rounded-3xl overflow-hidden border-2 transition-all p-2
+                ${activeRoom?.id === room.id 
+                  ? (isDark ? "border-teal-500 bg-teal-500/5" : "border-blue-500 bg-blue-50") 
+                  : (isDark ? "border-slate-800 bg-slate-900/50" : "border-slate-200 bg-white")
+                }`}
+            >
+              <div className="relative h-44 rounded-2xl overflow-hidden mb-4">
+                <img src={room.image} alt={room.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <ViewfinderCircleIcon className="absolute bottom-4 right-4 h-8 w-8 text-white/80 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <div className="px-3 pb-3">
+                <h3 className={`text-xl font-bold mb-1 ${isDark ? "text-white" : "text-slate-900"}`}>{room.name}</h3>
+                <p className={`text-xs leading-relaxed ${isDark ? "text-slate-400" : "text-slate-500"}`}>{room.description}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* --- BOOKING CTA --- */}
         <motion.div 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="text-center mt-16"
+          className={`mt-32 p-12 rounded-[3rem] text-center relative overflow-hidden
+            ${isDark ? "bg-slate-900 border border-slate-800" : "bg-white border border-slate-200 shadow-xl"}`}
         >
-          <div className="flex justify-center mb-6">
-            <CalendarIcon className={`h-10 w-10 ${theme === "dark" ? "text-teal-400" : "text-blue-600"}`} />
-          </div>
-          <h2 className={`text-3xl font-semibold ${currentTheme.heading} mb-4`}>
-            Schedule a Live Virtual Tour
-          </h2>
-          <p className={`text-lg ${currentTheme.textSecondary} mb-8 max-w-2xl mx-auto`}>
-            Experience a personalized walkthrough with one of our agents at a time that works for you.
+          <div className={`absolute top-0 left-1/2 -translate-x-1/2 h-1 w-32 rounded-b-full ${isDark ? "bg-teal-500" : "bg-blue-500"}`} />
+          <CalendarIcon className={`h-12 w-12 mx-auto mb-6 ${activeColor}`} />
+          <h2 className={`text-4xl font-black mb-4 ${isDark ? "text-white" : "text-slate-900"}`}>Live Guided Tour</h2>
+          <p className={`text-lg mb-10 max-w-xl mx-auto ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+            Prefer a guided experience? Join a live session with our property specialist.
           </p>
           <NavLink
             to="/virtualtoure"
-            className={`px-8 py-3 ${currentTheme.button} text-white font-semibold rounded-lg shadow-lg transition duration-300 inline-flex items-center`}
+            className="px-10 py-4 bg-gradient-to-r from-teal-500 to-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-500/20 hover:scale-105 transition-transform inline-flex items-center gap-2"
           >
-            Book Your Tour
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
+            Reserve Your Slot
+            <ArrowsPointingOutIcon className="h-5 w-5 rotate-45" />
           </NavLink>
         </motion.div>
       </div>

@@ -1,114 +1,118 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle2, AlertCircle, Info, AlertTriangle, X } from 'lucide-react';
 
 const ToastContext = createContext();
 
- const ToastProvider = ({ children }) => {
+export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
   const toastTypes = {
     success: {
-      icon: (
-        <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path d="M5 13l4 4L19 7" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      ),
-      bg: 'bg-green-50',
-      border: 'border-l-4 border-green-500',
-      text: 'text-green-700',
+      icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" />,
+      color: 'emerald',
+      label: 'Success'
     },
     error: {
-      icon: (
-        <svg className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path d="M6 18L18 6M6 6l12 12" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      ),
-      bg: 'bg-red-50',
-      border: 'border-l-4 border-red-500',
-      text: 'text-red-700',
+      icon: <AlertCircle className="h-5 w-5 text-rose-500" />,
+      color: 'rose',
+      label: 'Error'
     },
     info: {
-      icon: (
-        <svg className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      ),
-      bg: 'bg-blue-50',
-      border: 'border-l-4 border-blue-500',
-      text: 'text-blue-700',
+      icon: <Info className="h-5 w-5 text-blue-500" />,
+      color: 'blue',
+      label: 'Info'
     },
     warning: {
-      icon: (
-        <svg className="h-5 w-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path d="M12 9v2m0 4h.01M6.938 20h10.124c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L4.34 17c-.77 1.333.192 3 1.732 3z" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      ),
-      bg: 'bg-yellow-50',
-      border: 'border-l-4 border-yellow-500',
-      text: 'text-yellow-700',
+      icon: <AlertTriangle className="h-5 w-5 text-amber-500" />,
+      color: 'amber',
+      label: 'Warning'
     },
   };
 
   const addToast = (message, type = 'info', duration = 5000) => {
     const id = Date.now();
+    const config = toastTypes[type] || toastTypes.info;
 
-  
     setToasts((prev) => {
-      const updated = [...prev];
-      if (updated.length >= 3) {
-        updated.shift(); 
-      }
-      return [...updated, { id, message, duration, ...toastTypes[type] }];
+      const updated = prev.length >= 3 ? prev.slice(1) : prev;
+      return [...updated, { id, message, duration, ...config }];
     });
 
-    // Auto remove
     if (duration > 0) {
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, duration);
+      setTimeout(() => removeToast(id), duration);
     }
   };
-  
+
   const removeToast = (id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
+
   return (
     <ToastContext.Provider value={{ addToast }}>
       {children}
 
+      {/* TOAST CONTAINER */}
+      <div className="fixed top-6 right-6 z-[9999] flex flex-col gap-3 max-w-sm w-full pointer-events-none">
+        <AnimatePresence mode="popLayout">
+          {toasts.map((toast) => (
+            <motion.div
+              key={toast.id}
+              layout
+              initial={{ opacity: 0, x: 50, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+              className="pointer-events-auto"
+            >
+              <div className={`
+                relative overflow-hidden group
+                backdrop-blur-md bg-white/90 dark:bg-gray-900/90 
+                border border-gray-200 dark:border-gray-800 
+                shadow-2xl rounded-2xl p-4 flex items-start gap-3
+              `}>
+                {/* Side Color Strip */}
+                <div className={`absolute left-0 top-0 bottom-0 w-1.5 bg-${toast.color}-500`} />
 
-      <div className="fixed top-4 right-4 space-y-4 z-50 max-w-sm w-full">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className={`relative p-4 rounded-lg shadow-lg flex items-start transform transition-all duration-500 ease-out animate-slideInDown ${toast.bg} ${toast.border}`}
-          >
-    
-            <div className="mr-3">{toast.icon}</div>
+                {/* Icon Section */}
+                <div className={`p-2 rounded-xl bg-${toast.color}-500/10`}>
+                  {toast.icon}
+                </div>
 
-          
-            <div className="flex-1">
-              <p className={`font-semibold ${toast.text}`}>{toast.message}</p>
-              <div className="w-full h-1 bg-gray-200 mt-2 rounded overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-amber-400 to-orange-500 animate-progressBar"
-                  style={{ animationDuration: `${toast.duration}ms` }}
-                />
+                {/* Content */}
+                <div className="flex-1 pt-0.5">
+                  <h4 className={`text-sm font-bold text-gray-900 dark:text-gray-100`}>
+                    {toast.label}
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    {toast.message}
+                  </p>
+                  
+                  {/* Modern Progress Bar */}
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-100 dark:bg-gray-800">
+                    <motion.div
+                      initial={{ width: "100%" }}
+                      animate={{ width: "0%" }}
+                      transition={{ duration: toast.duration / 1000, ease: "linear" }}
+                      className={`h-full bg-${toast.color}-500`}
+                    />
+                  </div>
+                </div>
+
+                {/* Close Button */}
+                <button 
+                  onClick={() => removeToast(toast.id)}
+                  className="p-1 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-            </div>
-
-            <button onClick={() => removeToast(toast.id)} className="ml-3 text-gray-400 hover:text-gray-600">
-              <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M6 6l8 8M6 14L14 6" />
-              </svg>
-            </button>
-          </div>
-        ))}
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </ToastContext.Provider>
   );
 };
 
-
-  export default ToastProvider
-
 export const useToast = () => useContext(ToastContext);
+export default ToastProvider;
