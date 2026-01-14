@@ -14,6 +14,7 @@ import {
   Layers,
   ChevronRight
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const AgentPropertyList = () => {
   const [latestProperty, setLatestProperty] = useState([]);
@@ -170,18 +171,18 @@ const AgentPropertyList = () => {
           ))}
         </div>
         
-        {/* Massive Luxury CTA
+       {/* Massive Luxury CTA */}
         <div className="mt-32 border-t border-slate-100 dark:border-white/5 pt-20">
             <button className="group flex items-center justify-between w-full text-start">
                 <span className={`text-4xl md:text-6xl font-black uppercase tracking-tighter ${isDark ? 'text-white' : 'text-slate-950'}`}>
                     View the full <br/>
                     <span className="text-amber-500 italic font-serif font-light">2026 Collection</span>
                 </span>
-                <div className="w-20 h-20 md:w-32 md:h-32 rounded-full border-2 border-amber-500 flex items-center justify-center group-hover:bg-amber-500 group-hover:scale-110 transition-all duration-500">
+                <Link to="/propertylisting" className="w-20 h-20 md:w-32 md:h-32 rounded-full border-2 border-amber-500 flex items-center justify-center group-hover:bg-amber-500 group-hover:scale-110 transition-all duration-500">
                     <ChevronRight size={40} className={`group-hover:text-black transition-colors ${isDark ? 'text-white' : 'text-black'}`} />
-                </div>
+                </Link>
             </button>
-        </div> */}
+        </div> 
       </div>
     </section>
   );
