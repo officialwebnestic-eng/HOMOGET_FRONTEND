@@ -65,6 +65,15 @@ import UserProfile from "../pages/UserProfile";
 import UpdateAgent from "../components/admin/Agent/UpdateAgent";
 import ViewHomeLoan from "../components/HomeLoan/ViewHomeLoan";
  import MainLayout from "./MainLayout";
+import Developer from "../components/Developer";
+import Commercial from "../components/Comkmercial";
+import Luxury from "../components/Luxury";
+import Mortgage from "../components/Mortgage.JSX";
+import Transactions from "../components/Transaction";
+import Measurement from "../components/Mesaurment";
+import RentVsBuy from "../components/RentVsByCalculator";
+import PrivacyPolicy from "../components/PrivacyPolicy";
+import TermsOfService from "../components/TermsOfService";
 
 export const AdminRoutes = () => {
 
@@ -389,6 +398,16 @@ export const PublicRoutes = () => {
             <Route path="/showuserappoinment" element={<ShowUserAppoinment />} />
             <Route path="/testimonials" element={<UserTestimonial />} />
             <Route path="/helpcenter" element={<HelpCenter />} />
+            <Route path="/find-developer" element={<Developer />} />
+            <Route path="/commercial" element={<Commercial />} />
+            <Route path="/luxury" element={<Luxury />} />
+            <Route path="/mortgage" element={<Mortgage />} />
+            <Route path="/transactions" element={<Transactions />} />
+            <Route path="/measurement" element={<Measurement />} />
+            <Route path="/calculator" element={<RentVsBuy />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+             <Route path="/terms-of-service" element={<TermsOfService />} /> 
+            {/* <Route path="/rera-compliance" element={<ReraCompliance />} />  */}
              </Route>
         </>
     );

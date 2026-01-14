@@ -4,6 +4,7 @@ import Agentfilter from './homecommon/Agentfilter'
 import AgentPropertyList from './homecommon/AgentPropertyList'
 import AgentSlider from './homecommon/AgentSlider'
 import HomeLoans from './homecommon/HomeLoans'
+import FAQSection from '../FAQSection'
  
  const HomePage = () => {
    return (
@@ -12,7 +13,8 @@ import HomeLoans from './homecommon/HomeLoans'
        <Agentfilter></Agentfilter>
        <AgentPropertyList></AgentPropertyList>
        <AgentSlider></AgentSlider>
-       <HomeLoans></HomeLoans>
+       <FAQSection ></FAQSection>
+       {/* <HomeLoans></HomeLoans> */}
 
 
 

@@ -1,18 +1,21 @@
-import { motion } from "framer-motion";
-import { useTheme } from "../../context/ThemeContext";
+import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
-import { useToast } from "../../model/SuccessToasNotification";
-import { useLocation, useNavigate } from "react-router-dom";
-import { http } from "../../axios/axios";
+import { useLocation, useNavigate, Link } from "react-router-dom";
+import { ShieldCheck, Loader2, ArrowRight, ChevronLeft, RefreshCcw, MailCheck } from "lucide-react";
 
- import {navbarlogo} from "../../ExportImages";
+// Context & Utils
+import { useTheme } from "../../context/ThemeContext";
+import { http } from "../../axios/axios";
+import { useToast } from "../../model/SuccessToasNotification";
+import { navbarlogo } from "../../ExportImages";
 
 const VerifyOtp = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const { addToast } = useToast();
+  const isDark = theme === "dark";
 
   const email = location.state?.email;
 
@@ -20,16 +23,11 @@ const VerifyOtp = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [countdown, setCountdown] = useState(30);
 
-   const bg1 =
-    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
-
-  const bg2 =
-    "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cHJvcGVydHl8ZW58MHx8MHx8fDA%3D";
-  const bg3 =
-    "https://images.unsplash.com/photo-1602941525421-8f8b81d3edbb?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvcGVydHl8ZW58MHx8MHx8fDA%3D";
-
-
-  const backgrounds = [bg1,bg2,bg3];
+  const backgrounds = [
+    "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=2070&q=80",
+    "https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?auto=format&fit=crop&w=2070&q=80",
+    "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=2070&q=80"
+  ];
 
   const {
     register,
@@ -44,7 +42,6 @@ const VerifyOtp = () => {
   const onSubmit = async (data) => {
     try {
       setIsSubmitting(true);
-
       const res = await http.post(
         `/verifytoken?email=${encodeURIComponent(email)}`,
         { otp: data.otp }
@@ -52,17 +49,12 @@ const VerifyOtp = () => {
 
       if (res.data?.success) {
         addToast("OTP verified successfully!", "success");
-        navigate("/forget-password", {
-          state: { email, otp: data.otp },
-        });
+        navigate("/forget-password", { state: { email, otp: data.otp } });
       } else {
         addToast(res.data?.message || "Invalid OTP", "error");
       }
     } catch (error) {
-      addToast(
-        error.response?.data?.message || "OTP verification failed",
-        "error"
-      );
+      addToast(error.response?.data?.message || "OTP verification failed", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -71,17 +63,15 @@ const VerifyOtp = () => {
   const handleResendOtp = async () => {
     try {
       setCountdown(30);
-      addToast("New OTP sent to your email!", "success");
+      addToast("New security code dispatched.", "success");
     } catch {
-      addToast("Failed to resend OTP", "error");
+      addToast("Failed to resend code", "error");
     }
   };
 
   useEffect(() => {
     if (countdown === 0) return;
-    const timer = setInterval(() => {
-      setCountdown((prev) => prev - 1);
-    }, 1000);
+    const timer = setInterval(() => setCountdown((prev) => prev - 1), 1000);
     return () => clearInterval(timer);
   }, [countdown]);
 
@@ -90,109 +80,129 @@ const VerifyOtp = () => {
       setCurrentBg((prev) => (prev + 1) % backgrounds.length);
     }, 6000);
     return () => clearInterval(interval);
-  }, []);
+  }, [backgrounds.length]);
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
-
-      {/* Background */}
+      {/* 1. Cinematic Background */}
       <div className="absolute inset-0 z-0">
-        {backgrounds.map((bg, i) => (
+        <AnimatePresence mode="wait">
           <motion.div
-            key={i}
+            key={currentBg}
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 2.5 }}
             className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${bg})` }}
-            animate={{
-              opacity: currentBg === i ? 1 : 0,
-              scale: currentBg === i ? 1 : 1.05,
-            }}
-            transition={{ duration: 1.5 }}
+            style={{ backgroundImage: `url(${backgrounds[currentBg]})` }}
           />
-        ))}
-        <div className="absolute inset-0 bg-black/60" />
+        </AnimatePresence>
+        <div className={`absolute inset-0 ${isDark ? "bg-black/70" : "bg-black/50"}`} />
       </div>
 
-      {/* Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7 }}
-        className={`relative z-10 w-full max-w-md p-6 sm:p-8 rounded-3xl
-        backdrop-blur-lg border border-white/20 shadow-2xl
-        ${theme === "dark" ? "bg-gray-900/80 text-white" : "bg-white/90 text-gray-900"}`}
-      >
+      {/* 2. Top Navigation */}
+      <div className="absolute top-8 left-8 z-20">
+        <Link to="/forget-password-request" className="flex items-center gap-2 text-white/70 hover:text-[#C5A059] transition-colors font-bold text-xs tracking-widest uppercase">
+          <ChevronLeft size={16} /> Edit Email
+        </Link>
+      </div>
 
+      {/* 3. Verification Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`relative z-10 w-full max-w-[440px] p-8 sm:p-12 rounded-[2.5rem] backdrop-blur-3xl border shadow-2xl ${
+          isDark ? "bg-black/40 border-white/10" : "bg-white/90 border-white/20"
+        }`}
+      >
         {/* Header */}
-        <div className="text-center mb-8">
-          <img src={navbarlogo} alt="Logo" className="w-20 h-20 mx-auto mb-4" />
-          <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-500 to-amber-600 text-transparent bg-clip-text">
-            Verify OTP
+        <div className="text-center mb-10">
+          <div className="inline-block relative mb-6">
+            <div className="absolute inset-0 rounded-full bg-[#C5A059] blur-2xl opacity-20 animate-pulse" />
+            <img
+              src={navbarlogo}
+              alt="Logo"
+              className={`w-16 h-16 object-contain relative z-10 ${isDark ? 'brightness-200' : ''}`}
+            />
+          </div>
+          <h2 className={`text-2xl font-black tracking-tight uppercase mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            Secure <span className="text-[#C5A059]">Verification</span>
           </h2>
-          <p className="text-sm opacity-80 mt-2">
-            Enter the 6-digit code sent to your email
-          </p>
+          <div className="flex flex-col items-center gap-1 opacity-60">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Verification code sent to</p>
+            <p className={`text-xs font-bold ${isDark ? "text-white" : "text-black"}`}>{email}</p>
+          </div>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          <div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <div className="relative">
             <input
               type="text"
               maxLength="6"
-              placeholder="••••••"
-              className="w-full p-4 rounded-xl text-center text-2xl tracking-widest border focus:ring-2 focus:ring-purple-500 focus:outline-none"
+              placeholder="0 0 0 0 0 0"
+              className={`w-full py-5 rounded-xl text-center text-3xl font-black tracking-[0.5em] border transition-all duration-300 outline-none ${
+                isDark
+                  ? "bg-black/40 border-white/10 text-white focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059]/30 placeholder-white/10"
+                  : "bg-gray-50 border-gray-200 text-gray-900 focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059]/20 placeholder-gray-200"
+              }`}
               {...register("otp", {
-                required: "OTP is required",
-                pattern: {
-                  value: /^[0-9]{6}$/,
-                  message: "Enter a valid 6-digit OTP",
-                },
+                required: "Required",
+                pattern: { value: /^[0-9]{6}$/, message: "Invalid Code" },
               })}
             />
             {errors.otp && (
-              <p className="text-red-500 text-xs mt-1">
+              <p className="text-[#C5A059] text-center text-[10px] font-black mt-2 uppercase">
                 {errors.otp.message}
               </p>
             )}
           </div>
 
-          {/* Resend */}
-          <div className="text-center text-sm">
-            {countdown > 0 ? (
-              <p className="opacity-70">
-                Resend OTP in {countdown}s
-              </p>
-            ) : (
-              <button
-                type="button"
-                onClick={handleResendOtp}
-                className="text-black hover:underline"
-              >
-                Resend OTP
-              </button>
-            )}
-          </div>
+          {/* Action and Resend Logic */}
+          <div className="space-y-4">
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              disabled={isSubmitting}
+              className={`w-full py-4 rounded-xl bg-gradient-to-r from-[#C5A059] to-[#8E7037] text-black font-black uppercase text-xs tracking-[0.2em] shadow-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50`}
+            >
+              {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <MailCheck size={18} />}
+              {isSubmitting ? "Verifying..." : "Validate Access"}
+            </motion.button>
 
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            disabled={isSubmitting}
-            className="w-full py-3 rounded-xl font-semibold text-white
-            bg-gradient-to-r from-amber-500 to-amber-600
-            hover:from-amber-600 hover:to-amber-700 transition-all disabled:opacity-70"
-          >
-            {isSubmitting ? "Verifying..." : "Verify OTP"}
-          </motion.button>
+            <div className="text-center">
+              {countdown > 0 ? (
+                <div className="flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest opacity-40">
+                  <RefreshCcw size={12} className="animate-spin-slow" />
+                  <span>Resend available in {countdown}s</span>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  className="text-[10px] font-black text-[#C5A059] hover:underline uppercase tracking-widest"
+                >
+                  Dispatch New Code
+                </button>
+              )}
+            </div>
+          </div>
         </form>
 
         {/* Footer */}
-        <p className="text-center text-sm mt-6 opacity-80">
-          Back to{" "}
-          <a href="/login" className="text-amber-400 hover:underline">
-            Sign In
-          </a>
-        </p>
+        <div className="mt-12 text-center border-t border-white/10 pt-6">
+          <p className="text-[9px] opacity-30 uppercase tracking-[0.3em] font-black">
+            © {new Date().getFullYear()} HomoGet Properties
+          </p>
+        </div>
       </motion.div>
+
+      {/* Decorative Background Text */}
+      <div className="hidden xl:block absolute right-12 bottom-12 z-10 pointer-events-none">
+         <h1 className="text-[120px] font-black text-white/[0.03] leading-none uppercase select-none">
+           Verify<br/>Access
+         </h1>
+      </div>
     </div>
   );
 };

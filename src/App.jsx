@@ -15,6 +15,7 @@ import PropertyRegistrationForm from "./components/ShellProperty/PropertyRegistr
 import ViewShellProperty from "./components/ShellProperty/ViewShellProperty";
 
 import MainLayout from "./routes/MainLayout";
+import UserProfile from "./pages/UserProfile";
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
               path="/getPropertyshell"
               element={<ViewShellProperty />}
             />
+            <Route path="/user-profile" element={<UserProfile />} />
 
           </Route>
 

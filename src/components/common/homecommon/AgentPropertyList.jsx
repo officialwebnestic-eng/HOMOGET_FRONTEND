@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { http } from "../../../axios/axios";
 import { useTheme } from "../../../context/ThemeContext";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   MapPin, 
   BedDouble, 
@@ -10,7 +10,9 @@ import {
   ArrowUpRight, 
   Heart,
   Navigation,
-  Sparkles
+  Sparkles,
+  Layers,
+  ChevronRight
 } from "lucide-react";
 
 const AgentPropertyList = () => {
@@ -19,6 +21,7 @@ const AgentPropertyList = () => {
   const { theme } = useTheme();
 
   const isDark = theme === 'dark';
+  const accentColor = "#C5A059"; // Dubai Luxury Gold
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -36,143 +39,149 @@ const AgentPropertyList = () => {
 
   if (loading) return (
     <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
-      <div className="relative">
-        <div className="w-20 h-20 border-2 border-blue-500/20 rounded-full border-t-blue-500 animate-spin" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-10 h-10 bg-blue-500/10 rounded-full animate-pulse" />
-        </div>
-      </div>
+      <motion.div 
+        animate={{ rotate: 360 }}
+        transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+        className="w-16 h-16 border-t-2 border-amber-500 rounded-full" 
+      />
     </div>
   );
 
   return (
-    <section className={`py-24 px-6 transition-colors duration-700 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
+    <section className={`py-32 px-6 transition-colors duration-1000 ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
       <div className="max-w-7xl mx-auto">
         
-        {/* Section Header */}
-        <div className="relative mb-20 overflow-hidden">
+        {/* Editorial Header */}
+        <header className="relative mb-24 flex flex-col md:flex-row justify-between items-end gap-10">
           <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            className="flex flex-col gap-4"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className="z-10"
           >
-            <div className="flex items-center gap-3">
-              <div className="h-[1px] w-12 bg-blue-500" />
-              <span className="text-blue-500 font-bold tracking-[0.3em] text-xs uppercase">Curated Selection</span>
+            <div className="flex items-center gap-4 mb-6">
+              <span className="h-[2px] w-12 bg-amber-500" />
+              <span className="text-amber-500 font-black tracking-[0.4em] text-[10px] uppercase">Curated Portfolio</span>
             </div>
-            <h2 className={`text-5xl md:text-7xl font-serif italic ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              Latest <span className="font-sans not-italic font-black uppercase tracking-tighter">Listings</span>
+            <h2 className={`text-6xl md:text-8xl font-black tracking-tighter leading-[0.85] ${isDark ? 'text-white' : 'text-slate-950'}`}>
+              PREMIER <br/>
+              <span className="font-serif italic font-light text-amber-600">Listings.</span>
             </h2>
           </motion.div>
+
+          <p className={`max-w-xs text-sm font-medium leading-relaxed mb-4 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+            Explore the most sought-after residences in Dubai, hand-picked for their architectural significance and investment potential.
+          </p>
           
-          <div className={`absolute -right-20 -top-20 opacity-[0.03] pointer-events-none ${isDark ? 'text-white' : 'text-black'}`}>
-            <Navigation size={400} />
+          <div className="absolute -right-10 -top-20 opacity-[0.04] select-none pointer-events-none">
+            <h2 className="text-[20rem] font-black italic tracking-tighter">HG</h2>
           </div>
-        </div>
+        </header>
 
         {/* The Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-y-16 gap-x-8">
           {latestProperty.map((property, idx) => (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: idx * 0.1 }}
-              className={`group relative md:col-span-6 lg:col-span-4 rounded-3xl overflow-hidden border transition-all duration-500 ${
-                isDark ? 'bg-slate-900/40 border-slate-800' : 'bg-white border-slate-200'
-              } hover:border-blue-500/50`}
+              transition={{ duration: 0.8, delay: idx * 0.1 }}
+              className={`group relative md:col-span-6 lg:col-span-4 flex flex-col h-full`}
             >
-              {/* Image Hero Container */}
-              <div className="relative h-[450px] overflow-hidden">
+              {/* Media Container */}
+              <div className="relative aspect-[4/5] rounded-[2.5rem] overflow-hidden mb-8 shadow-2xl">
                 <img
                   src={property.image?.[0] || "https://images.unsplash.com/photo-1600585154340-be6191da95b8?auto=format&fit=crop&w=800"}
                   alt={property.propertyname}
-                  className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
+                  className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110"
                 />
                 
-                {/* Visual Overlays */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
+                {/* Visual Layers */}
+                <div className={`absolute inset-0 bg-gradient-to-t ${isDark ? 'from-slate-950 via-slate-950/20' : 'from-slate-900/60 via-transparent'} opacity-80`} />
                 
-                {/* Floating UI */}
+                {/* Top Badge UI */}
                 <div className="absolute top-6 left-6 right-6 flex justify-between items-start">
-                  <div className="flex gap-2">
-                    <span className="px-3 py-1 bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold uppercase tracking-widest rounded">
-                      {property.listingtype || "Premier"}
+                  <div className="flex flex-col gap-2">
+                    <span className="px-4 py-2 bg-black/40 backdrop-blur-xl border border-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl">
+                      {property.listingtype || "Elite"}
                     </span>
-                    {idx === 0 && (
-                      <span className="px-3 py-1 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded flex items-center gap-1">
-                        <Sparkles size={10} /> New
-                      </span>
-                    )}
                   </div>
-                  <button className="w-10 h-10 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-md border border-white/10 text-white hover:bg-white hover:text-black transition-all">
-                    <Heart size={18} />
+                  <button className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 text-white hover:bg-amber-500 hover:text-black transition-all">
+                    <Heart size={20} />
                   </button>
                 </div>
 
-                {/* Bottom Image Info */}
-                <div className="absolute bottom-8 left-8 right-8 text-white">
-                    <div className="mb-2">
-                         <span className="text-4xl font-black tracking-tighter">
-                            ₹{new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(property.price / 100000)}L
-                         </span>
-                         <span className="text-sm opacity-60 ml-2 font-medium">Starting from</span>
+                {/* Bottom Overlay Text */}
+                <div className="absolute bottom-8 left-8 right-8">
+                    <div className="flex items-baseline gap-2 mb-2">
+                        <span className="text-4xl font-black text-white tracking-tighter">
+                           {property.price > 9999999 
+                             ? `₹${(property.price / 10000000).toFixed(2)}Cr` 
+                             : `₹${(property.price / 100000).toFixed(1)}L`}
+                        </span>
                     </div>
-                    <h3 className="text-2xl font-bold leading-tight group-hover:text-blue-400 transition-colors uppercase tracking-tight">
+                    <div className="flex items-center gap-2 text-white/60 text-[10px] font-bold uppercase tracking-widest">
+                        <MapPin size={12} className="text-amber-500" />
+                        {property.city}
+                    </div>
+                </div>
+              </div>
+
+              {/* Content / Info Section */}
+              <div className="px-4 flex-grow flex flex-col">
+                <div className="flex justify-between items-start mb-6">
+                    <h3 className={`text-2xl font-black uppercase tracking-tighter leading-tight ${isDark ? 'text-white' : 'text-slate-950'} group-hover:text-amber-600 transition-colors`}>
                         {property.propertyname}
                     </h3>
-                </div>
-              </div>
-
-              {/* Technical Detail Bar */}
-              <div className={`p-6 flex items-center justify-between border-t transition-colors ${
-                isDark ? 'border-slate-800 bg-slate-900/60' : 'border-slate-100 bg-slate-50/50'
-              }`}>
-                <div className="flex gap-6">
-                   <div className="flex flex-col">
-                        <span className={`text-[10px] font-bold uppercase tracking-tighter ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Beds</span>
-                        <span className={`font-mono font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{property.bedroom.toString().padStart(2, '0')}</span>
-                   </div>
-                   <div className="flex flex-col">
-                        <span className={`text-[10px] font-bold uppercase tracking-tighter ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Baths</span>
-                        <span className={`font-mono font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{property.bathroom.toString().padStart(2, '0')}</span>
-                   </div>
-                   <div className="flex flex-col">
-                        <span className={`text-[10px] font-bold uppercase tracking-tighter ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Area</span>
-                        <span className={`font-mono font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{property.squarefoot}</span>
-                   </div>
+                    <motion.div 
+                        whileHover={{ rotate: 45 }}
+                        className="p-3 rounded-full border border-amber-500/20 text-amber-500"
+                    >
+                        <ArrowUpRight size={24} />
+                    </motion.div>
                 </div>
 
-                <motion.div 
-                    whileHover={{ scale: 1.1, rotate: 45 }}
-                    className="w-12 h-12 flex items-center justify-center bg-blue-600 rounded-full text-white cursor-pointer shadow-lg shadow-blue-500/20"
-                >
-                    <ArrowUpRight size={24} />
-                </motion.div>
-              </div>
-
-              {/* Location Tag */}
-              <div className={`px-6 py-4 flex items-center gap-2 border-t ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
-                <MapPin size={14} className="text-blue-500" />
-                <span className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    {property.city}, {property.state}
-                </span>
+                {/* Technical Specs Bar */}
+                <div className={`grid grid-cols-3 gap-4 py-6 border-y ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-black uppercase tracking-tighter text-slate-500">Beds</span>
+                        <div className="flex items-center gap-2">
+                            <BedDouble size={14} className="text-amber-500" />
+                            <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{property.bedroom}</span>
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-black uppercase tracking-tighter text-slate-500">Baths</span>
+                        <div className="flex items-center gap-2">
+                            <Bath size={14} className="text-amber-500" />
+                            <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{property.bathroom}</span>
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-black uppercase tracking-tighter text-slate-500">Sq.Ft</span>
+                        <div className="flex items-center gap-2">
+                            <Maximize size={14} className="text-amber-500" />
+                            <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{property.squarefoot}</span>
+                        </div>
+                    </div>
+                </div>
               </div>
             </motion.div>
           ))}
         </div>
         
-        {/* View All Button */}
-        <div className="mt-20 text-center">
-            <button className={`px-12 py-5 rounded-full border-2 font-bold uppercase tracking-[0.2em] text-sm transition-all ${
-                isDark 
-                ? 'border-white text-white hover:bg-white hover:text-black' 
-                : 'border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white'
-            }`}>
-                View Full Collection
+        {/* Massive Luxury CTA
+        <div className="mt-32 border-t border-slate-100 dark:border-white/5 pt-20">
+            <button className="group flex items-center justify-between w-full text-start">
+                <span className={`text-4xl md:text-6xl font-black uppercase tracking-tighter ${isDark ? 'text-white' : 'text-slate-950'}`}>
+                    View the full <br/>
+                    <span className="text-amber-500 italic font-serif font-light">2026 Collection</span>
+                </span>
+                <div className="w-20 h-20 md:w-32 md:h-32 rounded-full border-2 border-amber-500 flex items-center justify-center group-hover:bg-amber-500 group-hover:scale-110 transition-all duration-500">
+                    <ChevronRight size={40} className={`group-hover:text-black transition-colors ${isDark ? 'text-white' : 'text-black'}`} />
+                </div>
             </button>
-        </div>
+        </div> */}
       </div>
     </section>
   );

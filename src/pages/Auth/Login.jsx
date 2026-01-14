@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft, ShieldCheck } from "lucide-react";
+import { Link } from "react-router-dom";
 
 // Context & Hooks
 import { useTheme } from "../../context/ThemeContext";
@@ -17,9 +18,9 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const backgrounds = [
-    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=2070&q=80",
-    "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=2070&q=80",
-    "https://images.unsplash.com/photo-1602941525421-8f8b81d3edbb?auto=format&fit=crop&w=2070&q=80"
+    "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=2070&q=80",
+    "https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?auto=format&fit=crop&w=2070&q=80",
+    "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=2070&q=80"
   ];
 
   const {
@@ -39,16 +40,15 @@ const Login = () => {
     return () => clearInterval(interval);
   }, [backgrounds.length]);
 
-  // Combined Template Literal (Corrected the closing bracket issue)
-  const inputBase = `w-full pl-11 pr-4 py-3.5 rounded-2xl border-2 transition-all duration-300 outline-none ${
+  const inputBase = `w-full pl-11 pr-12 py-4 rounded-xl border transition-all duration-300 outline-none font-medium ${
     isDark
-      ? "bg-gray-800/40 border-gray-700/50 text-white focus:border-amber-500/50 focus:bg-gray-800/60"
-      : "bg-white/50 border-gray-200 text-gray-900 focus:border-amber-500 focus:bg-white"
+      ? "bg-black/40 border-white/10 text-white focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059]/30"
+      : "bg-gray-50 border-gray-200 text-gray-900 focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059]/20"
   }`;
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden font-sans">
-      {/* Dynamic Background Engine */}
+    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
+      {/* 1. Cinematic Background */}
       <div className="absolute inset-0 z-0">
         <AnimatePresence mode="wait">
           <motion.div
@@ -56,164 +56,119 @@ const Login = () => {
             initial={{ opacity: 0, scale: 1.1 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 2 }}
+            transition={{ duration: 2.5 }}
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url(${backgrounds[currentBg]})` }}
           />
         </AnimatePresence>
-        <div
-          className={`absolute inset-0 transition-colors duration-1000 ${
-            isDark ? "bg-black/60" : "bg-black/40"
-          }`}
-        />
+        <div className={`absolute inset-0 ${isDark ? "bg-black/70" : "bg-black/50"}`} />
       </div>
 
-      {/* Login Card */}
+      {/* 2. Top Navigation */}
+      <div className="absolute top-8 left-8 z-20">
+        <Link to="/" className="flex items-center gap-2 text-white/70 hover:text-[#C5A059] transition-colors font-bold text-xs tracking-widest uppercase">
+          <ArrowLeft size={16} /> Back to Website
+        </Link>
+      </div>
+
+      {/* 3. The Login Card */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className={`relative z-10 w-full max-w-md p-8 sm:p-10 rounded-[2.5rem] backdrop-blur-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.3)] ${
-          isDark ? "bg-gray-900/80" : "bg-white/90"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`relative z-10 w-full max-w-[440px] p-8 sm:p-12 rounded-[2rem] backdrop-blur-3xl border shadow-2xl ${
+          isDark ? "bg-black/40 border-white/10" : "bg-white/90 border-white/20"
         }`}
       >
-        {/* Header */}
-        <div className="text-center mb-8">
-          <motion.div
-            initial={{ y: -20 }}
-            animate={{ y: 0 }}
-            className="inline-block p-4 rounded-3xl bg-white shadow-xl mb-4"
-          >
+        <div className="text-center mb-10">
+          <div className="inline-block relative mb-6">
+            <div className="absolute inset-0 rounded-full bg-[#C5A059] blur-2xl opacity-20 animate-pulse" />
             <img
               src={navbarlogo}
-              alt="HomoGet Logo"
-              className="w-16 h-16 object-contain"
+              alt="Logo"
+              className={`w-20 h-20 object-contain relative z-10 ${isDark ? 'brightness-200' : ''}`}
             />
-          </motion.div>
-          <h2 className="text-3xl font-black bg-gradient-to-br from-amber-400 via-amber-600 to-amber-800 text-transparent bg-clip-text">
-            HomoGet Properties
+          </div>
+          <h2 className={`text-2xl font-black tracking-tight uppercase mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            Partner <span className="text-[#C5A059]">Portal</span>
           </h2>
-          <p
-            className={`text-sm mt-2 font-medium ${
-              isDark ? "text-gray-400" : "text-gray-600"
-            }`}
-          >
-            Secure Partner Portal Login
-          </p>
+          <div className="flex items-center justify-center gap-2 opacity-60">
+            <ShieldCheck size={14} className="text-[#C5A059]" />
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] transition-colors">Dubai Regulatory Standard</p>
+          </div>
         </div>
 
-        {/* Form */}
-        <form
-          onSubmit={handleSubmit(onHandleSubmitLoginData)}
-          className="space-y-6"
-        >
-          {/* Email Field */}
-          <div className="space-y-1.5">
-            <label
-              className={`text-xs font-bold uppercase tracking-widest ml-1 ${
-                isDark ? "text-gray-400" : "text-gray-500"
-              }`}
-            >
-              Email Identity
+        <form onSubmit={handleSubmit(onHandleSubmitLoginData)} className="space-y-5">
+          <div className="space-y-2">
+            <label className={`text-[10px] font-black uppercase tracking-widest ml-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+              Registered Email
             </label>
-            <div className="relative group">
-              <Mail
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-amber-500 transition-colors"
-                size={18}
-              />
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="email"
-                placeholder="agent@homoget.com"
+                placeholder="email@homoget.com"
                 className={inputBase}
-                {...register("email", {
-                  required: "Email is mandatory",
-                  pattern: {
-                    value: /^\S+@\S+$/i,
-                    message: "Invalid email format",
-                  },
-                })}
+                {...register("email", { required: "Email is mandatory" })}
               />
             </div>
-            {errors.email && (
-              <p className="text-red-500 text-[10px] font-bold uppercase ml-1">
-                {errors.email.message}
-              </p>
-            )}
+            {errors.email && <p className="text-[#C5A059] text-[10px] font-bold mt-1 uppercase">{errors.email.message}</p>}
           </div>
 
-          {/* Password Field */}
-          <div className="space-y-1.5">
-            <label
-              className={`text-xs font-bold uppercase tracking-widest ml-1 ${
-                isDark ? "text-gray-400" : "text-gray-500"
-              }`}
-            >
-              Security Key
-            </label>
-            <div className="relative group">
-              <Lock
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-amber-500 transition-colors"
-                size={18}
-              />
+          <div className="space-y-2">
+            <div className="flex justify-between items-center px-1">
+              <label className={`text-[10px] font-black uppercase tracking-widest ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                Access Key
+              </label>
+              <Link to="/forget-password-request" className="text-[9px] font-black text-[#C5A059] hover:underline uppercase tracking-tighter">
+                Forgot Key?
+              </Link>
+            </div>
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 className={inputBase}
-                {...register("password", { required: "Password is required" })}
+                {...register("password", { required: "Required" })}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-amber-500 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#C5A059] transition-colors"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-            {errors.password && (
-              <p className="text-red-500 text-[10px] font-bold uppercase ml-1">
-                {errors.password.message}
-              </p>
-            )}
+            {errors.password && <p className="text-[#C5A059] text-[10px] font-bold mt-1 uppercase">{errors.password.message}</p>}
           </div>
 
-          {/* Quick Links */}
-          <div className="flex justify-between items-center px-1">
-            <a
-              href="/forget-password-request"
-              className="text-xs font-bold text-amber-600 hover:text-amber-500 transition-colors"
-            >
-              RESET KEY?
-            </a>
-            <div className="h-1 w-1 bg-gray-400 rounded-full" />
-            <a
-              href="/signup"
-              className="text-xs font-bold text-amber-600 hover:text-amber-500 transition-colors"
-            >
-              JOIN PLATFORM
-            </a>
-          </div>
-
-          {/* Submit Button */}
           <motion.button
-            whileHover={{
-              scale: 1.02,
-              boxShadow: "0 10px 20px -10px rgba(245, 158, 11, 0.5)",
-            }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
             disabled={isSubmitting}
-            className={`w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-700 text-white font-bold tracking-widest uppercase text-sm shadow-lg flex items-center justify-center gap-2 group transition-all ${
-              isSubmitting ? "opacity-70 cursor-not-allowed" : ""
-            }`}
+            className={`w-full py-4 rounded-xl bg-gradient-to-r from-[#C5A059] to-[#8E7037] text-black font-black uppercase text-xs tracking-[0.2em] shadow-xl flex items-center justify-center gap-3 group transition-all disabled:opacity-50 mt-4`}
           >
-            {isSubmitting ? "Verifying..." : "Authorize Access"}
-            {!isSubmitting && (
-              <ArrowRight
-                size={18}
-                className="group-hover:translate-x-1 transition-transform"
-              />
-            )}
+            {isSubmitting ? "Authenticating..." : "Authorize Login"}
+            {!isSubmitting && <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />}
           </motion.button>
         </form>
+
+        <div className="mt-10 text-center">
+          <p className={`text-[11px] font-medium ${isDark ? "text-gray-500" : "text-gray-500"}`}>
+            Don't have a partner account?{" "}
+            <Link to="/signup" className="text-[#C5A059] font-black uppercase hover:underline ml-1">
+              Request Access
+            </Link>
+          </p>
+        </div>
       </motion.div>
+
+      {/* 4. Decorative Dubai Text */}
+      <div className="hidden xl:block absolute right-12 bottom-12 z-10 pointer-events-none">
+         <h1 className="text-[120px] font-black text-white/[0.03] leading-none uppercase select-none">
+           Dubai<br/>Estate
+         </h1>
+      </div>
     </div>
   );
 };

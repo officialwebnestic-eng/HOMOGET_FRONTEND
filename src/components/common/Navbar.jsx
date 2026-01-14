@@ -1,72 +1,56 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
-import { Disclosure } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
+import { ChevronDownIcon, Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useTheme } from "../../context/ThemeContext";
 import { 
   MoonIcon, 
   SunIcon, 
   LogOut, 
-  User, 
-  Settings, 
   LayoutDashboard,
-  Home,
-  Image as ImageIcon,
-  Info,
-  Mail,
-  FileText,
-  Building,
-  Calendar,
-  Users,
-  ShoppingCart,
-  Sparkles,
-  Bot
+  PlusCircle,
+  ChevronRight,
+  User,
+  Settings,
+  Building2,
+  ShieldCheck,
+  Briefcase
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
-import { useSidebar } from "../../context/SidebarContext";
 import { navbarlogo } from "../../ExportImages";
 import { motion, AnimatePresence } from "framer-motion";
 
-const commonNavigation = [
-  { name: "Home", href: "/", icon: Home },
-  { name: "Gallery", href: "/gallery", icon: ImageIcon },
-  { name: "AboutUs", href: "/about", icon: Info },
-  { name: "ContactUs", href: "/contactus", icon: Mail },
-  {
-    name: "Information",
-    href: "#",
-    icon: Info,
-    dropdown: [
-      { name: "Blogs", href: "/blog", icon: FileText, description: "Latest news and insights" },
-      { name: "Testimonials", href: "/testimonials", icon: Building, description: "See what our clients say" },
-      { name: "Appointment", href: "/selectappoinmentproperty", icon: Calendar, description: "Book a site visit" },
-      { name: "HelpLine", href: "/helpcenter", icon: Mail, description: "Get support and FAQs" },
-    ],
-  },
-  {
-    name: "Services",
-    href: "/services",
-    icon: Sparkles,
-    dropdown: [
-      { name: "Property Listing", href: "/propertylisting", icon: Building, description: "List your property" },
-      { name: "Agent Support", href: "/agentsupport", icon: Users, description: "Get expert help" },
-      { name: "Legal Support", href: "/documentationsupport", icon: FileText, description: "Documentation help" },
-      { name: "Home Loan", href: "/homeloanrequestform", icon: ShoppingCart, description: "Financing options" },
-      { name: "Virtual Tours", href: "/walkthrough", icon: Bot, description: "3D property views" },
-    ],
-  },
+// Additional Dropdown Menu Items
+const sidebarLinks = [
+  { name: "MORTGAGE", href: "/mortgage", badge: "NEW" },
+  { name: "FIND AGENT", href: "/agentsupport" },
+  { name: "FIND DEVELOPER", href: "/find-developer" },
+  { name: "DUBAI TRANSACTION", href: "/transactions", badge: "HOT" },
+  { name: "MEASUREMENT SYSTEM", href: "/measurement" },
+  { name: "RENT V/S BUY CALCULATOR", href: "/calculator" },
+  { name: "TRENDS", href: "/trends", badge: "TRENDING" },
+  { name: "EXPLORE", href: "/explore" },
+  { name: "BLOG", href: "/blog" },
+  { name: "PROPERTY LISTING", href: "/propertylisting" },
+  { name: "TESTIMONIALS", href: "/testimonials" },
 ];
 
-const authenticatedNavigation = [
-  { name: "MyProperties", href: "/getPropertyshell", icon: Building },
-  { name: "Profile", href: "/profile", icon: User },
+// Main Horizontal Links
+const commonNavigation = [
+  { name: "Home", href: "/" },
+  { name: "Buy", href: "/buy" },
+  { name: "Rent", href: "/rent" },
+  { name: "Offplan", href: "/offplan", badge: "HOT" },
+  { name: "Commercial", href: "/commercial" },
+  { name: "Luxury", href: "/luxury" },
+  { name: "About", href: "/about" },
+  { name: "Contact", href: "/contactus" },
 ];
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { logoutUser, user, isAuthenticated } = useContext(AuthContext);
-  const { isOpen, toggleSidebar } = useSidebar();
   
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
@@ -75,50 +59,14 @@ export default function Navbar() {
   const profileDropdownRef = useRef();
   const isDark = theme === "dark";
 
+  // Handle Scroll Transparency
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const themeClasses = {
-    dark: {
-      bg: scrollY > 20 ? "bg-gray-950/90 backdrop-blur-xl" : "bg-gray-950",
-      text: "text-slate-200",
-      hover: "hover:bg-white/10 hover:text-white",
-      border: "border-white/10",
-      dropdown: "bg-gray-900 border-white/10 shadow-2xl",
-      profileText: "text-slate-400",
-      divider: "border-white/5",
-      button:"bg-gradient-to-r from-white to-gray-500 hover:shadow-lg transform active:scale-95",
-       buttontext:"text-white"
-    },
-    light: {
-      bg: scrollY > 20 ? "bg-white/90 backdrop-blur-xl" : "bg-white",
-      text: "text-slate-900",
-      hover: "hover:bg-slate-100 hover:text-slate-900",
-      border: "border-slate-200",
-      dropdown: "bg-white border-slate-200 shadow-xl",
-      profileText: "text-slate-500",
-      divider: "border-slate-100",
-      button:"bg-gradient-to-r from-black to-gray-500 hover:shadow-lg transform active:scale-95",
-      buttontext:"text-white"
-    }
-  };
-
-  const currentTheme = themeClasses[theme] || themeClasses.light;
-
-  const handleLogout = async () => {
-    await logoutUser();
-    setIsProfileOpen(false);
-    navigate("/login");
-  };
-
-  const navigation = !isAuthenticated 
-    ? commonNavigation 
-    : (user.role === "user" ? [...commonNavigation, ...authenticatedNavigation] : commonNavigation);
-
-  // Close profile dropdown on outside click
+  // Handle Outside Click to Close Profile Dropdown
   useEffect(() => {
     function handleClickOutside(event) {
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
@@ -129,146 +77,268 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const dropdownVariants = {
-    hidden: { opacity: 0, y: 10, scale: 0.95 },
-    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.2 } },
+  const handleLogout = async () => {
+    await logoutUser();
+    setIsProfileOpen(false);
+    navigate("/login");
+  };
+
+  const themeClasses = {
+    dark: {
+      bg: scrollY > 20 ? "bg-black/95 backdrop-blur-md" : "bg-black",
+      text: "text-white",
+      hover: "hover:text-amber-500",
+      border: "border-white/10",
+      dropdown: "bg-neutral-900 border-white/10 shadow-2xl",
+      buttonPrimary: "bg-white text-black hover:bg-neutral-200",
+      buttonSecondary: "border border-white/20 text-white hover:bg-white/10",
+      addBtn: "bg-amber-500 text-black hover:bg-amber-400"
+    },
+    light: {
+      bg: scrollY > 20 ? "bg-white/95 backdrop-blur-md" : "bg-white",
+      text: "text-slate-900",
+      hover: "hover:text-blue-600",
+      border: "border-slate-200",
+      dropdown: "bg-white border-slate-200 shadow-xl",
+      buttonPrimary: "bg-black text-white hover:bg-neutral-800",
+      buttonSecondary: "border border-slate-300 text-slate-900 hover:bg-slate-50",
+      addBtn: "bg-blue-600 text-white hover:bg-blue-700"
+    }
+  };
+
+  const currentTheme = themeClasses[theme] || themeClasses.light;
+
+  const renderBadge = (type) => {
+    if (!type) return null;
+    const colors = { HOT: "bg-red-500", NEW: "bg-blue-500", TRENDING: "bg-amber-500" };
+    return (
+      <span className={`ml-2 px-1.5 py-0.5 rounded text-[8px] font-black text-white uppercase ${colors[type]}`}>
+        {type}
+      </span>
+    );
   };
 
   return (
-    <nav className={`w-full z-40 transition-all duration-300 ${currentTheme.bg} border-b ${currentTheme.border}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className={`flex items-center justify-between transition-all duration-300 ${scrollY > 20 ? 'h-16' : 'h-20'}`}>
-          
-          {/* LEFT: Toggle Button + Logo */}
-          <div className="flex items-center gap-4">
-            {/* Sidebar Toggle Button (Shows for Admin/Agent) */}
-            {isAuthenticated && user?.role !== "user" && (
-              <button
-                onClick={toggleSidebar}
-                className={`p-2 rounded-xl transition-all ${currentTheme.hover} ${currentTheme.text}`}
-              >
-                <Bars3Icon className="h-6 w-6" />
-              </button>
-            )}
+    <>
+      <nav className={`fixed top-0 w-full z-[100] transition-all duration-300 ${currentTheme.bg} border-b ${currentTheme.border}`}>
+        <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-10">
+          <div className={`flex items-center justify-between transition-all duration-300 ${scrollY > 20 ? 'h-16 lg:h-20' : 'h-20 lg:h-24'}`}>
+            
+            {/* 1. LOGO */}
+            <div className="flex items-center">
+              <Link to="/" className="flex-shrink-0">
+                <img 
+                  src={navbarlogo} 
+                  alt="Logo" 
+                  className={`${scrollY > 20 ? 'h-10 lg:h-14 w-32 lg:w-40' : 'h-12 lg:h-18 w-36 lg:w-48'} object-contain transition-all duration-300`} 
+                />
+              </Link>
+            </div>
 
-         <Link 
-  to={
-    user?.role === "admin" 
-      ? "/admin-dashboard" 
-      : isAuthenticated 
-        ? "/agent-dashboard" 
-        : "/"
-  } 
-  className="flex-shrink-0"
->
-  <img 
-    src={navbarlogo} 
-    alt="Logo" 
-    className={`
-      ${scrollY > 20 ? 'h-8 md:h-25' : 'h-10 md:h-20 lg:h-25'} 
-      w-auto object-contain transition-all duration-300
-    `} 
-  />
-</Link>
-          </div>
 
-          {/* CENTER: Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-1">
-            {navigation.map((item) => (
+            {/* 2. DESKTOP CENTER NAVIGATION */}
+            <div className="hidden lg:flex items-center space-x-6 xl:space-x-10">
+              {commonNavigation.map((item) => (
+                <Link 
+                  key={item.name} 
+                  to={item.href} 
+                  className={`group relative text-sm font-bold tracking-tight ${currentTheme.text} ${currentTheme.hover} transition-all`}
+                >
+                  {item.name} {renderBadge(item.badge)}
+                  <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-current transition-all group-hover:w-full" />
+                </Link>
+              ))}
+              {/* {isAuthenticated && (
+                <Link 
+                  to="/getPropertyshell"
+                  className={`flex items-center gap-2 px-3 lg:px-5 py-2 rounded-full text-xs font-bold transition-all shadow-lg ${currentTheme.text}  ${currentTheme.hover}`}
+                >
+                  <PlusCircle size={18} />
+                  <span className="hidden xl:inline">My Property</span>
+                </Link>
+              )} */}
+
+              {/* MENUS DROPDOWN */}
               <div 
-                key={item.name} 
                 className="relative" 
-                onMouseEnter={() => item.dropdown && setOpenDropdown(item.name)} 
+                onMouseEnter={() => setOpenDropdown("menus")} 
                 onMouseLeave={() => setOpenDropdown(null)}
               >
-                {item.dropdown ? (
-                  <>
-                    <button className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium ${currentTheme.text} ${currentTheme.hover}`}>
-                      {item.name}
-                      <ChevronDownIcon className="h-3 w-3" />
-                    </button>
-                    <AnimatePresence>
-                      {openDropdown === item.name && (
-                        <motion.div variants={dropdownVariants} initial="hidden" animate="visible" exit="hidden" className={`absolute left-0 mt-2 w-72 rounded-2xl border p-2 z-[60] ${currentTheme.dropdown}`}>
-                          {item.dropdown.map((sub) => (
-                            <Link key={sub.name} to={sub.href} className={`flex items-start gap-3 p-3 rounded-xl ${currentTheme.hover}`}>
-                              <sub.icon className="h-4 w-4 mt-1 text-blue-500" />
-                              <div>
-                                <div className="font-bold text-sm leading-tight">{sub.name}</div>
-                                <div className="text-[11px] opacity-60 leading-tight">{sub.description}</div>
-                              </div>
-                            </Link>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </>
-                ) : (
-                  <Link to={item.href} className={`px-4 py-2 rounded-full text-sm font-medium ${currentTheme.text} ${currentTheme.hover}`}>
-                    {item.name}
-                  </Link>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* RIGHT: Actions */}
-          <div className="flex items-center gap-3">
-            <button onClick={toggleTheme} className={`p-2 rounded-full ${currentTheme.text} ${currentTheme.hover}`}>
-              {isDark ? <SunIcon size={20} className="text-yellow-400" /> : <MoonIcon size={20} />}
-            </button>
-
-            {isAuthenticated ? (
-              <div className="relative" ref={profileDropdownRef}>
-                <button 
-                  onClick={() => setIsProfileOpen(!isProfileOpen)} 
-                  className={`flex items-center gap-2 p-1 pr-3 rounded-full border ${currentTheme.border} ${currentTheme.hover}`}
-                >
-                  <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold uppercase">
-                    {user?.firstname?.charAt(0) || <User size={14}/>}
-                  </div>
-                  <span className={`hidden sm:block text-sm font-bold ${currentTheme.text}`}>{user?.firstname}</span>
-                  <ChevronDownIcon className={`h-3 w-3 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
+                <button className={`flex items-center gap-1 text-sm font-extrabold uppercase tracking-widest ${currentTheme.text} ${currentTheme.hover}`}>
+                  Menus <ChevronDownIcon className={`h-3 w-3 transition-transform ${openDropdown === 'menus' ? 'rotate-180' : ''}`} />
                 </button>
-
                 <AnimatePresence>
-                  {isProfileOpen && (
-                    <motion.div variants={dropdownVariants} initial="hidden" animate="visible" exit="hidden" className={`absolute right-0 mt-3 w-60 rounded-2xl border p-2 z-[60] ${currentTheme.dropdown}`}>
-                      <div className="px-3 py-2 border-b mb-1">
-                        <p className="text-[10px] font-bold uppercase opacity-50 tracking-wider">Signed in as</p>
-                        <p className="text-xs font-bold truncate">{user?.email}</p>
+                  {openDropdown === "menus" && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 15 }}
+                      className={`absolute right-0 mt-4 w-72 rounded-2xl border p-2 z-[110] ${currentTheme.dropdown}`}
+                    >
+                      <div className="grid grid-cols-1">
+                        {sidebarLinks.map((item) => (
+                          <Link 
+                            key={item.name} 
+                            to={item.href} 
+                            className={`flex items-center justify-between px-4 py-3 rounded-xl text-[11px] font-bold tracking-widest ${currentTheme.text} hover:bg-white/5 transition-colors`}
+                          >
+                            {item.name} {renderBadge(item.badge)}
+                          </Link>
+                        ))}
                       </div>
-                      
-                      {user.role !== "user" && (
-                        <Link to={user.role === "admin" ? "/admin-dashboard" : "/agent-dashboard"} className={`flex items-center gap-3 p-2.5 rounded-xl text-sm font-medium ${currentTheme.hover}`}>
-                          <LayoutDashboard size={16} className="text-blue-500" /> Dashboard
-                        </Link>
-                      )}
-                      
-                      <Link to="/user-profile" className={`flex items-center gap-3 p-2.5 rounded-xl text-sm font-medium ${currentTheme.hover}`}>
-                        <Settings size={16} className="opacity-70" /> Settings
-                      </Link>
-                      
-                      <div className={`my-1 border-t ${currentTheme.divider}`} />
-                      
-                      <button onClick={handleLogout} className="w-full flex items-center gap-3 p-2.5 rounded-xl text-sm font-bold text-red-500 hover:bg-red-500/10">
-                        <LogOut size={16} /> Logout
-                      </button>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link to="/login" className={`px-4 py-2 text-sm font-bold ${currentTheme.text}`}>Login</Link>
-                <Link to="/signup" className={`px-5 py-2 text-sm font-bold ${currentTheme.buttontext}   ${currentTheme.button} rounded-full transition-colors shadow-lg shadow-blue-500/20`}>
-                  Signup
+            </div>
+
+            {/* 3. RIGHT SIDE ACTIONS */}
+            <div className="flex items-center gap-2 lg:gap-5">
+              
+              {/* Add Property Button */}
+              {isAuthenticated && (
+                <Link 
+                  to="/userpropertyregister" 
+                  className={`flex items-center gap-2 px-3 lg:px-5 py-2 rounded-full text-xs font-bold transition-all shadow-lg ${currentTheme.addBtn}`}
+                >
+                  <PlusCircle size={18} />
+                  <span className="hidden xl:inline">Add Property</span>
                 </Link>
-              </div>
-            )}
+              )}
+
+              {/* Theme Toggle */}
+              <button onClick={toggleTheme} className={`${currentTheme.text} p-2 transition-transform hover:scale-110`}>
+                {isDark ? <SunIcon size={20} className="text-amber-400" /> : <MoonIcon size={20} />}
+              </button>
+
+              {/* User Profile / Auth */}
+              {!isAuthenticated ? (
+                <div className="flex items-center gap-2">
+                  <Link to="/login" className={`px-4 lg:px-5 py-2 lg:py-2.5 text-xs font-bold rounded-full transition-all ${currentTheme.buttonSecondary}`}>
+                    Login
+                  </Link>
+                  <Link to="/signup" className={`px-4 lg:px-6 py-2 lg:py-2.5 text-xs font-black rounded-full uppercase tracking-tighter transition-all shadow-lg ${currentTheme.buttonPrimary}`}>
+                    Join
+                  </Link>
+                </div>
+              ) : (
+                <div className="relative" ref={profileDropdownRef}>
+                  <button 
+                    onClick={() => setIsProfileOpen(!isProfileOpen)} 
+                    className={`flex items-center gap-2 p-1 pr-2 lg:pr-4 rounded-full border ${currentTheme.border} hover:bg-white/5 transition-all`}
+                  >
+                    <div className="h-8 w-8 lg:h-9 lg:w-9 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center text-black text-xs font-black">
+                      {user?.firstname?.charAt(0).toUpperCase() || "U"}
+                    </div>
+                    <span className={`hidden xl:block text-sm font-bold ${currentTheme.text}`}>{user?.firstname}</span>
+                    <ChevronDownIcon className={`h-3 w-3 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {isProfileOpen && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 15, scale: 0.95 }} 
+                        animate={{ opacity: 1, y: 0, scale: 1 }} 
+                        exit={{ opacity: 0, y: 15, scale: 0.95 }}
+                        className={`absolute right-0 mt-3 w-64 rounded-2xl border p-2 z-[110] ${currentTheme.dropdown}`}
+                      >
+                        <div className="px-4 py-3 border-b border-white/10 mb-2">
+                          <p className="text-[10px] font-bold uppercase opacity-50 tracking-[0.2em]">Profile</p>
+                          <p className={`text-sm font-bold truncate ${currentTheme.text}`}>{user?.email}</p>
+                        </div>
+                        
+                        {user.role !== "user" && (
+                          <Link 
+                            to={user.role === "admin" ? "/admin-dashboard" : "/agent-dashboard"} 
+                            onClick={() => setIsProfileOpen(false)}
+                            className={`flex items-center gap-3 p-3 rounded-xl text-sm font-medium ${currentTheme.text} hover:bg-white/5`}
+                          >
+                            <LayoutDashboard size={18} className="text-amber-500" /> Dashboard
+                          </Link>
+                        )}
+                        
+                        <Link 
+                          to="/user-profile" 
+                          onClick={() => setIsProfileOpen(false)}
+                          className={`flex items-center gap-3 p-3 rounded-xl text-sm font-medium ${currentTheme.text} hover:bg-white/5`}
+                        >
+                          <Settings size={18} className="opacity-60" /> Account Settings
+                        </Link>
+
+                        <div className="my-2 border-t border-white/5" />
+                        
+                        <button 
+                          onClick={handleLogout} 
+                          className="w-full flex items-center gap-3 p-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-500/10 transition-colors"
+                        >
+                          <LogOut size={18} /> Sign Out
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {/* Mobile Menu Toggle */}
+              <button 
+                onClick={() => setIsMobileMenuOpen(true)}
+                className={`p-2 lg:hidden rounded-xl border ${currentTheme.border} ${currentTheme.text}`}
+              >
+                <Bars3Icon className="h-6 w-6" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {/* 4. MOBILE MENU OVERLAY */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div 
+            initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
+            className={`fixed inset-0 z-[200] lg:hidden flex flex-col ${isDark ? 'bg-black text-white' : 'bg-white text-slate-900'}`}
+          >
+            <div className={`flex items-center justify-between p-6 border-b ${currentTheme.border}`}>
+              <img src={navbarlogo} alt="Logo" className="h-10 object-contain" />
+              <button onClick={() => setIsMobileMenuOpen(false)} className="p-2">
+                <XMarkIcon className="h-8 w-8" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              <p className="text-[10px] font-bold uppercase opacity-40 tracking-[0.2em] mb-4">Navigation</p>
+              {commonNavigation.map((link) => (
+                <Link 
+                  key={link.name} to={link.href} onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-between py-4 border-b border-gray-100 dark:border-white/5 text-lg font-bold"
+                >
+                  {link.name} {renderBadge(link.badge)} <ChevronRight size={18} className="opacity-30" />
+                </Link>
+              ))}
+
+              <div className="mt-8">
+                <p className="text-[10px] font-bold uppercase opacity-40 tracking-[0.2em] mb-4">Explore More</p>
+                <div className="grid grid-cols-1 gap-2">
+                  {sidebarLinks.map((link) => (
+                    <Link 
+                      key={link.name} to={link.href} onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-white/5 text-sm font-bold"
+                    >
+                      {link.name} {renderBadge(link.badge)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {!isAuthenticated && (
+              <div className={`p-6 border-t ${currentTheme.border} bg-inherit grid grid-cols-2 gap-4`}>
+                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className={`py-4 text-center rounded-2xl font-bold ${currentTheme.buttonSecondary}`}>Login</Link>
+                <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)} className={`py-4 text-center rounded-2xl font-bold ${currentTheme.buttonPrimary}`}>Join Now</Link>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
