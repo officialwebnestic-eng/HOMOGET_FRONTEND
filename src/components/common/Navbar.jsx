@@ -148,6 +148,9 @@ export default function Navbar() {
                   <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-current transition-all group-hover:w-full" />
                 </Link>
               ))}
+
+
+              
               {/* {isAuthenticated && (
                 <Link 
                   to="/getPropertyshell"
