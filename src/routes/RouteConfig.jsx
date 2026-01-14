@@ -68,12 +68,14 @@ import ViewHomeLoan from "../components/HomeLoan/ViewHomeLoan";
 import Developer from "../components/Developer";
 import Commercial from "../components/Comkmercial";
 import Luxury from "../components/Luxury";
-import Mortgage from "../components/Mortgage.JSX";
+
 import Transactions from "../components/Transaction";
 import Measurement from "../components/Mesaurment";
 import RentVsBuy from "../components/RentVsByCalculator";
 import PrivacyPolicy from "../components/PrivacyPolicy";
 import TermsOfService from "../components/TermsOfService";
+import Mortgage from "../components/Mortgage.jsx";
+
 
 export const AdminRoutes = () => {
 
