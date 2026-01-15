@@ -28,6 +28,8 @@
     "gsap": "^3.13.0",
     "headlessui": "^0.0.0",
     "heroicons": "^2.2.0",
+    "jspdf": "^4.0.0",
+    "jspdf-autotable": "^5.0.7",
     "jsvectormap": "^1.6.0",
     "lucide-react": "^0.487.0",
     "npm": "^11.2.0",

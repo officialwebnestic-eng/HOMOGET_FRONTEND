@@ -1,61 +1,35 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
-  MapPin, Home, IndianRupee, 
-  Bed, Bath, Ruler, Building2, Wrench, X,
-  Barcode, Phone, Mail, Calendar, Sparkles, ChevronRight
+  MapPin, Bed, Ruler, X, ArrowRight, Search, Filter, Calendar, Sparkles
 } from "lucide-react";
-import "swiper/css";
-import "swiper/css/pagination";
 import { useTheme } from "../../context/ThemeContext";
 import useGetAllProperty from "../../hooks/useGetAllProperty";
-import { propertiesListingImage } from "../../ExportImages";
-import AgentHero from "./homecommon/AgentHero";
-import PropertyListingSection from "./homecommon/PropertyListingSection";
 
 const PropertyListing = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
-  const [selectedTab, setSelectedTab] = useState("buy");
   const [showFilters, setShowFilters] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
   const limit = 6;
-  const listRef = useRef(null); // For scrolling to results
+  const listRef = useRef(null);
 
-  const { propertyList, pagination, loading } = useGetAllProperty(currentPage, limit, filters);
+  const { propertyList, loading } = useGetAllProperty(currentPage, limit, filters);
 
-  const filterFields = [
-    { name: "city", label: "City", icon: <MapPin size={16} /> },
-    { name: "propertytype", label: "Type", icon: <Home size={16} /> },
-    { name: "listingtype", label: "Listing", icon: <Building2 size={16} /> },
-    { name: "bedroom", label: "Beds", icon: <Bed size={16} /> },
-  ];
-
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
-    setCurrentPage(1);
-  };
-
-  const handleSubmit = () => {
-    setFilters(prev => ({ ...prev, city: searchQuery }));
-    setCurrentPage(1);
-    setShowSuggestions(false);
-    // Smooth scroll to results
-    listRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const resetFilters = () => {
-    setFilters({});
-    setSearchQuery("");
-    setShowFilters(false);
+  const colors = {
+    amber: "text-amber-500",
+    bgAmber: "bg-amber-500",
+    text: isDark ? "text-white" : "text-[#1a1a1e]",
+    textSec: isDark ? "text-slate-400" : "text-slate-600",
+    border: isDark ? "border-white/10" : "border-slate-200",
+    inputBg: isDark ? "bg-white/10" : "bg-slate-100",
   };
 
   const getUniqueValues = (data, key) => {
@@ -64,148 +38,168 @@ const PropertyListing = () => {
   };
 
   return (
-    <div className={`transition-colors duration-500 ${isDark ? "bg-[#0a0a0c]" : "bg-slate-50"}`}>
+    <div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-[#0a0a0c]" : "bg-white"}`}>
       
-      {/* --- HERO SECTION --- */}
-      <AgentHero 
-        theme={theme}
-        selectedTab={selectedTab}
-        setSelectedTab={setSelectedTab}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        showSuggestions={showSuggestions}
-        setShowSuggestions={setShowSuggestions}
-        propertyList={propertyList}
-        filters={filters}
-        setFilters={setFilters}
-        handleSubmit={handleSubmit}
-       getUniqueValues={getUniqueValues}
-        propertiesListingImage={propertiesListingImage}
-                colors={{ primary: "bg-amber-500", primaryHover: "hover:bg-amber-600" }}
+      {/* --- HERO SECTION: PRIVACY POLICY STYLE --- */}
+      <section className="relative w-full h-[80vh] flex items-center overflow-hidden">
+        {/* Background Overlay Logic */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=2000" 
+            alt="Dubai Skyline" 
+            className="w-full h-full object-cover opacity-30"
+          />
+          <div className={`absolute inset-0 ${isDark ? "bg-gradient-to-r from-[#0a0a0c] via-[#0a0a0c]/90 to-transparent" : "bg-gradient-to-r from-white via-white/90 to-transparent"}`}></div>
+        </div>
 
-      />
+        <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
+          <div className="max-w-3xl space-y-6">
+            {/* Top Badge */}
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-600 text-[10px] font-black uppercase tracking-widest">
+                <Sparkles size={12} className="text-amber-500" /> Premium Collection
+              </span>
+            </motion.div>
 
-      {/* --- LISTING SECTION --- */}
-      <div ref={listRef}>
-        <PropertyListingSection 
-          propertyList={propertyList}
-          loading={loading}
-          theme={theme}
-          filters={filters}
-          handleFilterChange={handleFilterChange}
-          filterFields={filterFields}
-          getUniqueValues={getUniqueValues}
-          setFilters={setFilters}
-          setSearchQuery={setSearchQuery}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          pagination={pagination}
-          limit={limit}
-          openModal={(prop) => setSelectedProperty(prop)}
-          handleBuyNow={(prop) => navigate("/bookings", { state: { property: prop } })}
-        />
+            {/* Typography inspired by Screenshot */}
+            <div className="space-y-0">
+              <motion.h1 
+                initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
+                className={`text-7xl md:text-8xl font-black tracking-tighter ${colors.text} leading-[0.85]`}
+              >
+                Property
+              </motion.h1>
+              <motion.h1 
+                initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                className="text-7xl md:text-8xl font-serif italic font-light text-amber-500 leading-[1.1]"
+              >
+                Listings
+              </motion.h1>
+            </div>
+
+            <motion.p 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
+              className={`max-w-md text-lg leading-relaxed ${colors.textSec}`}
+            >
+              Homoget Properties offers a verified portfolio of luxury assets, ensuring full compliance with UAE market regulations and transparency.
+            </motion.p>
+
+            {/* --- SEARCH & FILTER HUB --- */}
+            <div className="pt-6 relative z-50">
+              <div className={`flex flex-col md:flex-row items-center p-2 rounded-2xl md:rounded-full border ${colors.border} ${colors.inputBg} backdrop-blur-xl shadow-2xl w-full max-w-2xl`}>
+                <div className="flex-1 flex items-center px-4 w-full">
+                  <Search className="text-amber-500 w-5 h-5 mr-3" />
+                  <input 
+                    type="text" 
+                    placeholder="Search city or project..." 
+                    className={`bg-transparent border-none outline-none text-sm w-full py-3 focus:ring-0 ${colors.text}`}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                
+                <button 
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`px-6 py-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors ${showFilters ? 'text-amber-500' : 'text-slate-500'}`}
+                >
+                  <Filter size={16} /> Filters
+                </button>
+
+                <button className="w-full md:w-auto bg-amber-500 text-black px-10 py-4 rounded-xl md:rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-amber-400 transition-all">
+                  Search
+                </button>
+              </div>
+
+              {/* Advanced Filters Dropdown */}
+              <AnimatePresence>
+                {showFilters && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                    className={`absolute left-0 right-0 mt-4 p-6 rounded-[2rem] border ${colors.border} ${isDark ? "bg-[#121214]" : "bg-white"} shadow-3xl grid grid-cols-1 md:grid-cols-3 gap-6`}
+                  >
+                    {['city', 'propertytype', 'bedroom'].map((field) => (
+                      <div key={field}>
+                        <label className="text-[9px] font-black uppercase text-amber-500 tracking-widest block mb-2">{field}</label>
+                        <select 
+                          value={filters[field] || ""}
+                          onChange={(e) => setFilters({...filters, [field]: e.target.value})}
+                          className={`w-full bg-white/5 border ${colors.border} rounded-xl py-2.5 px-4 text-xs outline-none ${colors.text}`}
+                        >
+                          <option value="" className={isDark ? "bg-[#0a0a0c]" : "bg-white"}>All {field}s</option>
+                          {getUniqueValues(propertyList, field).map(v => (
+                            <option key={v} value={v} className={isDark ? "bg-[#0a0a0c]" : "bg-white"}>{v}</option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- PROPERTY GRID --- */}
+      <div className="max-w-7xl mx-auto px-6 py-24">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+          {propertyList.map((property, index) => (
+            <motion.div 
+              key={property._id || index}
+              whileHover={{ y: -10 }}
+              className={`group relative h-[450px] rounded-[2.5rem] overflow-hidden border ${colors.border} bg-white/5`}
+            >
+              <img src={property.image?.[0]} className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 transition-all duration-700" alt="" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+              
+              <div className="absolute top-8 left-8">
+                <span className="px-4 py-1.5 rounded-lg bg-amber-500 text-black text-[9px] font-black uppercase tracking-widest">
+                  {property.propertytype}
+                </span>
+              </div>
+
+              <div className="absolute bottom-0 left-0 right-0 p-10 translate-y-6 group-hover:translate-y-0 transition-all duration-500">
+                <p className="text-amber-500 text-[10px] font-black uppercase tracking-widest mb-2">{property.city}</p>
+                <h3 className="text-3xl font-serif text-white mb-6 leading-tight">{property.propertyname}</h3>
+                <div className="flex gap-6 mb-8 text-white/60 text-xs font-bold">
+                  <span className="flex items-center gap-2"><Bed size={16} className="text-amber-500" /> {property.bedroom} BHK</span>
+                  <span className="flex items-center gap-2"><Ruler size={16} className="text-amber-500" /> {property.squarefoot} ft²</span>
+                </div>
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => setSelectedProperty(property)}
+                    className="flex-1 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all"
+                  >
+                    View Asset
+                  </button>
+                  <button onClick={() => navigate("/bookings", { state: { property } })} className="p-4 bg-amber-500 text-black rounded-2xl hover:scale-110 transition-transform">
+                    <ArrowRight size={20} />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
 
-      {/* --- PREMIUM PROPERTY MODAL --- */}
+      {/* --- COMPACT MODAL --- */}
       <AnimatePresence>
         {selectedProperty && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10"
-          >
-            {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={() => setSelectedProperty(null)} />
-
-            <motion.div 
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className={`relative w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-[3rem] border ${isDark ? 'bg-slate-900 border-white/10' : 'bg-white border-slate-200'} shadow-2xl flex flex-col md:flex-row`}
-            >
-              {/* Close Button */}
-              <button 
-                onClick={() => setSelectedProperty(null)}
-                className="absolute top-6 right-6 z-50 w-12 h-12 flex items-center justify-center rounded-full bg-black/20 text-white backdrop-blur-md hover:bg-red-500 transition-all"
-              >
-                <X size={24} />
-              </button>
-
-              {/* Left: Image Gallery (60%) */}
-              <div className="w-full md:w-[60%] h-[40vh] md:h-auto relative bg-black">
-                <img 
-                  src={selectedProperty.image?.[0]} 
-                  className="w-full h-full object-cover opacity-80"
-                  alt="Feature"
-                />
-                <div className="absolute bottom-10 left-10">
-                    <span className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full mb-4 inline-block">
-                        {selectedProperty.propertytype}
-                    </span>
-                    <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase leading-none">
-                        {selectedProperty.propertyname}
-                    </h2>
-                </div>
-              </div>
-
-              {/* Right: Content (40%) */}
-              <div className="w-full md:w-[40%] p-8 md:p-12 overflow-y-auto">
-                <div className="space-y-8">
-                    {/* Price Tag */}
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Investment Value</p>
-                        <h3 className={`text-4xl font-mono font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                            ₹{new Intl.NumberFormat('en-IN').format(selectedProperty.price)}
-                        </h3>
-                    </div>
-
-                    {/* Stats Grid */}
-                    <div className={`grid grid-cols-3 gap-4 p-6 rounded-[2rem] ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}>
-                        <div className="text-center">
-                            <Bed className="mx-auto mb-2 text-blue-500" size={20} />
-                            <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{selectedProperty.bedroom}</p>
-                        </div>
-                        <div className="text-center">
-                            <Bath className="mx-auto mb-2 text-blue-500" size={20} />
-                            <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{selectedProperty.bathroom}</p>
-                        </div>
-                        <div className="text-center">
-                            <Ruler className="mx-auto mb-2 text-blue-500" size={20} />
-                            <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{selectedProperty.squarefoot}</p>
-                        </div>
-                    </div>
-
-                    {/* Description */}
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4">Architecture & Design</p>
-                        <p className={`text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                            {selectedProperty.description || "A masterclass in modern living, featuring open-concept layouts and premium finishes throughout."}
-                        </p>
-                    </div>
-
-                    {/* Agent Card */}
-                    <div className={`p-6 rounded-[2rem] border ${isDark ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50'} flex items-center gap-4`}>
-                        <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-black">
-                            {selectedProperty.agentId?.agentName?.[0] || "A"}
-                        </div>
-                        <div>
-                            <p className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{selectedProperty.agentId?.agentName || "Premium Agent"}</p>
-                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Verified Concierge</p>
-                        </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <button className="py-4 rounded-2xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all">
-                            Book Visit
-                        </button>
-                        <button className={`py-4 rounded-2xl border text-[10px] font-black uppercase tracking-widest transition-all ${isDark ? 'border-white/10 text-white hover:bg-white/5' : 'border-slate-200 text-slate-900 hover:bg-slate-100'}`}>
-                            Contact Agent
-                        </button>
-                    </div>
-                </div>
-              </div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[10000] bg-black/95 backdrop-blur-md flex justify-center items-center p-4">
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className={`max-w-5xl w-full bg-[#0a0a0c] rounded-[3rem] overflow-hidden border border-white/10 relative max-h-[90vh] overflow-y-auto`}>
+               <button onClick={() => setSelectedProperty(null)} className="absolute top-8 right-8 z-50 w-12 h-12 rounded-full bg-white/10 text-white hover:bg-amber-500 hover:text-black flex items-center justify-center transition-all"><X size={24}/></button>
+               <div className="grid grid-cols-1 lg:grid-cols-2">
+                  <div className="h-[400px] lg:h-full bg-black"><img src={selectedProperty.image?.[currentImageIndex]} className="w-full h-full object-cover opacity-80" /></div>
+                  <div className="p-12 space-y-8">
+                     <h2 className="text-5xl font-serif text-white">{selectedProperty.propertyname}</h2>
+                     <p className="text-amber-500 font-black uppercase tracking-widest text-xs">{selectedProperty.city}</p>
+                     <div className="p-8 rounded-[2rem] bg-amber-500 text-black">
+                        <p className="text-[10px] font-black uppercase opacity-60 mb-1">Asset Value</p>
+                        <p className="text-5xl font-serif">₹{selectedProperty.price.toLocaleString()}</p>
+                     </div>
+                     <button className="w-full py-5 bg-amber-500 text-black rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-amber-400 transition-all">Schedule Appointment</button>
+                  </div>
+               </div>
             </motion.div>
           </motion.div>
         )}

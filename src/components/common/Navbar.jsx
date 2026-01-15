@@ -15,7 +15,6 @@ import { AuthContext } from "../../context/AuthContext";
 import { navbarlogo } from "../../ExportImages";
 import { motion, AnimatePresence } from "framer-motion";
 
-// RESTORED ALL ORIGINAL LINKS
 const sidebarLinks = [
   { name: "MORTGAGE", href: "/mortgage", badge: "NEW" },
   { name: "FIND AGENT", href: "/agentsupport" },
@@ -29,6 +28,8 @@ const sidebarLinks = [
   { name: "PROPERTY LISTING", href: "/propertylisting" },
   { name: "TESTIMONIALS", href: "/testimonials" },
 ];
+
+
 
 const commonNavigation = [
   { name: "Home", href: "/" },

@@ -75,6 +75,11 @@ import RentVsBuy from "../components/RentVsByCalculator";
 import PrivacyPolicy from "../components/PrivacyPolicy";
 import TermsOfService from "../components/TermsOfService";
 import Mortgage from "../components/Mortgage.jsx";
+import Trends from "../components/Trends.jsx";
+import Explore from "../components/Explore.jsx";
+import Rent from "../components/Rent.jsx";
+import Buy from "../components/Buy.jsx";
+import OffPlan from "../components/OffPlan.jsx";
 
 
 export const AdminRoutes = () => {
@@ -409,6 +414,11 @@ export const PublicRoutes = () => {
             <Route path="/calculator" element={<RentVsBuy />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
              <Route path="/terms-of-service" element={<TermsOfService />} /> 
+             <Route path="trends" element={<Trends />} />
+             <Route path="explore" element={<Explore />} />
+             <Route path="rent" element={<Rent />} />
+             <Route path="buy" element={<Buy />} />
+             <Route path="offplan" element={<OffPlan />} />
             {/* <Route path="/rera-compliance" element={<ReraCompliance />} />  */}
              </Route>
         </>

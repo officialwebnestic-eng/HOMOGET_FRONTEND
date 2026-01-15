@@ -5,7 +5,8 @@ import {
   Search, MapPin, Home, IndianRupee, ArrowRight,
   Bed, Bath, Ruler, Building2, Wrench, X,
   Barcode, Filter, ChevronDown, ChevronUp, Star,
-  Calendar, Phone, Mail, Share2, Maximize2
+  Calendar, Phone, Mail, Share2, Maximize2,
+  ChevronRight
 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
@@ -189,6 +190,7 @@ const filterFields = [
   return (
     <div className={colors.background}>
       {/* Hero Section with Background Image */}
+     
    <AgentHero 
         selectedTab={selectedTab}
         setSelectedTab={setSelectedTab}
@@ -209,664 +211,306 @@ const filterFields = [
       />
 
       {/* Main Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16">
-        {/* Featured Properties Section */}
-        <div className={`rounded-2xl ${colors.card} shadow-xl p-6 mb-16 border ${colors.border}`}>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-            <div>
-              <h2 className={`text-2xl sm:text-3xl font-bold ${colors.text}`}>
-                Explore New Projects
-              </h2>
-              <p className={`${colors.textSecondary} mt-2`}>
-                Discover the latest off-plan properties and be informed
-              </p>
-            </div>
-            <NavLink to="/propertylisting">
-              <button className={`mt-4 md:mt-0 flex items-center gap-2 ${colors.text} hover:${colors.textSecondary} transition-colors`}>
-                <span>View all</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </NavLink>
-          </div>
-
-          {/* Featured Properties Grid */}
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className={`animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 ${theme === "dark" ? "border-indigo-500" : "border-blue-500"}`}></div>
-            </div>
-          ) : propertyList.length === 0 ? (
-            <div className="text-center py-16">
-              <h3 className={`text-xl font-medium mb-2 ${colors.text}`}>
-                No properties found
-              </h3>
-              <p className={`mb-6 ${colors.textSecondary}`}>
-                Try adjusting your search filters
-              </p>
-              <button
-                onClick={resetFilters}
-                className={`px-6 py-3 rounded-xl font-medium ${colors.primary} text-white hover:shadow-lg transition-shadow`}
-              >
-                Reset Filters
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {propertyList.slice(0, 3).map((property, index) => (
-                <motion.div
-                  key={property._id || index}
-                  className={`rounded-2xl overflow-hidden shadow-lg ${colors.card} hover:shadow-xl transition-all duration-300 border ${colors.border}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -4 }}
-                >
-                  {/* Property Image */}
-                  <div className="relative h-48">
-                    {property.image?.[0] ? (
-                      <img
-                        src={property.image[0]}
-                        alt={property.propertyname}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className={`w-full h-full ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} flex items-center justify-center`}>
-                        <Home className={`w-12 h-12 ${colors.textSecondary}`} />
-                      </div>
-                    )}
-                    <div className="absolute top-3 left-3">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        theme === "dark" ? "bg-indigo-600 text-white" : "bg-blue-600 text-white"
-                      }`}>
-                        {property.propertytype || "Property"}
-                      </span>
-                    </div>
-                    <div className="absolute top-3 right-3">
-                      <button className={`p-2 rounded-full ${theme === "dark" ? "bg-gray-900/80" : "bg-white/80"} backdrop-blur-sm`}>
-                        <Star className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Property Details */}
-                  <div className="p-5">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h3 className={`font-bold text-lg mb-1 ${colors.text}`}>
-                          {property.propertyname}
-                        </h3>
-                        <p className={`text-sm flex items-center ${colors.textSecondary}`}>
-                          <MapPin className="w-3 h-3 mr-1" />
-                          {property.city}, {property.state}
-                        </p>
-                      </div>
-                      <div className={`text-right font-bold ${colors.text}`}>
-                        <div className="text-sm">Launch price</div>
-                        <div className="flex items-center">
-                          <IndianRupee className="w-4 h-4" />
-                          {property.price.toLocaleString()}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Property Stats */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-4">
-                        <span className={`flex items-center text-sm ${colors.textSecondary}`}>
-                          <Bed className="w-4 h-4 mr-1" /> {property.bedroom || "0"}
-                        </span>
-                        <span className={`flex items-center text-sm ${colors.textSecondary}`}>
-                          <Bath className="w-4 h-4 mr-1" /> {property.bathroom || "0"}
-                        </span>
-                        <span className={`flex items-center text-sm ${colors.textSecondary}`}>
-                          <Ruler className="w-4 h-4 mr-1" /> {property.squarefoot || "0"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Amenities Preview */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {property.aminities &&
-                        Array.isArray(property.aminities) &&
-                        property.aminities.slice(0, 2).map((item, index) => {
-                          try {
-                            const parsed = JSON.parse(item);
-                            const amenity = Array.isArray(parsed) ? parsed[0] : parsed;
-                            return (
-                              <span
-                                key={index}
-                                className={`text-xs px-2 py-1 rounded-full ${
-                                  theme === "dark" ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"
-                                }`}
-                              >
-                                {amenity}
-                              </span>
-                            );
-                          } catch {
-                            return null;
-                          }
-                        })}
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => openModal(property)}
-                        className={`flex-1 py-2 rounded-lg border ${colors.border} ${
-                          theme === "dark" ? "text-gray-300 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-50"
-                        } transition-colors`}
-                      >
-                        View Details
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleBuyNow(property);
-                        }}
-                        className={`flex-1 py-2 rounded-lg ${colors.primary} text-white ${colors.primaryHover} transition-colors`}
-                      >
-                        Book Now
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
+     {/* Main Content Wrapper - Lower z-index ensures Hero filters float on top */}
+<div className="relative z-0 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-5">
+  
+  {/* 1. Featured Properties Section */}
+  <div className={`rounded-[2.5rem] ${colors.card} backdrop-blur-2xl shadow-[0_40px_100px_rgba(0,0,0,0.2)] p-8 md:p-12 mb-20 border ${colors.border}`}>
+    <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="h-[1px] w-8 bg-amber-500"></div>
+          <span className="text-amber-500 text-[10px] font-black uppercase tracking-[0.4em]">
+            Elite Selection
+          </span>
         </div>
+        <h2 className={`text-4xl md:text-5xl font-serif leading-tight ${colors.text}`}>
+          Featured <span className="italic font-light text-amber-500/90">Living</span>
+        </h2>
+        <p className={`${colors.textSecondary} max-w-md text-sm leading-relaxed font-medium`}>
+          A hand-picked collection of Dubai's most prestigious architectural landmarks.
+        </p>
+      </div>
+      
+      <NavLink to="/propertylisting">
+        <button className="group flex items-center gap-4 px-8 py-4 rounded-full bg-amber-500 text-black transition-all duration-500 text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-amber-500/20 hover:scale-105 active:scale-95">
+          <span>View Full Collection</span>
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        </button>
+      </NavLink>
+    </div>
 
-        {/* All Properties Section */}
-        <div className="mb-16">
-          <h2 className={`text-2xl sm:text-3xl font-bold mb-8 ${colors.text}`}>
-            All Properties
-          </h2>
-          
-          {/* Property Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {propertyList.map((property, index) => (
-              <motion.div
-                key={property._id || index}
-                className={`rounded-xl overflow-hidden ${colors.card} shadow-md hover:shadow-lg transition-shadow border ${colors.border}`}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <div className="p-4">
-                  <div className="flex items-start gap-3">
-                    {/* Property Image */}
-                    <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
-                      {property.image?.[0] ? (
-                        <img
-                          src={property.image[0]}
-                          alt={property.propertyname}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className={`w-full h-full ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} flex items-center justify-center`}>
-                          <Home className={`w-8 h-8 ${colors.textSecondary}`} />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Property Info */}
-                    <div className="flex-1">
-                      <h4 className={`font-semibold mb-1 ${colors.text}`}>
-                        {property.propertyname}
-                      </h4>
-                      <p className={`text-xs flex items-center mb-2 ${colors.textSecondary}`}>
-                        <MapPin className="w-3 h-3 mr-1" />
-                        {property.city}, {property.state}
-                      </p>
-                      
-                      <div className="flex items-center gap-4 mb-2">
-                        <span className={`text-sm ${colors.text}`}>
-                          <IndianRupee className="w-3 h-3 inline mr-1" />
-                          {property.price.toLocaleString()}
-                        </span>
-                        <span className={`text-sm ${colors.textSecondary}`}>
-                          <Bed className="w-3 h-3 inline mr-1" /> {property.bedroom}
-                        </span>
-                        <span className={`text-sm ${colors.textSecondary}`}>
-                          <Bath className="w-3 h-3 inline mr-1" /> {property.bathroom}
-                        </span>
-                      </div>
-
-                      <button
-                        onClick={() => openModal(property)}
-                        className={`text-sm font-medium ${colors.text} hover:${colors.textSecondary} transition-colors`}
-                      >
-                        View details →
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Load More Button */}
-          {propertyList.length > 0 && (
-            <div className="text-center mt-8">
-              <button
-                onClick={() => setCurrentPage(prev => prev + 1)}
-                className={`px-6 py-3 rounded-lg ${colors.primary} text-white ${colors.primaryHover} transition-colors`}
-              >
-                Load More Properties
-              </button>
-            </div>
-          )}
+    {/* Featured Properties Grid */}
+    {loading ? (
+      <div className="flex flex-col justify-center items-center h-80">
+        <div className="relative h-12 w-12">
+          <div className="absolute inset-0 rounded-full border-2 border-amber-500/20"></div>
+          <div className="absolute inset-0 rounded-full border-t-2 border-amber-500 animate-spin"></div>
         </div>
       </div>
-
-      {/* Property Modal */}
-      <AnimatePresence>
-        {selectedProperty && (
+    ) : (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {propertyList.slice(0, 3).map((property, index) => (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-center items-center p-4 overflow-y-auto"
-            onClick={closeModal}
+            key={property._id || index}
+            className="group relative"
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: index * 0.1 }}
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 50 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 50 }}
-              className={`max-w-6xl w-full ${colors.modal} rounded-2xl shadow-2xl overflow-y-auto max-h-[90vh] border ${colors.border}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Close Button */}
-              <button
-                onClick={closeModal}
-                className={`absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center ${
-                  theme === "dark" 
-                    ? "bg-gray-700 hover:bg-gray-600 text-gray-300" 
-                    : "bg-white hover:bg-gray-100 text-gray-700"
-                } shadow-lg transition-colors`}
-                aria-label="Close modal"
-              >
-                <X className="w-5 h-5" />
-              </button>
+            {/* Image Box */}
+            <div className="relative h-[420px] rounded-[2rem] overflow-hidden shadow-2xl">
+              <img
+                src={property.image?.[0]}
+                alt={property.propertyname}
+                className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110"
+              />
+              {/* Amber Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500"></div>
+              
+              {/* Top Badges */}
+              <div className="absolute top-6 left-6 flex flex-col gap-2">
+                <span className="px-4 py-1.5 rounded-full text-[9px] font-black tracking-widest uppercase bg-amber-500 text-black shadow-xl">
+                  {property.propertytype}
+                </span>
+                {property.isHot && (
+                  <span className="px-4 py-1.5 rounded-full text-[9px] font-black tracking-widest uppercase bg-white/10 backdrop-blur-md text-white border border-white/20">
+                    Hot Deal
+                  </span>
+                )}
+              </div>
 
-              {/* Modal Content */}
-              <div className="p-4 md:p-8">
-                {/* Property Images Section */}
-                <div className="mb-8">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Main Image */}
-                    <div className="lg:col-span-2">
-                      <div className="relative h-64 md:h-96 rounded-2xl overflow-hidden shadow-xl">
-                        <img
-                          src={
-                            selectedProperty.image?.[currentImageIndex] ||
-                            "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80"
-                          }
-                          alt="Property"
-                          className="w-full h-full object-cover"
-                        />
-                        {/* Overlay Gradient */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                        
-                        {/* Image Counter */}
-                        <div className={`absolute bottom-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
-                          theme === "dark" ? "bg-gray-900/80 text-white" : "bg-white/90 text-gray-800"
-                        } backdrop-blur-sm`}>
-                          {currentImageIndex + 1} / {selectedProperty.image?.length || 1}
-                        </div>
+              {/* Price Tag Floating */}
+              <div className="absolute top-6 right-6">
+                 <div className="bg-black/40 backdrop-blur-md p-3 rounded-2xl border border-white/10 text-center">
+                    <p className="text-[8px] font-black uppercase tracking-tighter text-amber-500">Starting</p>
+                    <p className="text-sm font-bold text-white">₹{property.price.toLocaleString()}</p>
+                 </div>
+              </div>
 
-                        {/* Fullscreen Button */}
-                        <button className={`absolute top-4 right-4 p-2 rounded-full ${
-                          theme === "dark" ? "bg-gray-900/80 hover:bg-gray-800" : "bg-white/90 hover:bg-white"
-                        } backdrop-blur-sm transition-colors`}>
-                          <Maximize2 className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Thumbnails and Quick Info */}
-                    <div className="space-y-6">
-                      {/* Thumbnails */}
-                      <div className={`p-4 rounded-xl ${theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"}`}>
-                        <h3 className={`text-sm font-semibold mb-3 ${colors.text}`}>Gallery</h3>
-                        <div className="grid grid-cols-3 gap-2">
-                          {selectedProperty.image && selectedProperty.image.length > 0 ? (
-                            selectedProperty.image.slice(0, 6).map((imgSrc, index) => (
-                              <button
-                                key={index}
-                                onClick={() => setCurrentImageIndex(index)}
-                                className={`relative h-20 overflow-hidden rounded-lg transition-all ${
-                                  currentImageIndex === index 
-                                    ? "ring-2 ring-blue-500 scale-105" 
-                                    : "hover:scale-105"
-                                }`}
-                              >
-                                <img 
-                                  src={imgSrc} 
-                                  alt={`Property Image ${index + 1}`} 
-                                  className="w-full h-full object-cover"
-                                />
-                                <div className={`absolute inset-0 ${
-                                  currentImageIndex === index 
-                                    ? "bg-blue-500/20" 
-                                    : "bg-black/10 hover:bg-black/20"
-                                } transition-colors`}></div>
-                              </button>
-                            ))
-                          ) : (
-                            <div className="col-span-3 text-center py-4">
-                              <Home className={`w-8 h-8 mx-auto mb-2 ${colors.textSecondary}`} />
-                              <p className={`text-sm ${colors.textSecondary}`}>No images available</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Quick Stats */}
-                      <div className={`p-4 rounded-xl ${theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"}`}>
-                        <h3 className={`text-sm font-semibold mb-3 ${colors.text}`}>Property Info</h3>
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-center">
-                            <span className={`text-sm ${colors.textSecondary}`}>Property Type</span>
-                            <span className={`font-medium ${colors.text}`}>{selectedProperty.propertytype || "N/A"}</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className={`text-sm ${colors.textSecondary}`}>Status</span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              selectedProperty.status === "Available" 
-                                ? "bg-green-100 text-green-800" 
-                                : "bg-red-100 text-red-800"
-                            }`}>
-                              {selectedProperty.status || "Available"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className={`text-sm ${colors.textSecondary}`}>Listed On</span>
-                            <span className={`font-medium ${colors.text}`}>
-                              {new Date(selectedProperty.createdAt || Date.now()).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              {/* Bottom Content Area */}
+              <div className="absolute bottom-0 left-0 right-0 p-8 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                <p className="text-amber-500 text-[10px] font-black uppercase tracking-widest mb-1">
+                  {property.city}, {property.state}
+                </p>
+                <h3 className="text-2xl font-serif text-white mb-6 leading-tight">
+                  {property.propertyname}
+                </h3>
+                
+                {/* Specs Row */}
+                <div className="flex items-center gap-6 mb-8 text-white/70">
+                   <div className="flex items-center gap-2">
+                     <Bed className="w-4 h-4 text-amber-500" />
+                     <span className="text-xs font-bold">{property.bedroom} BHK</span>
+                   </div>
+                   <div className="flex items-center gap-2">
+                     <Ruler className="w-4 h-4 text-amber-500" />
+                     <span className="text-xs font-bold">{property.squarefoot} ft²</span>
+                   </div>
                 </div>
 
-                {/* Property Details Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  {/* Left Column - Main Details */}
-                  <div className="lg:col-span-2 space-y-8">
-                    {/* Title and Location */}
-                    <div>
-                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-                        <div>
-                          <h2 className={`text-2xl md:text-3xl font-bold mb-2 ${colors.text}`}>
-                            {selectedProperty.propertyname || "Luxury Property"}
-                          </h2>
-                          <p className={`font-medium ${colors.textSecondary} text-sm flex items-center`}>
-                            <MapPin className="w-4 h-4 mr-2" />
-                            {selectedProperty.address || "N/A"}, {selectedProperty.city || "City"}, {selectedProperty.state || "State"}
-                          </p>
-                        </div>
-                        {/* Share and Favorite Buttons */}
-                        <div className="flex gap-2 mt-4 md:mt-0">
-                          <button className={`p-2 rounded-lg border ${colors.border} ${
-                            theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-50"
-                          } transition-colors`}>
-                            <Share2 className="w-4 h-4" />
-                          </button>
-                          <button className={`p-2 rounded-lg border ${colors.border} ${
-                            theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-50"
-                          } transition-colors`}>
-                            <Star className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                <div className="flex gap-3">
+                  <button onClick={() => openModal(property)} className="flex-1 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">
+                    View Details
+                  </button>
+                  <button onClick={() => handleBuyNow(property)} className="p-4 bg-amber-500 text-black rounded-2xl hover:scale-110 transition-transform shadow-xl shadow-amber-500/40">
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    )}
+  </div>
 
-                    {/* Property Stats Grid */}
-                    <div className={`p-6 rounded-2xl ${theme === "dark" ? "bg-gray-800/50" : "bg-blue-50"} border ${colors.border}`}>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        <div className="text-center">
-                          <div className={`flex items-center justify-center w-12 h-12 rounded-full mx-auto mb-3 ${
-                            theme === "dark" ? "bg-gray-700" : "bg-white"
-                          }`}>
-                            <Bed className={`w-6 h-6 ${theme === "dark" ? "text-indigo-400" : "text-blue-500"}`} />
-                          </div>
-                          <div className={`text-2xl font-bold ${colors.text}`}>{selectedProperty.bedroom || "0"}</div>
-                          <div className={`text-sm ${colors.textSecondary}`}>Bedrooms</div>
-                        </div>
-                        
-                        <div className="text-center">
-                          <div className={`flex items-center justify-center w-12 h-12 rounded-full mx-auto mb-3 ${
-                            theme === "dark" ? "bg-gray-700" : "bg-white"
-                          }`}>
-                            <Bath className={`w-6 h-6 ${theme === "dark" ? "text-indigo-400" : "text-blue-500"}`} />
-                          </div>
-                          <div className={`text-2xl font-bold ${colors.text}`}>{selectedProperty.bathroom || "0"}</div>
-                          <div className={`text-sm ${colors.textSecondary}`}>Bathrooms</div>
-                        </div>
-                        
-                        <div className="text-center">
-                          <div className={`flex items-center justify-center w-12 h-12 rounded-full mx-auto mb-3 ${
-                            theme === "dark" ? "bg-gray-700" : "bg-white"
-                          }`}>
-                            <Ruler className={`w-6 h-6 ${theme === "dark" ? "text-indigo-400" : "text-blue-500"}`} />
-                          </div>
-                          <div className={`text-2xl font-bold ${colors.text}`}>{selectedProperty.squarefoot || "0"}</div>
-                          <div className={`text-sm ${colors.textSecondary}`}>Sq. Ft</div>
-                        </div>
-                        
-                        <div className="text-center">
-                          <div className={`flex items-center justify-center w-12 h-12 rounded-full mx-auto mb-3 ${
-                            theme === "dark" ? "bg-gray-700" : "bg-white"
-                          }`}>
-                            <Barcode className={`w-6 h-6 ${theme === "dark" ? "text-indigo-400" : "text-blue-500"}`} />
-                          </div>
-                          <div className={`text-2xl font-bold ${colors.text}`}>{selectedProperty.floor || "0"}</div>
-                          <div className={`text-sm ${colors.textSecondary}`}>Floor</div>
-                        </div>
-                      </div>
-                    </div>
+  {/* 2. Secondary Inventory List */}
+  <div className="pb-32" >
+    <div className="flex items-center gap-8 mb-12">
+      <h2 className={`text-3xl font-serif ${colors.text}`}>Market <span className="italic font-light text-amber-500">Insights</span></h2>
+      <div className="flex-1 h-[1px] bg-gradient-to-r from-amber-500/50 to-transparent"></div>
+    </div>
+    
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {propertyList.map((property, index) => (
+        <motion.div
+          key={property._id || index}
+          className={`group p-4 rounded-[1.5rem] ${colors.card} border ${colors.border} hover:border-amber-500/50 transition-all duration-500`}
+          whileHover={{ x: 10 }}
+        >
+          <div className="flex items-center gap-5">
+            <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-lg">
+              <img src={property.image?.[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            </div>
+            <div className="flex-1">
+              <h4 className={`font-bold text-sm mb-1 group-hover:text-amber-500 transition-colors ${colors.text}`}>
+                {property.propertyname}
+              </h4>
+              <div className="flex items-center gap-2 mb-2">
+                <MapPin className="w-3 h-3 text-amber-500" />
+                <span className={`text-[10px] font-medium ${colors.textSecondary}`}>{property.city}</span>
+              </div>
+              <p className="text-xs font-black text-amber-500">₹{property.price.toLocaleString()}</p>
+            </div>
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+               <ChevronRight className="w-5 h-5 text-amber-500" />
+            </div>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  </div>
+</div>
+    <AnimatePresence>
+  {selectedProperty && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[10000] bg-black/90 backdrop-blur-md flex justify-center items-center p-4 md:p-6"
+      onClick={closeModal}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.98, y: 10 }}
+        /* REDUCED WIDTH: Changed max-w-7xl to max-w-5xl */
+        className={`max-w-5xl w-full ${theme === "dark" ? "bg-neutral-900" : "bg-white"} rounded-[2rem] shadow-[0_50px_100px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col max-h-[85vh] border ${colors.border}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        
+        {/* Compact Close Button */}
+        <button
+          onClick={closeModal}
+          className="absolute top-4 right-4 z-30 w-10 h-10 rounded-full flex items-center justify-center bg-black/40 hover:bg-amber-500 text-white hover:text-black backdrop-blur-sm transition-all"
+        >
+          <X className="w-5 h-5" />
+        </button>
 
-                    {/* Description */}
-                    {selectedProperty.description && (
-                      <div>
-                        <h3 className={`text-xl font-semibold mb-4 ${colors.text}`}>Description</h3>
-                        <p className={`${colors.textSecondary} leading-relaxed`}>
-                          {selectedProperty.description}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Amenities */}
-                    <div>
-                      <h3 className={`text-xl font-semibold mb-4 ${colors.text}`}>Amenities</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {selectedProperty.aminities && Array.isArray(selectedProperty.aminities) ? (
-                          selectedProperty.aminities.map((item, index) => {
-                            try {
-                              const parsed = JSON.parse(item);
-                              const amenities = Array.isArray(parsed) ? parsed : [parsed];
-                              return amenities.map((amenity, i) => (
-                                <div
-                                  key={`${index}-${i}`}
-                                  className={`flex items-center p-3 rounded-lg border ${colors.border} ${
-                                    theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-50"
-                                  } transition-colors`}
-                                >
-                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-                                    theme === "dark" ? "bg-indigo-900/50" : "bg-blue-100"
-                                  }`}>
-                                    <Wrench className={`w-4 h-4 ${
-                                      theme === "dark" ? "text-indigo-300" : "text-blue-600"
-                                    }`} />
-                                  </div>
-                                  <span className={`text-sm ${colors.text}`}>{amenity}</span>
-                                </div>
-                              ));
-                            } catch {
-                              return (
-                                <div
-                                  key={index}
-                                  className={`flex items-center p-3 rounded-lg border ${colors.border} ${
-                                    theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-50"
-                                  } transition-colors`}
-                                >
-                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-                                    theme === "dark" ? "bg-indigo-900/50" : "bg-blue-100"
-                                  }`}>
-                                    <Wrench className={`w-4 h-4 ${
-                                      theme === "dark" ? "text-indigo-300" : "text-blue-600"
-                                    }`} />
-                                  </div>
-                                  <span className={`text-sm ${colors.text}`}>{item}</span>
-                                </div>
-                              );
-                            }
-                          })
-                        ) : (
-                          <p className={`text-sm ${colors.textSecondary}`}>No amenities listed</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column - Price and Actions */}
-                  <div className="space-y-6">
-                    {/* Price Card */}
-                    <div className={`p-6 rounded-2xl shadow-lg border ${theme === "dark" ? "border-gray-700 bg-gray-800/50" : "border-gray-200 bg-gradient-to-br from-blue-50 to-blue-100"}`}>
-                      <div className="mb-4">
-                        <div className={`text-3xl md:text-4xl font-bold mb-1 ${colors.text}`}>
-                          ₹{new Intl.NumberFormat('en-IN').format(selectedProperty.price) || "Price on request"}
-                        </div>
-                        {selectedProperty.price && selectedProperty.squarefoot && (
-                          <div className={`text-sm ${colors.textSecondary}`}>
-                            ₹{Math.round(selectedProperty.price / selectedProperty.squarefoot).toLocaleString()} per sq.ft
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Payment Plan */}
-                      <div className={`mt-4 p-4 rounded-lg ${theme === "dark" ? "bg-gray-700/50" : "bg-white/50"}`}>
-                        <h4 className={`text-sm font-semibold mb-2 ${colors.text}`}>Payment Plan</h4>
-                        <ul className="space-y-2">
-                          <li className="flex justify-between text-sm">
-                            <span className={colors.textSecondary}>Down Payment</span>
-                            <span className={colors.text}>20%</span>
-                          </li>
-                          <li className="flex justify-between text-sm">
-                            <span className={colors.textSecondary}>During Construction</span>
-                            <span className={colors.text}>60%</span>
-                          </li>
-                          <li className="flex justify-between text-sm">
-                            <span className={colors.textSecondary}>On Completion</span>
-                            <span className={colors.text}>20%</span>
-                          </li>
-                        </ul>
-                      </div>
-
-                      {/* Contact Info */}
-                      <div className={`mt-6 pt-6 border-t ${colors.border}`}>
-                        <h4 className={`text-sm font-semibold mb-3 ${colors.text}`}>Contact Agent</h4>
-                        <div className="space-y-3">
-                          <button className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg border ${colors.border} ${
-                            theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-50"
-                          } transition-colors`}>
-                            <Phone className="w-4 h-4" />
-                            <span>Call Now</span>
-                          </button>
-                          <button className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg border ${colors.border} ${
-                            theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-50"
-                          } transition-colors`}>
-                            <Mail className="w-4 h-4" />
-                            <span>Email Agent</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="space-y-3">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleBuyNow(selectedProperty);
-                        }}
-                        className={`w-full ${colors.primary} text-white py-3 px-6 rounded-xl ${colors.primaryHover} transition-all duration-300 font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2`}
-                      >
-                        <Calendar className="w-5 h-5" />
-                        <span>Schedule Visit</span>
-                      </button>
-                      
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleBuyNow(selectedProperty);
-                        }}
-                        className={`w-full border-2 border-yellow-400 text-yellow-600 dark:text-yellow-400 py-3 px-6 rounded-xl hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-all duration-300 font-semibold flex items-center justify-center gap-2`}
-                      >
-                        <IndianRupee className="w-5 h-5" />
-                        <span>Book Now</span>
-                      </button>
-                    </div>
-
-                    {/* Additional Info */}
-                    <div className={`p-4 rounded-xl border ${colors.border} ${theme === "dark" ? "bg-gray-800/30" : "bg-gray-50"}`}>
-                      <h4 className={`text-sm font-semibold mb-3 ${colors.text}`}>Additional Information</h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className={`text-xs ${colors.textSecondary}`}>Property ID</span>
-                          <span className={`text-xs font-medium ${colors.text}`}>{selectedProperty._id?.slice(-8) || "N/A"}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className={`text-xs ${colors.textSecondary}`}>Zip Code</span>
-                          <span className={`text-xs font-medium ${colors.text}`}>{selectedProperty.zipcode || "N/A"}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className={`text-xs ${colors.textSecondary}`}>Listing Type</span>
-                          <span className={`text-xs font-medium ${colors.text}`}>{selectedProperty.listingtype || "N/A"}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          <div className="grid grid-cols-1 lg:grid-cols-11">
+            
+            {/* LEFT: MEDIA SECTION (Reduced to 6 columns) */}
+            <div className="lg:col-span-6 p-6 space-y-6">
+              {/* REDUCED IMAGE HEIGHT: Changed from 500px to 380px */}
+              <div className="relative h-[250px] md:h-[380px] rounded-[1.5rem] overflow-hidden shadow-xl group">
+                <img
+                  src={selectedProperty.image?.[currentImageIndex] || "https://images.unsplash.com/photo-1512917774080-9991f1c4c750"}
+                  alt="Elite Home"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                
+                {/* Minimalist Image Dots */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 p-1.5 bg-black/30 backdrop-blur-md rounded-full">
+                  {selectedProperty.image?.slice(0, 5).map((_, idx) => (
+                    <button 
+                      key={idx} 
+                      onClick={() => setCurrentImageIndex(idx)}
+                      className={`h-1 rounded-full transition-all ${currentImageIndex === idx ? "w-4 bg-amber-500" : "w-1 bg-white/50"}`}
+                    />
+                  ))}
                 </div>
               </div>
 
-              {/* Modal Footer */}
-              <div className={`sticky bottom-0 z-10 flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t ${colors.border} ${
-                theme === "dark" ? "bg-gray-800/95" : "bg-white/95"
-              } backdrop-blur-sm`}>
-                <div className="mb-4 sm:mb-0">
-                  <p className={`text-sm ${colors.textSecondary}`}>
-                    Interested in this property? Contact us for more details
+              {/* Header Details */}
+              <div className="space-y-4 px-2">
+                <div className="space-y-1">
+                  <h2 className={`text-2xl md:text-3xl font-serif ${colors.text}`}>
+                    {selectedProperty.propertyname}
+                  </h2>
+                  <p className="flex items-center text-amber-500 font-bold text-[10px] uppercase tracking-[0.2em]">
+                    <MapPin className="w-3.5 h-3.5 mr-1.5" />
+                    {selectedProperty.city}, {selectedProperty.state}
                   </p>
                 </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={closeModal}
-                    className={`px-6 py-2 border rounded-xl transition ${
-                      theme === "dark" 
-                        ? "border-gray-600 text-gray-300 hover:bg-gray-700" 
-                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    Close
+
+                {/* Compact Stats Grid */}
+                <div className="grid grid-cols-4 gap-3">
+                  {[
+                    { label: "Beds", val: selectedProperty.bedroom, icon: <Bed size={16}/> },
+                    { label: "Baths", val: selectedProperty.bathroom, icon: <Bath size={16}/> },
+                    { label: "Area", val: selectedProperty.squarefoot, icon: <Ruler size={16}/> },
+                    { label: "Floor", val: selectedProperty.floor, icon: <Building2 size={16}/> }
+                  ].map((stat, i) => (
+                    <div key={i} className={`p-3 rounded-xl border ${colors.border} ${theme === "dark" ? "bg-white/5" : "bg-slate-50"} text-center`}>
+                      <div className="flex justify-center text-amber-500 mb-1">{stat.icon}</div>
+                      <p className={`text-sm font-bold ${colors.text}`}>{stat.val}</p>
+                      <p className="text-[8px] font-black uppercase text-amber-500/60">{stat.label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Description Snippet */}
+                <p className={`text-xs leading-relaxed ${colors.textSecondary} line-clamp-3`}>
+                  {selectedProperty.description}
+                </p>
+              </div>
+            </div>
+
+            {/* RIGHT: ACTION PANEL (Reduced to 5 columns) */}
+            <div className={`lg:col-span-5 border-l ${colors.border} p-6 bg-gradient-to-br ${theme === "dark" ? "from-neutral-900 to-neutral-800" : "from-slate-50 to-white"}`}>
+              <div className="space-y-6">
+                
+                {/* Minimalist Pricing Card */}
+                <div className="p-6 rounded-[1.5rem] bg-amber-500 text-black shadow-lg">
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] mb-1 opacity-70">Investment</p>
+                  <p className="text-3xl font-serif">₹{selectedProperty.price.toLocaleString()}</p>
+                  <div className="mt-4 pt-4 border-t border-black/10 flex justify-between items-center">
+                    <span className="text-[10px] font-black uppercase tracking-widest">{selectedProperty.status}</span>
+                    <span className="text-[10px] opacity-60">REF ID: {selectedProperty._id?.slice(-5)}</span>
+                  </div>
+                </div>
+
+                {/* Primary Action */}
+                <div className="space-y-3">
+                  <button className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-md">
+                    Schedule Visit
                   </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleBuyNow(selectedProperty);
-                    }}
-                    className={`px-6 py-2 ${colors.primary} text-white rounded-xl ${colors.primaryHover} transition shadow-lg hover:shadow-xl flex items-center gap-2`}
-                  >
-                    <span>Book Now</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button className={`py-3 border ${colors.border} rounded-xl text-[9px] font-black uppercase tracking-widest ${colors.text} hover:bg-amber-500 hover:text-black transition-all`}>
+                      WhatsApp
+                    </button>
+                    <button className={`py-3 border ${colors.border} rounded-xl text-[9px] font-black uppercase tracking-widest ${colors.text} hover:bg-amber-500 hover:text-black transition-all`}>
+                      Contact
+                    </button>
+                  </div>
+                </div>
+
+                {/* Compact Amenities */}
+                <div className="space-y-3">
+                   <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-500">Key Features</h4>
+                   <div className="grid grid-cols-2 gap-2">
+                     {selectedProperty.aminities?.slice(0, 4).map((item, idx) => (
+                       <div key={idx} className="flex items-center gap-2 text-[10px] font-bold py-1">
+                         <div className="w-1 h-1 rounded-full bg-amber-500" />
+                         <span className={colors.textSecondary}>{item.replace(/[\[\]"]/g, '').slice(0, 15)}</span>
+                       </div>
+                     ))}
+                   </div>
+                </div>
+
+                {/* Payment Plan */}
+                <div className={`p-4 rounded-xl border border-dashed ${colors.border}`}>
+                  <div className="flex justify-between text-[10px] mb-2 font-black uppercase text-amber-500">
+                    <span>Payment Structure</span>
+                  </div>
+                  <div className="space-y-1.5 text-[10px]">
+                    <div className="flex justify-between"><span className={colors.textSecondary}>Initial</span><span className={colors.text}>20%</span></div>
+                    <div className="flex justify-between"><span className={colors.textSecondary}>Construction</span><span className={colors.text}>50%</span></div>
+                    <div className="flex justify-between"><span className={colors.textSecondary}>Completion</span><span className={colors.text}>30%</span></div>
+                  </div>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
     </div>
   );
 };

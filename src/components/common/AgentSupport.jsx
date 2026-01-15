@@ -11,7 +11,6 @@ import { useToast } from "../../model/SuccessToasNotification";
 import { http } from "../../axios/axios";
 
 
-
 const AgentSupport = () => {
   const [chatOpen, setChatOpen] = useState(false);
   const [firstName, setName] = useState("");
@@ -202,4 +201,4 @@ const AgentSupport = () => {
   );
 };
 
-export default AgentSupport;
+export default AgentSupport;  
