@@ -7,10 +7,11 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
-import { Calendar, User, Phone, Mail, ArrowLeft, CheckCircle } from "lucide-react";
+import { Calendar, User, Phone, Mail, ArrowLeft, CheckCircle, MapPin, Landmark, ArrowUpRight } from "lucide-react";
 import { AuthContext } from "../../../context/AuthContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { useToast } from "../../../model/SuccessToasNotification";
+import { motion } from "framer-motion";
 
 const CreateBooking = () => {
   const navigate = useNavigate();
@@ -26,10 +27,9 @@ const CreateBooking = () => {
     handleSubmit,
     formState: { errors },
     reset,
-    setValue // Used to populate form from Context
+    setValue
   } = useForm();
 
-  // Populate form if user is logged in
   useEffect(() => {
     if (isAuthenticated && user) {
       setValue("fullName", `${user.firstname} ${user.lastname || ""}`.trim());
@@ -37,35 +37,9 @@ const CreateBooking = () => {
     }
   }, [isAuthenticated, user, setValue]);
 
-  const themeClasses = {
-    light: {
-      bg: "bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen",
-      card: "bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl",
-      text: "text-gray-800",
-      textSecondary: "text-gray-600",
-      input: "bg-white/70 backdrop-blur-sm border-gray-200 focus:border-blue-500 transition-all duration-300",
-      button: "bg-gradient-to-r from-blue-600 to-indigo-700 hover:shadow-lg transform active:scale-95",
-      featureBadge: "bg-blue-100 text-blue-800",
-      backButton: "text-blue-600 hover:bg-blue-50"
-    },
-    dark: {
-      bg: "bg-gray-950 min-h-screen",
-      card: "bg-gray-900/80 backdrop-blur-xl border border-gray-800 shadow-2xl",
-      text: "text-gray-100",
-      textSecondary: "text-gray-400",
-      input: "bg-gray-800/70 border-gray-700 focus:border-blue-500",
-      button: "bg-gradient-to-r from-blue-500 to-indigo-600 transform active:scale-95",
-      featureBadge: "bg-gray-800 text-blue-300",
-      backButton: "text-blue-400 hover:bg-gray-800"
-    }
-  };
-
-  const currentTheme = themeClasses[theme];
-
   const onSubmit = async (data) => {
-    // Ensure we don't submit if property is missing
     if (!property?._id) {
-      toast.error("Property information missing. Please try again.");
+      toast.error("Property information missing.");
       return;
     }
 
@@ -73,7 +47,7 @@ const CreateBooking = () => {
       ...data, 
       propertyId: property._id, 
       agentId: property.agentId,
-      userId: user?.id // Track which user made the booking
+      userId: user?.id 
     };
 
     try {
@@ -89,146 +63,184 @@ const CreateBooking = () => {
   };
 
   return (
-    <div className={`w-full py-8 px-4 sm:px-6 lg:px-8 ${currentTheme.bg}`}>
+    <div className="min-h-screen bg-slate-50 dark:bg-neutral-950 pt-32 pb-20 px-4 transition-colors duration-500">
       <div className="max-w-7xl mx-auto">
-        <button
-          onClick={() => navigate(-1)}
-          className={`flex items-center mb-8 p-2 rounded-lg transition-all ${currentTheme.backButton}`}
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          <span className="font-medium">Back to Property</span>
-        </button>
+        
+        {/* Navigation Header */}
+        <div className="flex items-center justify-between mb-12">
+          <button
+            onClick={() => navigate(-1)}
+            className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-amber-500 transition-colors"
+          >
+            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> 
+            Back to Property
+          </button>
+          
+          <div className="hidden md:block h-[1px] flex-1 mx-8 bg-slate-200 dark:bg-white/10" />
+          
+          <h1 className="text-xl font-black text-slate-900 dark:text-white italic">
+            Secure <span className="text-amber-500 text-2xl">Viewing</span>
+          </h1>
+        </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Property Summary Section */}
-          <div className={`lg:w-1/2 w-full rounded-2xl overflow-hidden h-fit ${currentTheme.card}`}>
-            <Swiper
-              pagination={{ clickable: true }}
-              autoplay={{ delay: 3000 }}
-              modules={[Autoplay, Pagination]}
-              className="w-full h-64 md:h-80"
-            >
-              {property?.image?.map((img, i) => (
-                <SwiperSlide key={i}>
-                  <img src={img} alt="Property" className="w-full h-full object-cover" />
-                </SwiperSlide>
-              ))}
-            </Swiper>
-
-            <div className="p-6">
-              <h2 className={`text-2xl font-bold ${currentTheme.text}`}>{property?.propertyname}</h2>
-              <p className={currentTheme.textSecondary}>{property?.city}, {property?.state}</p>
-              
-              <div className="mt-4 flex items-center justify-between">
-                <span className="text-2xl font-bold text-blue-600">₹{property?.price?.toLocaleString()}</span>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${currentTheme.featureBadge}`}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          
+          {/* LEFT: Property Visual Summary */}
+          <div className="lg:col-span-5 space-y-8 sticky top-32">
+            <div className="relative group overflow-hidden rounded-[2.5rem] shadow-2xl">
+              <Swiper
+                pagination={{ clickable: true }}
+                autoplay={{ delay: 4000 }}
+                modules={[Autoplay, Pagination]}
+                className="w-full aspect-[4/5]"
+              >
+                {property?.image?.map((img, i) => (
+                  <SwiperSlide key={i}>
+                    <img src={img} alt="Property" className="w-full h-full object-cover" />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+              <div className="absolute top-6 left-6 z-10">
+                <span className="px-4 py-2 bg-amber-500 text-black text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
                   {property?.propertytype}
                 </span>
               </div>
             </div>
+
+            <div className="p-8 bg-white dark:bg-neutral-900 rounded-[2.5rem] border border-slate-200 dark:border-white/5">
+              <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-2 leading-tight">
+                {property?.propertyname}
+              </h2>
+              <div className="flex items-center gap-2 text-slate-400 text-sm font-medium mb-6">
+                <MapPin size={16} className="text-amber-500" />
+                {property?.city}, {property?.state}
+              </div>
+              
+              <div className="flex items-end justify-between py-6 border-t border-slate-100 dark:border-white/5">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Asking Price</p>
+                  <p className="text-3xl font-black text-amber-500 italic">
+                    AED {property?.price?.toLocaleString()}
+                  </p>
+                </div>
+                <Landmark size={32} className="text-slate-200 dark:text-white/5" />
+              </div>
+            </div>
           </div>
 
-          {/* Form Section */}
-          <div className="lg:w-1/2 w-full">
-            <div className={`rounded-2xl p-8 ${currentTheme.card}`}>
+          {/* RIGHT: Modern Booking Form */}
+          <div className="lg:col-span-7">
+            <div className="bg-white dark:bg-neutral-900 p-8 md:p-12 rounded-[3rem] border border-slate-200 dark:border-white/5 shadow-xl relative overflow-hidden">
+              
+              {/* Decorative Blur */}
+              <div className="absolute -top-24 -right-24 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+
               {bookingId ? (
                 /* SUCCESS STATE */
-                <div className="text-center py-10">
-                  <div className="flex justify-center mb-6">
-                    <CheckCircle className="w-20 h-20 text-green-500 animate-bounce" />
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9 }} 
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center py-20"
+                >
+                  <div className="inline-flex items-center justify-center w-24 h-24 bg-amber-500 rounded-full mb-8 shadow-2xl shadow-amber-500/20">
+                    <CheckCircle size={48} className="text-black" />
                   </div>
-                  <h2 className={`text-3xl font-bold mb-4 ${currentTheme.text}`}>Request Received!</h2>
-                  <p className={`mb-8 ${currentTheme.textSecondary}`}>
-                    Our agent will contact you shortly to confirm your visit for the selected date.
+                  <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-4">Request Received</h2>
+                  <p className="text-slate-500 dark:text-slate-400 font-medium max-w-sm mx-auto mb-10 leading-relaxed">
+                    Our luxury property consultants will contact you within 24 hours to finalize your exclusive tour.
                   </p>
                   <button 
                     onClick={() => navigate("/")}
-                    className={`px-8 py-3 text-white font-bold rounded-xl ${currentTheme.button}`}
+                    className="px-10 py-5 bg-slate-900 dark:bg-white text-white dark:text-black rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform"
                   >
-                    Browse More Properties
+                    Explore More Collections
                   </button>
-                </div>
+                </motion.div>
               ) : (
                 /* FORM STATE */
                 <>
-                  <div className="mb-8">
-                    <h2 className={`text-2xl font-bold ${currentTheme.text}`}>Schedule a Visit</h2>
-                    <p className={currentTheme.textSecondary}>Fill in your details to book a tour</p>
+                  <div className="mb-12">
+                    <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-4">Schedule a <span className="text-amber-500 italic">Tour</span></h2>
+                    <p className="text-slate-500 dark:text-slate-400 font-medium">Please provide your details for a personalized viewing experience.</p>
                   </div>
 
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       {/* Name */}
-                      <div className="space-y-2">
-                        <label className={`text-sm font-semibold ${currentTheme.text}`}>Full Name</label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Full Name</label>
+                        <div className="relative group">
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-amber-500 transition-colors" />
                           <input
-                            {...register("fullName", { required: "Name is required" })}
-                            className={`w-full pl-10 pr-4 py-3 rounded-xl border ${currentTheme.input}`}
+                            {...register("fullName", { required: "Full name is required" })}
+                            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-neutral-800 border-none focus:ring-2 focus:ring-amber-500/50 font-bold dark:text-white transition-all"
                             placeholder="John Doe"
                           />
                         </div>
-                        {errors.fullName && <span className="text-xs text-red-500">{errors.fullName.message}</span>}
+                        {errors.fullName && <span className="text-[10px] font-bold text-red-500 ml-1 uppercase">{errors.fullName.message}</span>}
                       </div>
 
                       {/* Email */}
-                      <div className="space-y-2">
-                        <label className={`text-sm font-semibold ${currentTheme.text}`}>Email</label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Contact Email</label>
+                        <div className="relative group">
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-amber-500 transition-colors" />
                           <input
                             {...register("email", { required: "Email is required" })}
-                            className={`w-full pl-10 pr-4 py-3 rounded-xl border ${currentTheme.input}`}
+                            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-neutral-800 border-none focus:ring-2 focus:ring-amber-500/50 font-bold dark:text-white transition-all"
                             placeholder="john@example.com"
                           />
                         </div>
                       </div>
 
                       {/* Phone */}
-                      <div className="space-y-2">
-                        <label className={`text-sm font-semibold ${currentTheme.text}`}>Phone</label>
-                        <div className="relative">
-                          <Phone className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Phone Number</label>
+                        <div className="relative group">
+                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-amber-500 transition-colors" />
                           <input
-                            {...register("phone", { required: "Phone is required" })}
-                            className={`w-full pl-10 pr-4 py-3 rounded-xl border ${currentTheme.input}`}
-                            placeholder="10-digit number"
+                            {...register("phone", { required: "Phone number is required" })}
+                            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-neutral-800 border-none focus:ring-2 focus:ring-amber-500/50 font-bold dark:text-white transition-all"
+                            placeholder="+971 -- --- ----"
                           />
                         </div>
                       </div>
 
                       {/* Date */}
-                      <div className="space-y-2">
-                        <label className={`text-sm font-semibold ${currentTheme.text}`}>Preferred Date</label>
-                        <div className="relative">
-                          <Calendar className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Preferred Date</label>
+                        <div className="relative group">
+                          <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-amber-500 transition-colors" />
                           <input
                             type="date"
                             min={new Date().toISOString().split("T")[0]}
-                            {...register("date", { required: "Select a date" })}
-                            className={`w-full pl-10 pr-4 py-3 rounded-xl border ${currentTheme.input}`}
+                            {...register("date", { required: "Please select a date" })}
+                            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-neutral-800 border-none focus:ring-2 focus:ring-amber-500/50 font-bold dark:text-white transition-all cursor-pointer"
                           />
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <label className={`text-sm font-semibold ${currentTheme.text}`}>Notes (Optional)</label>
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Additional Requirements</label>
                       <textarea
                         {...register("message")}
-                        rows="3"
-                        className={`w-full p-4 rounded-xl border ${currentTheme.input}`}
-                        placeholder="I'm interested in the morning slot..."
+                        rows="4"
+                        className="w-full p-6 rounded-[2rem] bg-slate-50 dark:bg-neutral-800 border-none focus:ring-2 focus:ring-amber-500/50 font-bold dark:text-white transition-all resize-none"
+                        placeholder="Tell us about your specific preferences..."
                       />
                     </div>
 
                     <button
                       type="submit"
-                      className={`w-full py-4 text-white font-bold text-lg rounded-xl shadow-lg transition-all ${currentTheme.button}`}
+                      className="w-full py-6 bg-amber-500 text-black font-black text-[12px] uppercase tracking-[0.3em] rounded-2xl shadow-2xl shadow-amber-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
                     >
-                      Confirm Booking Request
+                      Confirm Selection <ArrowUpRight size={20} />
                     </button>
+                    
+                    <p className="text-center text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                      Your data is protected under UAE Federal Decree-Law No. 45
+                    </p>
                   </form>
                 </>
               )}

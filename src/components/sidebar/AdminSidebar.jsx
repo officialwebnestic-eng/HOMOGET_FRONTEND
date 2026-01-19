@@ -76,7 +76,7 @@ export default function Sidebar() {
           <DropdownMenu 
             icon={<ShoppingCart size={20} />} label="Bookings" menuKey="Book" 
             openDropdown={openDropdown} toggleDropdown={toggleDropdown} isDark={isDark}
-            items={[{ to: "/viewallbookings", label: "All Bookings" }]} 
+            items={[{ to: "/viewallbookings", label: "All Bookings" },{to:"/"}]} 
           />
 
           <NavItem to="/gettourbooking" icon={<Users size={20} />} label="Tour List" isDark={isDark} />
