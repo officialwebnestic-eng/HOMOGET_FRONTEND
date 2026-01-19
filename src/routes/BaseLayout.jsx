@@ -6,6 +6,7 @@ import AdminSidebar from "../components/sidebar/AdminSidebar";
 import AgentSidebar from "../components/sidebar/AgentSidebar";
 import { AuthContext } from "../context/AuthContext";
 import Navbar from "../components/common/Navbar";
+import { AnimatePresence } from "framer-motion";
 
 const BaseLayout = () => {
   const { user } = useContext(AuthContext);
@@ -13,50 +14,46 @@ const BaseLayout = () => {
   const { isOpen, closeSidebar } = useSidebar();
   const isDark = theme === "dark";
 
- const renderSidebar = () => {
-  // If the user is specifically an admin, show the Admin Sidebar
-  if (user?.role === "admin") {
-    return <AdminSidebar />;
-  }
-
-  // For any other role (agent, user, guest), show the Agent Sidebar
-  return <AgentSidebar />;
-};
+  const renderSidebar = () => {
+    if (user?.role === "admin") return <AdminSidebar />;
+    return <AgentSidebar />;
+  };
 
   return (
     <div className={`flex h-screen w-full overflow-hidden transition-colors duration-300 ${
       isDark ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-900"
     }`}>
       
-      {/* Mobile Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden"
-          onClick={closeSidebar}
-        />
-      )}
+      
+      
+            <AnimatePresence>
+        {isOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] lg:hidden"
+            onClick={closeSidebar}
+          />
+        )}
+      </AnimatePresence>
 
-      {/* Sidebar - Fixed Position */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 left-0 z-[70] w-72 transform transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {renderSidebar()}
       </aside>
 
-      {/* Main Wrapper - The margin moves EVERYTHING inside (Navbar + Content) */}
       <main 
-        className={`flex-1 flex flex-col h-full overflow-hidden relative transition-all duration-300 ease-in-out ${
+        className={`flex-1 flex flex-col h-full min-w-0 relative transition-all duration-300 ease-in-out ${
           isOpen ? "lg:ml-72" : "ml-0"
         }`}
       >
-        {/* Navbar is first child of Main */}
-        {/* <Navbar /> */}
+        <header className="flex-shrink-0 w-full z-40">
+           <Navbar />
+        </header>
 
-        {/* Scrollable Content Area */}
-        <div className="flex-1   overflow-y-auto p-4 md:p-6 lg:p-8">
-          <div className="max-w-7xl mx-auto">
+        <div className="flex-1 overflow-y-auto scroll-smooth px-4 py-6 md:px-8">
+          <div className="max-w-[1600px] mx-auto">
             <Outlet />
           </div>
         </div>
@@ -66,7 +63,3 @@ const BaseLayout = () => {
 };
 
 export default BaseLayout;
-
-
-
-

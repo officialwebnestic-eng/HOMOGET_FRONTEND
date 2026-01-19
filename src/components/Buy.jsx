@@ -14,6 +14,7 @@ const Buy = () => {
   // NEW: State for tracking the selected asset for the modal
   const [selectedAsset, setSelectedAsset] = useState(null);
 
+
   const salesListings = [
     {
       id: 1,
@@ -45,7 +46,7 @@ const Buy = () => {
       status: "New Launch",
       beds: 2,
       sqft: "1,650",
-      image: "https://images.unsplash.com/photo-1600607687940-c52af04657b3?q=80&w=1000&auto=format&fit=crop",
+      image: "https://media.istockphoto.com/id/1371047678/photo/multi-storey-house-with-holiday-apartments-stands-on-sandy-beach-in-dubai-palma-island-sun.webp?a=1&b=1&s=612x612&w=0&k=20&c=5EPXmjikDd8CHasn5rYs9a1MrmXS3OKGn0zZwYO7jAw=",
       description: "Modern waterfront living designed for high-yield returns in Dubai's fastest-growing business district."
     }
   ];
