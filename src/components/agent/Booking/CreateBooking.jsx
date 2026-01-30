@@ -13,15 +13,15 @@ import { useTheme } from "../../../context/ThemeContext";
 import { useToast } from "../../../model/SuccessToasNotification";
 import { motion } from "framer-motion";
 
+
+
 const CreateBooking = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const property = location.state?.property;
   const { user, isAuthenticated } = useContext(AuthContext);
-  const { theme } = useTheme();
   const [bookingId, setBookingId] = useState(null);
   const { addToast } = useToast();
-
   const {
     register,
     handleSubmit,

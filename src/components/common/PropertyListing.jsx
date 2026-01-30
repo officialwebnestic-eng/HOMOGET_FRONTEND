@@ -186,21 +186,42 @@ const PropertyListing = () => {
       <AnimatePresence>
         {selectedProperty && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[10000] bg-black/95 backdrop-blur-md flex justify-center items-center p-4">
-            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className={`max-w-5xl w-full bg-[#0a0a0c] rounded-[3rem] overflow-hidden border border-white/10 relative max-h-[90vh] overflow-y-auto`}>
-               <button onClick={() => setSelectedProperty(null)} className="absolute top-8 right-8 z-50 w-12 h-12 rounded-full bg-white/10 text-white hover:bg-amber-500 hover:text-black flex items-center justify-center transition-all"><X size={24}/></button>
-               <div className="grid grid-cols-1 lg:grid-cols-2">
-                  <div className="h-[400px] lg:h-full bg-black"><img src={selectedProperty.image?.[currentImageIndex]} className="w-full h-full object-cover opacity-80" /></div>
-                  <div className="p-12 space-y-8">
-                     <h2 className="text-5xl font-serif text-white">{selectedProperty.propertyname}</h2>
-                     <p className="text-amber-500 font-black uppercase tracking-widest text-xs">{selectedProperty.city}</p>
-                     <div className="p-8 rounded-[2rem] bg-amber-500 text-black">
-                        <p className="text-[10px] font-black uppercase opacity-60 mb-1">Asset Value</p>
-                        <p className="text-5xl font-serif">₹{selectedProperty.price.toLocaleString()}</p>
-                     </div>
-                     <button className="w-full py-5 bg-amber-500 text-black rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-amber-400 transition-all">Schedule Appointment</button>
-                  </div>
-               </div>
-            </motion.div>
+           <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className={`max-w-5xl w-full bg-[#0a0a0c] rounded-[3rem] overflow-hidden border border-white/10 relative max-h-[90vh] overflow-y-auto`}>
+   <button onClick={() => setSelectedProperty(null)} className="absolute top-8 right-8 z-50 w-12 h-12 rounded-full bg-white/10 text-white hover:bg-amber-500 hover:text-black flex items-center justify-center transition-all"><X size={24}/></button>
+   
+   <div className="grid grid-cols-1 lg:grid-cols-2">
+      <div className="h-[400px] lg:h-full bg-black">
+         <img src={selectedProperty.image?.[currentImageIndex]} className="w-full h-full object-cover opacity-80" />
+      </div>
+
+      <div className="p-12 space-y-8">
+         <div className="space-y-2">
+            <h2 className="text-5xl font-serif text-white">{selectedProperty.propertyname}</h2>
+            <p className="text-amber-500 font-black uppercase tracking-widest text-xs">{selectedProperty.city}, UAE</p>
+         </div>
+
+         {/* UPDATED PRICE BOX */}
+         <div className="p-8 rounded-[2rem] bg-amber-500 text-black">
+            <p className="text-[10px] font-black uppercase opacity-60 mb-1 tracking-widest">Asset Value</p>
+            <div className="flex items-baseline gap-2">
+               <span className="text-xl font-sans font-black">AED</span>
+               <p className="text-5xl font-serif">
+                  {selectedProperty.price.toLocaleString()}
+               </p>
+            </div>
+         </div>
+
+         <div className="space-y-4">
+            <button className="w-full py-5 bg-amber-500 text-black rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-amber-400 transition-all shadow-xl shadow-amber-500/20">
+               Schedule Appointment
+            </button>
+            <p className="text-[10px] text-center text-white/40 uppercase font-bold tracking-tighter">
+               Excluding Registration & Service Charges
+            </p>
+         </div>
+      </div>
+   </div>
+</motion.div>
           </motion.div>
         )}
       </AnimatePresence>
