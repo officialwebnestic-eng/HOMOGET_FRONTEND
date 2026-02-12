@@ -37,40 +37,16 @@ const AgentHero = ({
         {/* Header Section */}
         <div className="text-center mb-8 md:mb-12">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-amber-400 text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase mb-4">
-              <Sparkles className="w-3 h-3" /> Exclusive Portfolio 2026
-            </span>
+           
             <h1 className="text-4xl md:text-7xl font-serif text-white leading-tight">
-              Exceptional Homes. <br />
-              <span className="italic font-light text-white/80">Tailored Experiences.</span>
+            
+              <span className="italic font-light text-white/80">HOMOGET.</span>
             </h1>
           </motion.div>
         </div>
 
         {/* Search Hub */}
         <div className="max-w-5xl mx-auto relative z-[50]">
-          
-          {/* Tabs - Fixed for Responsiveness */}
-          <div className="flex justify-center mb-0 relative z-10 w-full overflow-hidden">
-            <div className="flex bg-black/40 backdrop-blur-2xl p-1 md:p-1.5 rounded-t-2xl border-x border-t border-white/10 overflow-x-auto no-scrollbar max-w-full scroll-smooth">
-              <div className="flex flex-nowrap gap-1">
-                {["buy", "rent", "new projects", "commercial"].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setSelectedTab(tab)}
-                    className={`px-4 md:px-8 py-2.5 md:py-3 rounded-xl text-[10px] md:text-sm font-bold transition-all duration-300 uppercase tracking-widest whitespace-nowrap ${
-                      selectedTab === tab 
-                        ? "bg-white text-slate-900 shadow-xl" 
-                        : "text-white/60 hover:text-white hover:bg-white/5"
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
           {/* Main Search Bar */}
           <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-2xl md:rounded-full p-2 shadow-2xl border border-white/20 flex flex-col md:flex-row items-center gap-1 relative z-[60] overflow-visible">
             

@@ -189,7 +189,7 @@ const filterFields = [
 
   return (
     <div className={colors.background}>
-      {/* Hero Section with Background Image */}
+    
      
    <AgentHero 
         selectedTab={selectedTab}
@@ -534,7 +534,7 @@ const filterFields = [
                 </div>
               </div>
             </div>
-          </div>
+        </div>
         </div>
       </motion.div>
     </motion.div>

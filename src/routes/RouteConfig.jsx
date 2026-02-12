@@ -80,6 +80,7 @@ import Explore from "../components/Explore.jsx";
 import Rent from "../components/Rent.jsx";
 import Buy from "../components/Buy.jsx";
 import OffPlan from "../components/OffPlan.jsx";
+import PropertyDetailsPage from "../components/common/homecommon/PropertyDetailsPage.jsx";
 
 
 export const AdminRoutes = () => {
@@ -419,7 +420,8 @@ export const PublicRoutes = () => {
              <Route path="rent" element={<Rent />} />
              <Route path="buy" element={<Buy />} />
              <Route path="offplan" element={<OffPlan />} />
-            {/* <Route path="/rera-compliance" element={<ReraCompliance />} />  */}
+
+            <Route path="/property/:id" element={<PropertyDetailsPage />} />
              </Route>
         </>
     );

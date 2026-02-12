@@ -99,7 +99,7 @@ export default function Navbar() {
                 </button>
               )}
               <Link to="/">
-                <img src={navbarlogo} alt="Logo" className={`${scrollY > 20 ? 'h-20 w-20 md:h-40 md:w-40' : 'h-15 w-15  md:h-40 md:w-40'} transition-all`} />
+                <img src={navbarlogo} alt="Logo" className={`${scrollY > 20 ? 'h-20 w-20 md:h-30 md:w-30' : 'h-15 w-15  md:h-30 md:w-30'} transition-all`} />
               </Link>
             </div>
             <div className="hidden xl:flex items-center space-x-5">
