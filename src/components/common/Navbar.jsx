@@ -153,8 +153,8 @@ export default function Navbar() {
                     Login
                   </Link>
                   <Link to="/signup" className={`px-4 md:px-6 py-2 text-[10px] font-black uppercase rounded-full bg-black text-white shadow-lg hover:bg-slate-800 transition-all`}>
-                    Join
-                  </Link>
+                  Sign Up
+                    </Link>
                 </div>
               ) : (
                 /* PROFILE DROPDOWN */
@@ -272,7 +272,7 @@ export default function Navbar() {
               {!isAuthenticated ? (
                 <div className="grid grid-cols-2 gap-4">
                   <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className={`py-4 text-center rounded-2xl font-black uppercase text-[10px] border ${currentTheme.border}`}>Login</Link>
-                  <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)} className="py-4 bg-indigo-600 text-white text-center rounded-2xl font-black uppercase text-[10px]">Join Now</Link>
+                  <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)} className="py-4 bg-indigo-600 text-white text-center rounded-2xl font-black uppercase text-[10px]">Sign Up</Link>
                 </div>
               ) : (
                 <Link to="/userpropertyregister" onClick={() => setIsMobileMenuOpen(false)} className="w-full py-4 bg-amber-500 text-black text-center rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-2">

@@ -1,15 +1,13 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, MapPin, Filter, ChevronDown, ArrowRight, Sparkles, Building2 } from "lucide-react";
+import { Search, MapPin, Filter, ChevronDown, ArrowRight, Building2 } from "lucide-react";
 
 const AgentHero = ({ 
-  selectedTab, 
-  setSelectedTab, 
   searchQuery, 
   setSearchQuery, 
   showSuggestions, 
   setShowSuggestions, 
-  propertyList, 
+  propertyList = [], 
   filters, 
   handleFilterChange, 
   showFilters, 
@@ -21,38 +19,43 @@ const AgentHero = ({
   colors 
 }) => {
   return (
-    <div className="relative min-h-[90vh] flex items-center justify-center overflow-visible z-[40]">
+    <div className="relative min-h-[85vh] flex items-center justify-center overflow-visible z-[40]">
       
-      {/* Background Layer */}
+      {/* Background with Premium Overlay */}
       <div className="absolute inset-0 z-0">
         <img
           src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=2000&q=80"
           alt="Luxury Architecture"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-slate-900"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-[#0a0a0c]"></div>
       </div>
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 md:px-6 pt-20 pb-24">
-        {/* Header Section */}
-        <div className="text-center mb-8 md:mb-12">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-           
-            <h1 className="text-4xl md:text-7xl font-serif text-white leading-tight">
-            
-              <span className="italic font-light text-white/80">HOMOGET.</span>
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 pt-10 pb-20">
+        
+        {/* Google-Inspired Minimalist Branding */}
+        <div className="text-center mb-10">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            transition={{ duration: 1 }}
+          >
+            <h1 className="text-6xl md:text-9xl font-serif tracking-tighter text-white mb-4">
+              Homoget<span className="text-amber-500 text-3xl md:text-5xl">.</span>
             </h1>
+            <p className="text-white/60 text-xs md:text-sm font-light tracking-[0.5em] uppercase">
+              The Future of Real Estate Search
+            </p>
           </motion.div>
         </div>
 
-        {/* Search Hub */}
-        <div className="max-w-5xl mx-auto relative z-[50]">
-          {/* Main Search Bar */}
-          <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-2xl md:rounded-full p-2 shadow-2xl border border-white/20 flex flex-col md:flex-row items-center gap-1 relative z-[60] overflow-visible">
+        {/* Unified Search Engine Bar */}
+        <div className="max-w-4xl mx-auto relative group">
+          <div className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-3xl rounded-[2rem] md:rounded-full p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/20 flex flex-col md:flex-row items-center transition-all duration-500 focus-within:shadow-[0_20px_70px_rgba(0,0,0,0.5)]">
             
-            {/* Location Input */}
-            <div className="flex-1 w-full relative group">
-              <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            {/* Main Input Field */}
+            <div className="flex-1 w-full relative flex items-center">
+              <Search className="absolute left-6 w-5 h-5 text-slate-400 group-focus-within:text-amber-500 transition-colors" />
               <input
                 type="text"
                 value={searchQuery}
@@ -61,23 +64,28 @@ const AgentHero = ({
                   setShowSuggestions(e.target.value.length > 0);
                 }}
                 onFocus={() => setShowSuggestions(true)}
-                placeholder="Where would you like to live?"
-                className="w-full pl-14 pr-6 py-4 bg-transparent text-slate-900 dark:text-white focus:outline-none text-base md:text-lg"
+                placeholder="Search by city, project or area..."
+                className="w-full pl-16 pr-6 py-5 bg-transparent text-slate-900 dark:text-white focus:outline-none text-base md:text-lg placeholder:text-slate-400 placeholder:font-light"
               />
               
-              {/* Suggestions Dropdown */}
+              {/* Suggestions Dropdown (Google Style) */}
               <AnimatePresence>
                 {showSuggestions && propertyList && propertyList.length > 0 && (
                   <motion.div 
-                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                    className="absolute left-0 right-0 mt-4 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden z-[100] border border-slate-100 dark:border-slate-700"
+                    initial={{ opacity: 0, y: 0 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    exit={{ opacity: 0 }}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl overflow-hidden z-[100] border border-slate-100 dark:border-white/10"
                   >
-                    <div className="p-2 md:p-3">
+                    <div className="py-4">
                       {propertyList.slice(0, 5).map((loc, i) => (
-                        <button key={i} onClick={() => { setSearchQuery(`${loc.city}, ${loc.state}`); setShowSuggestions(false); }}
-                          className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-between rounded-xl">
-                          <span className="text-sm md:text-base text-slate-700 dark:text-slate-200">{loc.city}, {loc.state}</span>
-                          <ArrowRight className="w-4 h-4 text-slate-400" />
+                        <button 
+                          key={i} 
+                          onClick={() => { setSearchQuery(`${loc.city}`); setShowSuggestions(false); }}
+                          className="w-full text-left px-8 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-4 group/item"
+                        >
+                          <MapPin className="w-4 h-4 text-slate-300 group-hover/item:text-amber-500" />
+                          <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{loc.city}, {loc.state}</span>
                         </button>
                       ))}
                     </div>
@@ -86,104 +94,68 @@ const AgentHero = ({
               </AnimatePresence>
             </div>
 
-            <div className="hidden md:block w-[1px] h-10 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+            {/* Vertical Divider (Hidden on Mobile) */}
+            <div className="hidden md:block w-[1px] h-8 bg-slate-200 dark:bg-white/10 mx-2"></div>
 
-            {/* Property Type Dropdown */}
-            <div className="w-full md:w-48 relative border-t border-slate-100 md:border-none">
-              <Building2 className="absolute left-5 md:left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <select 
-                name="propertytype"
-                value={filters.propertytype || ""}
-                onChange={handleFilterChange}
-                className="w-full pl-14 md:pl-12 pr-10 py-4 bg-transparent text-slate-700 dark:text-white appearance-none focus:outline-none cursor-pointer font-medium text-sm md:text-base"
-              >
-                <option value="">All Types</option>
-                {getUniqueValues(propertyList, "propertytype").map((opt) => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            </div>
-
-            <div className="hidden md:block w-[1px] h-10 bg-slate-200 dark:bg-slate-700 mx-1"></div>
-
-            {/* HOVER FILTER BUTTON */}
+            {/* Advanced Filters Interaction */}
             <div 
-              className="relative w-full md:w-auto"
+              className="relative w-full md:w-auto px-4 md:px-2 flex items-center justify-between"
               onMouseEnter={() => setShowFilters(true)}
               onMouseLeave={() => setShowFilters(false)}
             >
-              <button 
-                className={`w-full md:w-auto flex items-center justify-center gap-2 px-6 py-4 text-[10px] md:text-xs font-black uppercase tracking-widest transition-all rounded-full ${
-                  showFilters ? 'text-amber-500 bg-amber-500/10' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <Filter className="w-4 h-4" />
-                <span>Filters</span>
-                <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} />
+              <button className="flex items-center gap-2 px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-amber-500 transition-colors">
+                <Filter className="w-3.5 h-3.5" />
+                <span>Refine</span>
+                <ChevronDown className={`w-3 h-3 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* THE HOVER MODEL */}
+              {/* Hover Filter Modal */}
               <AnimatePresence>
                 {showFilters && (
                   <motion.div 
-                    initial={{ opacity: 0, y: 15, scale: 0.95 }} 
-                    animate={{ opacity: 1, y: 0, scale: 1 }} 
-                    exit={{ opacity: 0, y: 15, scale: 0.95 }}
-                    className="absolute top-full right-0 pt-4 z-[999] w-full md:w-[600px] overflow-visible"
+                    initial={{ opacity: 0, y: 10 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    className="absolute top-full right-0 pt-4 z-[999] w-full md:w-[500px]"
                   >
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl md:rounded-[2rem] shadow-[0_40px_120px_rgba(0,0,0,0.6)] border border-slate-100 dark:border-white/10 p-6 md:p-8">
-                      <div className="flex justify-between items-center mb-6">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500">Refine Search</h4>
-                        <button onClick={resetFilters} className="text-[10px] font-black text-slate-400 hover:text-red-500 uppercase tracking-widest transition-colors">Clear All</button>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {filterFields.map((field) => {
-                          if (field.name === "location" || field.name === "propertytype") return null;
-                          return (
-                            <div key={field.name} className="relative group">
-                              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-amber-500 transition-colors">
-                                {field.icon}
-                              </div>
-                              <select
-                                name={field.name}
-                                value={filters[field.name] || ""}
-                                onChange={handleFilterChange}
-                                className="w-full pl-10 pr-4 py-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 border-none text-[10px] md:text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-700 dark:text-slate-200"
-                              >
-                                <option value="">{field.label}</option>
-                                {getUniqueValues(propertyList, field.name).map((opt) => (
-                                  <option key={opt} value={opt}>{field.name === "price" ? `AED ${opt.toLocaleString()}` : opt}</option>
-                                ))}
-                              </select>
-                            </div>
-                          );
-                        })}
-                      </div>
+                    <div className="bg-white/95 dark:bg-slate-900 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-white/10 p-8">
+                       <div className="flex justify-between items-center mb-6">
+                         <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Advanced Parameters</span>
+                         <button onClick={resetFilters} className="text-[9px] font-bold text-red-400 uppercase">Reset</button>
+                       </div>
+                       <div className="grid grid-cols-2 gap-4">
+                         {filterFields.slice(0, 6).map((field) => (
+                           <select
+                             key={field.name}
+                             name={field.name}
+                             value={filters[field.name] || ""}
+                             onChange={handleFilterChange}
+                             className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-white/5 text-[10px] font-bold uppercase outline-none text-slate-700 dark:text-white border-none"
+                           >
+                             <option value="">{field.label}</option>
+                             {getUniqueValues(propertyList, field.name).map(opt => (
+                               <option key={opt} value={opt}>{opt}</option>
+                             ))}
+                           </select>
+                         ))}
+                       </div>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
 
-            {/* Search Action Button */}
-            <button 
-              onClick={handleSubmit}
-              className={`w-full md:w-auto px-10 py-4 ${colors.primary || 'bg-blue-600'} text-white rounded-xl md:rounded-full font-black uppercase text-[10px] md:text-xs tracking-widest flex items-center justify-center gap-3 shadow-xl transition-all hover:brightness-110 active:scale-95 md:ml-1`}
-            >
-              <Search className="w-4 h-4" />
-              <span>Search</span>
-            </button>
+              {/* Action Button */}
+              <button 
+                onClick={handleSubmit}
+                className="md:ml-2 px-8 py-4 bg-amber-500 text-black rounded-full font-black uppercase text-[10px] tracking-tighter hover:bg-white hover:scale-105 transition-all shadow-lg"
+              >
+                Find Home
+              </button>
+            </div>
           </div>
+          
+        
         </div>
       </div>
-
-      {/* Tailwind Utility for hiding scrollbar track */}
-      <style jsx>{`
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
     </div>
   );
 };
