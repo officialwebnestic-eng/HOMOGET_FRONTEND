@@ -1,140 +1,126 @@
-import React, { useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from "react-router-dom";
-import {
-  MapPin, Bed, Ruler, X, ArrowRight, Search, Filter, Calendar, Sparkles
-} from "lucide-react";
+import { 
+  Search, Filter, MapPin, Bed, Bath, Ruler, 
+  ChevronLeft, ChevronRight, ArrowRight,
+  Phone, Mail, Building2, Home, Barcode, Wrench, Calendar,
+  IndianRupee, ChevronDown
+} from 'lucide-react';
+import { FaWhatsapp } from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
 import useGetAllProperty from "../../hooks/useGetAllProperty";
 
 const PropertyListing = () => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState({});
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProperty, setSelectedProperty] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
-  const limit = 6;
-  const listRef = useRef(null);
 
-  const { propertyList, loading } = useGetAllProperty(currentPage, limit, filters);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState({
+    city: "", propertytype: "", price: "", squarefoot: "",
+    bedroom: "", bathroom: "", floor: "", state: "", aminities: ""
+  });
 
-  const colors = {
-    amber: "text-amber-500",
-    bgAmber: "bg-amber-500",
-    text: isDark ? "text-white" : "text-[#1a1a1e]",
-    textSec: isDark ? "text-slate-400" : "text-slate-600",
-    border: isDark ? "border-white/10" : "border-slate-200",
-    inputBg: isDark ? "bg-white/10" : "bg-slate-100",
-  };
+  const limit = 20; 
+  const { propertyList = [], loading, pagination = {} } = useGetAllProperty(currentPage, limit, filters);
 
-  const getUniqueValues = (data, key) => {
-    if (!data) return [];
-    return [...new Set(data.map((item) => item[key]).filter(Boolean))].sort();
+  // EXACT FILTER FIELDS FROM YOUR SCREENSHOT
+  const filterFields = [
+    { name: "city", label: "CITY", icon: <MapPin size={14} className="text-[#ff8a00]" /> },
+    { name: "propertytype", label: "TYPE", icon: <Home size={14} className="text-[#ff8a00]" /> },
+    { name: "price", label: "PRICE", icon: <IndianRupee size={14} className="text-[#ff8a00]" /> },
+    { name: "squarefoot", label: "AREA", icon: <Ruler size={14} className="text-[#ff8a00]" /> },
+    { name: "bedroom", label: "BEDS", icon: <Bed size={14} className="text-[#ff8a00]" /> },
+    { name: "bathroom", label: "BATHS", icon: <Bath size={14} className="text-[#ff8a00]" /> },
+    { name: "floor", label: "FLOOR", icon: <Barcode size={14} className="text-[#ff8a00]" /> },
+    { name: "state", label: "LOCATION", icon: <MapPin size={14} className="text-[#ff8a00]" /> },
+    { name: "aminities", label: "AMENITIES", icon: <Wrench size={14} className="text-[#ff8a00]" /> },
+  ];
+
+  const filteredProperties = useMemo(() => {
+    if (!propertyList) return [];
+    return propertyList.filter(item => {
+      const matchesSearch = item.propertyname?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            item.city?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesDropdowns = Object.keys(filters).every(key => {
+        if (!filters[key]) return true;
+        return String(item[key]).toLowerCase() === String(filters[key]).toLowerCase();
+      });
+      return matchesSearch && matchesDropdowns;
+    });
+  }, [propertyList, searchQuery, filters]);
+
+  const getUniqueValues = (key) => {
+    return [...new Set(propertyList.map(item => item[key]).filter(Boolean))].sort();
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-[#0a0a0c]" : "bg-white"}`}>
+    <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0c]' : 'bg-slate-50'}`}>
       
-      {/* --- HERO SECTION: PRIVACY POLICY STYLE --- */}
-      <section className="relative w-full h-[80vh] flex items-center overflow-hidden">
-        {/* Background Overlay Logic */}
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=2000" 
-            alt="Dubai Skyline" 
-            className="w-full h-full object-cover opacity-30"
-          />
-          <div className={`absolute inset-0 ${isDark ? "bg-gradient-to-r from-[#0a0a0c] via-[#0a0a0c]/90 to-transparent" : "bg-gradient-to-r from-white via-white/90 to-transparent"}`}></div>
-        </div>
+      {/* --- HERO SECTION --- */}
+      <section className="relative w-full h-[65vh] flex items-center overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=2000"
+          alt="Dubai Skyline"
+          className="absolute inset-0 w-full h-full object-cover opacity-50"
+        />
+        <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-b from-[#0a0a0c]/80 to-[#0a0a0c]' : 'bg-gradient-to-b from-white/20 to-white'}`} />
+        
+        <div className="relative z-10 max-w-7xl mx-auto px-6 w-full mt-[-50px]">
+          <h1 className={`text-7xl md:text-9xl font-black tracking-tighter ${isDark ? 'text-white' : 'text-[#1a1a1e]'} leading-[0.8] mb-4`}>
+            Property <br />
+            <span className="text-[#ff8a00] font-serif italic font-light lowercase">Listings</span>
+          </h1>
+          <p className={`max-w-md text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'} mb-8`}>
+            Homoget Properties offers a verified portfolio of luxury assets ensuring full compliance with UAE market regulations.
+          </p>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
-          <div className="max-w-3xl space-y-6">
-            {/* Top Badge */}
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-600 text-[10px] font-black uppercase tracking-widest">
-                <Sparkles size={12} className="text-amber-500" /> Premium Collection
-              </span>
-            </motion.div>
-
-            {/* Typography inspired by Screenshot */}
-            <div className="space-y-0">
-              <motion.h1 
-                initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-                className={`text-7xl md:text-8xl font-black tracking-tighter ${colors.text} leading-[0.85]`}
-              >
-                Property
-              </motion.h1>
-              <motion.h1 
-                initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                className="text-7xl md:text-8xl font-serif italic font-light text-amber-500 leading-[1.1]"
-              >
-                Listings
-              </motion.h1>
+          {/* SEARCH BAR */}
+          <div className="relative z-50 w-full max-w-2xl mb-8">
+            <div className="flex items-center bg-white/90 backdrop-blur-xl rounded-full border border-white/20 p-2 shadow-2xl">
+              <Search className="text-[#ff8a00] ml-4" size={20} />
+              <input 
+                type="text" 
+                placeholder="Search city or project..." 
+                className="w-full bg-transparent border-none outline-none px-4 py-3 text-sm font-bold text-slate-800 placeholder-slate-400"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <button className="bg-[#ff8a00] text-white px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest">Search</button>
             </div>
+          </div>
+        </div>
+      </section>
 
-            <motion.p 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-              className={`max-w-md text-lg leading-relaxed ${colors.textSec}`}
-            >
-              Homoget Properties offers a verified portfolio of luxury assets, ensuring full compliance with UAE market regulations and transparency.
-            </motion.p>
-
-            {/* --- SEARCH & FILTER HUB --- */}
-            <div className="pt-6 relative z-50">
-              <div className={`flex flex-col md:flex-row items-center p-2 rounded-2xl md:rounded-full border ${colors.border} ${colors.inputBg} backdrop-blur-xl shadow-2xl w-full max-w-2xl`}>
-                <div className="flex-1 flex items-center px-4 w-full">
-                  <Search className="text-amber-500 w-5 h-5 mr-3" />
-                  <input 
-                    type="text" 
-                    placeholder="Search city or project..." 
-                    className={`bg-transparent border-none outline-none text-sm w-full py-3 focus:ring-0 ${colors.text}`}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                
-                <button 
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`px-6 py-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors ${showFilters ? 'text-amber-500' : 'text-slate-500'}`}
-                >
-                  <Filter size={16} /> Filters
-                </button>
-
-                <button className="w-full md:w-auto bg-amber-500 text-black px-10 py-4 rounded-xl md:rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-amber-400 transition-all">
-                  Search
-                </button>
-              </div>
-
-              {/* Advanced Filters Dropdown */}
-              <AnimatePresence>
-                {showFilters && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                    className={`absolute left-0 right-0 mt-4 p-6 rounded-[2rem] border ${colors.border} ${isDark ? "bg-[#121214]" : "bg-white"} shadow-3xl grid grid-cols-1 md:grid-cols-3 gap-6`}
+      {/* --- EXACT REPLICA FILTER PANEL --- */}
+      <section className="max-w-7xl mx-auto px-6 mt-[-100px] relative z-[60]">
+        <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-y-8 gap-x-4">
+            {filterFields.map((field, index) => (
+              <div key={field.name} className={`relative px-2 ${index % 5 !== 4 ? 'md:border-r border-slate-100' : ''}`}>
+                <label className="flex items-center gap-2 text-[10px] font-black text-[#1a1a1e] mb-2 tracking-widest">
+                  {field.icon} {field.label}
+                </label>
+                <div className="relative">
+                  <select 
+                    value={filters[field.name]}
+                    onChange={(e) => setFilters({...filters, [field.name]: e.target.value})}
+                    className="w-full bg-transparent text-[11px] font-bold text-slate-400 outline-none appearance-none cursor-pointer uppercase pr-6"
                   >
-                    {['city', 'propertytype', 'bedroom'].map((field) => (
-                      <div key={field}>
-                        <label className="text-[9px] font-black uppercase text-amber-500 tracking-widest block mb-2">{field}</label>
-                        <select 
-                          value={filters[field] || ""}
-                          onChange={(e) => setFilters({...filters, [field]: e.target.value})}
-                          className={`w-full bg-white/5 border ${colors.border} rounded-xl py-2.5 px-4 text-xs outline-none ${colors.text}`}
-                        >
-                          <option value="" className={isDark ? "bg-[#0a0a0c]" : "bg-white"}>All {field}s</option>
-                          {getUniqueValues(propertyList, field).map(v => (
-                            <option key={v} value={v} className={isDark ? "bg-[#0a0a0c]" : "bg-white"}>{v}</option>
-                          ))}
-                        </select>
-                      </div>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    <option value="">SELECT {field.label}</option>
+                    {getUniqueValues(field.name).map(v => <option key={v} value={v} className="text-black">{v}</option>)}
+                  </select>
+                  <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" size={14} />
+                </div>
+              </div>
+            ))}
+            {/* APPLY ALL BUTTON */}
+            <div className="md:col-span-1 flex items-end">
+              <button className="w-full bg-[#ff8a00] hover:bg-[#e67c00] text-white font-black text-[11px] py-4 rounded-2xl tracking-[0.2em] transition-all uppercase shadow-lg shadow-orange-200">
+                Apply All
+              </button>
             </div>
           </div>
         </div>
@@ -142,89 +128,106 @@ const PropertyListing = () => {
 
       {/* --- PROPERTY GRID --- */}
       <div className="max-w-7xl mx-auto px-6 py-24">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {propertyList.map((property, index) => (
-            <motion.div 
-              key={property._id || index}
-              whileHover={{ y: -10 }}
-              className={`group relative h-[450px] rounded-[2.5rem] overflow-hidden border ${colors.border} bg-white/5`}
-            >
-              <img src={property.image?.[0]} className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 transition-all duration-700" alt="" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-              
-              <div className="absolute top-8 left-8">
-                <span className="px-4 py-1.5 rounded-lg bg-amber-500 text-black text-[9px] font-black uppercase tracking-widest">
-                  {property.propertytype}
-                </span>
-              </div>
+        {loading ? (
+          <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#ff8a00]"></div></div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {filteredProperties.map((property) => (
+              <motion.div 
+                key={property._id}
+                whileHover={{ y: -10 }}
+                className={`group relative h-[500px] rounded-[3.5rem] overflow-hidden shadow-2xl transition-all duration-500 ${isDark ? 'bg-zinc-900 border-white/5' : 'bg-white border-slate-100'}`}
+              >
+                {/* Image & Click Area */}
+                <img 
+                   src={property.image?.[0]} 
+                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+                   alt={property.propertyname} 
+                   onClick={() => navigate(`/property/${property._id}`, { state: { propertyData: property } })}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-10" />
 
-              <div className="absolute bottom-0 left-0 right-0 p-10 translate-y-6 group-hover:translate-y-0 transition-all duration-500">
-                <p className="text-amber-500 text-[10px] font-black uppercase tracking-widest mb-2">{property.city}</p>
-                <h3 className="text-3xl font-serif text-white mb-6 leading-tight">{property.propertyname}</h3>
-                <div className="flex gap-6 mb-8 text-white/60 text-xs font-bold">
-                  <span className="flex items-center gap-2"><Bed size={16} className="text-amber-500" /> {property.bedroom} BHK</span>
-                  <span className="flex items-center gap-2"><Ruler size={16} className="text-amber-500" /> {property.squarefoot} ft²</span>
+                {/* Badges */}
+                <div className="absolute top-8 left-8 flex gap-2 z-20">
+                  <span className="px-4 py-1.5 rounded-lg bg-[#ff8a00] text-white text-[9px] font-black uppercase tracking-widest">
+                    {property.propertytype}
+                  </span>
+                  <span className="px-4 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white text-[9px] font-black uppercase tracking-widest">
+                    {property.isReady ? 'Ready' : 'Off-Plan'}
+                  </span>
                 </div>
-                <div className="flex gap-4">
-                  <button 
-                    onClick={() => setSelectedProperty(property)}
-                    className="flex-1 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all"
-                  >
-                    View Asset
-                  </button>
-                  <button onClick={() => navigate("/bookings", { state: { property } })} className="p-4 bg-amber-500 text-black rounded-2xl hover:scale-110 transition-transform">
-                    <ArrowRight size={20} />
-                  </button>
+
+                {/* --- ALWAYS VISIBLE CONTACT ICONS --- */}
+                <div className="absolute top-8 right-6 flex flex-col gap-3 z-30">
+                  <a href={`https://wa.me/${property.agentId?.phone?.replace(/\s+/g, '')}`} target="_blank" rel="noreferrer" className="w-10 h-10 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-lg">
+                    <FaWhatsapp size={20} />
+                  </a>
+                  <a href={`tel:${property.agentId?.phone}`} className="w-10 h-10 bg-[#3b82f6] text-white rounded-full flex items-center justify-center shadow-lg">
+                    <Phone size={18} fill="currentColor" />
+                  </a>
+                  <a href={`mailto:${property.agentId?.email}`} className="w-10 h-10 bg-[#ff8a00] text-white rounded-full flex items-center justify-center shadow-lg">
+                    <Mail size={18} />
+                  </a>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
 
-      {/* --- COMPACT MODAL --- */}
-      <AnimatePresence>
-        {selectedProperty && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[10000] bg-black/95 backdrop-blur-md flex justify-center items-center p-4">
-           <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className={`max-w-5xl w-full bg-[#0a0a0c] rounded-[3rem] overflow-hidden border border-white/10 relative max-h-[90vh] overflow-y-auto`}>
-   <button onClick={() => setSelectedProperty(null)} className="absolute top-8 right-8 z-50 w-12 h-12 rounded-full bg-white/10 text-white hover:bg-amber-500 hover:text-black flex items-center justify-center transition-all"><X size={24}/></button>
-   
-   <div className="grid grid-cols-1 lg:grid-cols-2">
-      <div className="h-[400px] lg:h-full bg-black">
-         <img src={selectedProperty.image?.[currentImageIndex]} className="w-full h-full object-cover opacity-80" />
-      </div>
+                {/* Content Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 p-10 z-20" onClick={() => navigate(`/property/${property._id}`, { state: { propertyData: property } })}>
+                  <p className="text-[#ff8a00] text-[10px] font-black uppercase tracking-widest mb-2">{property.city}, UAE</p>
+                  <h3 className="text-2xl font-serif text-white mb-4 leading-tight group-hover:text-[#ff8a00] transition-colors">
+                    {property.propertyname}
+                  </h3>
+                  
+                  <div className="flex items-center justify-between mb-6">
+                     <p className="text-xl font-bold text-white tracking-tighter uppercase">
+                       {property.currency} {Number(property.price).toLocaleString()}
+                     </p>
+                     <button className="w-11 h-11 bg-[#ff8a00] rounded-full flex items-center justify-center text-white shadow-lg">
+                       <ArrowRight size={22} />
+                     </button>
+                  </div>
 
-      <div className="p-12 space-y-8">
-         <div className="space-y-2">
-            <h2 className="text-5xl font-serif text-white">{selectedProperty.propertyname}</h2>
-            <p className="text-amber-500 font-black uppercase tracking-widest text-xs">{selectedProperty.city}, UAE</p>
-         </div>
-
-         {/* UPDATED PRICE BOX */}
-         <div className="p-8 rounded-[2rem] bg-amber-500 text-black">
-            <p className="text-[10px] font-black uppercase opacity-60 mb-1 tracking-widest">Asset Value</p>
-            <div className="flex items-baseline gap-2">
-               <span className="text-xl font-sans font-black">AED</span>
-               <p className="text-5xl font-serif">
-                  {selectedProperty.price.toLocaleString()}
-               </p>
-            </div>
-         </div>
-
-         <div className="space-y-4">
-            <button className="w-full py-5 bg-amber-500 text-black rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-amber-400 transition-all shadow-xl shadow-amber-500/20">
-               Schedule Appointment
-            </button>
-            <p className="text-[10px] text-center text-white/40 uppercase font-bold tracking-tighter">
-               Excluding Registration & Service Charges
-            </p>
-         </div>
-      </div>
-   </div>
-</motion.div>
-          </motion.div>
+                  <div className="flex gap-6 pt-5 border-t border-white/10 text-white/70 text-[11px] font-bold">
+                    <span className="flex items-center gap-2"><Bed size={16} className="text-[#ff8a00]" /> {property.bedroom}</span>
+                    <span className="flex items-center gap-2"><Bath size={16} className="text-[#ff8a00]" /> {property.bathroom}</span>
+                    <span className="flex items-center gap-2"><Ruler size={16} className="text-[#ff8a00]" /> {property.squarefoot} ft²</span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         )}
-      </AnimatePresence>
+
+        {/* --- PAGINATION --- */}
+        {pagination.totalPages > 1 && (
+          <div className="mt-20 flex justify-center items-center gap-3">
+            <button 
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => prev - 1)}
+              className={`p-4 rounded-2xl border ${isDark ? 'border-white/10 text-white' : 'border-slate-200 text-slate-800'} ${currentPage === 1 ? 'opacity-30' : 'hover:bg-[#ff8a00] hover:text-white transition-all'}`}
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <div className="flex gap-2">
+              {[...Array(pagination.totalPages)].map((_, i) => (
+                <button 
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-12 h-12 rounded-2xl font-black text-xs transition-all ${currentPage === i + 1 ? 'bg-[#ff8a00] text-white shadow-xl scale-110' : `border border-slate-200 ${isDark ? 'text-white' : 'text-slate-800'}`}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+            <button 
+              disabled={currentPage === pagination.totalPages}
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              className={`p-4 rounded-2xl border ${isDark ? 'border-white/10 text-white' : 'border-slate-200 text-slate-800'} ${currentPage === pagination.totalPages ? 'opacity-30' : 'hover:bg-[#ff8a00] hover:text-white transition-all'}`}
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

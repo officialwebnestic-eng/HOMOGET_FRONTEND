@@ -133,14 +133,7 @@ const AdminDashboard = () => {
             <p className="text-[10px] font-bold opacity-50 uppercase">Current Liquidity</p>
             <p className="text-sm font-black text-emerald-500">₹{adminStats.revenue.toLocaleString()}</p>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsModalOpen(true)}
-            className="bg-white text-black px-6 py-3 rounded-2xl shadow-xl font-bold flex items-center gap-2 text-sm"
-          >
-            <Plus size={18} /> New Session
-          </motion.button>
+        
         </div>
       </header>
 

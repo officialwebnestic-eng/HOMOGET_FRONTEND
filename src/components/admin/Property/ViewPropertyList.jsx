@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Eye, Pencil, Trash2, Search, Filter, ChevronLeft, ChevronRight, MapPin, IndianRupee, X, Building, LayoutGrid } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Pencil, Trash2, Search, Filter, ChevronLeft, ChevronRight, MapPin, Sparkles, Crown, Briefcase, Building, Landmark } from 'lucide-react';
 import useGetAllProperty from './../../../hooks/useGetAllProperty';
 import { useTheme } from '../../../context/ThemeContext';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -11,13 +11,26 @@ import PermissionProtectedAction from '../../../Authorization/PermissionProtecte
 import EmptyStateModel from '../../../model/EmptyStateModel';
 import { useLoading } from '../../../model/LoadingModel';
 
-const ViewPropertyList = () => {
+// Helper to determine brand icon based on mode
+const getModeConfig = (mode) => {
+    switch (mode) {
+        case 'Luxury': return { icon: <Crown size={20} />, label: "Luxury Collection", color: "#C5A059" };
+        case 'project': return { icon: <Landmark size={20} />, label: "Off-Plan Projects", color: "#6366f1" };
+        case 'Commercial': return { icon: <Briefcase size={20} />, label: "Commercial Assets", color: "#0ea5e9" };
+        case 'Rent': return { icon: <Building size={20} />, label: "Rental Registry", color: "#10b981" };
+        default: return { icon: <Sparkles size={20} />, label: "Inventory Registry", color: "#C5A059" };
+    }
+};
+
+const ViewPropertyList = ({ mode = "all" }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const navigate = useNavigate();
     const [showFilters, setShowFilters] = useState(false);
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const config = getModeConfig(mode);
     
+    // Initial Filter State based on Mode
     const [filters, setFilters] = useState({
         propertyname: "",
         price: "",
@@ -25,14 +38,21 @@ const ViewPropertyList = () => {
         city: "",
         zipcode: "",
         propertytype: "",
+        // Dynamic logic fields
+        segment: mode === "Luxury" ? "Luxury" : "",
+        propertyListingType: mode === "project" ? "project" : (mode === "all" ? "" : "property"),
+        usageType: mode === "Commercial" ? "Commercial" : "",
+        listingtype: (mode === "Rent" || mode === "Buy") ? mode : "",
     });
 
-    const limit = 5;
-    const { propertyList, loading, error, pagination, deletePropertyById } = useGetAllProperty(currentPage, limit, filters);
-    const LoadingModel = useLoading({ type: "list", count: 3, showIcon: true });
+    // Re-sync filters if mode prop changes (navigation between pages)
+    useEffect(() => {
+        clearFilters();
+    }, [mode]);
 
-    // Count active filters for badge notification
-    const activeFiltersCount = Object.values(filters).filter(value => value !== "").length;
+    const limit = 5;
+    const { propertyList, loading, pagination, deletePropertyById } = useGetAllProperty(currentPage, limit, filters);
+    const LoadingModel = useLoading({ type: "list", count: 3, showIcon: true });
 
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
@@ -41,167 +61,126 @@ const ViewPropertyList = () => {
     };
 
     const clearFilters = () => {
-        setFilters({ propertyname: "", price: "", bedroom: "", city: "", zipcode: "", propertytype: "" });
+        setFilters({
+            propertyname: "", price: "", bedroom: "", city: "", zipcode: "", propertytype: "",
+            segment: mode === "Luxury" ? "Luxury" : "",
+            propertyListingType: mode === "project" ? "project" : (mode === "all" ? "" : "property"),
+            usageType: mode === "Commercial" ? "Commercial" : "",
+            listingtype: (mode === "Rent" || mode === "Buy") ? mode : "",
+        });
         setCurrentPage(1);
     };
 
-    const getBadgeStyle = (type, value) => {
-        const colors = {
-            property: {
-                House: isDark ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600',
-                Apartment: isDark ? 'bg-purple-500/10 text-purple-400' : 'bg-purple-50 text-purple-600',
-                Villa: isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600',
-            },
-            listing: {
-                Sale: isDark ? 'bg-amber-500/10 text-amber-400' : 'bg-amber-50 text-amber-600',
-                Rent: isDark ? 'bg-rose-500/10 text-rose-400' : 'bg-rose-50 text-rose-600',
-            }
-        };
-        return colors[type][value] || (isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-600');
-    };
-
     return (
-        <div className={`p-4 md:p-8 min-h-screen ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
-            <div className={`max-w-7xl mx-auto rounded-[2rem] border overflow-hidden shadow-2xl ${isDark ? 'bg-slate-900 border-slate-800 shadow-black/40' : 'bg-white border-slate-200 shadow-slate-200/50'}`}>
+        <div className={`p-4 md:p-8 min-h-screen transition-colors duration-500 ${isDark ? 'bg-[#0F1219]' : 'bg-slate-50'}`}>
+            <div className={`max-w-7xl mx-auto rounded-[2.5rem] border overflow-hidden transition-all duration-500 shadow-2xl ${isDark ? 'bg-[#161B26] border-white/5' : 'bg-white border-slate-100'}`}>
                 
-                {/* Header Section */}
-                <div className={`p-6 md:p-8 border-b ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
-                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                {/* Dynamic Header */}
+                <div className={`p-8 md:p-10 border-b ${isDark ? 'border-white/5' : 'border-slate-50'}`}>
+                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
                         <div>
                             <div className="flex items-center gap-3 mb-2">
-                                <div className="p-2 bg-indigo-600 rounded-xl text-white">
-                                    <Building size={20} />
+                                <div className="p-3 rounded-2xl text-white shadow-lg shadow-amber-500/10" style={{ backgroundColor: config.color }}>
+                                    {config.icon}
                                 </div>
-                                <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>Inventory</h2>
+                                <h2 className={`text-3xl font-black tracking-tighter uppercase italic ${isDark ? 'text-white' : 'text-[#1A1A1A]'}`}>
+                                    {config.label.split(' ')[0]} <span style={{ color: config.color }}>{config.label.split(' ')[1]}.</span>
+                                </h2>
                             </div>
-                            <p className="text-slate-500 text-sm font-medium">Manage and monitor {pagination?.totalItems || 0} listed properties</p>
+                            <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em]">
+                                {mode === "all" ? "Dubai Master Registry" : `Filtered by ${mode} segment`}
+                            </p>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                        {/* Search & Filter Controls */}
+                        <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
                             <div className="relative flex-1 lg:w-80">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30" size={18} />
                                 <input 
                                     name="propertyname"
                                     value={filters.propertyname}
                                     onChange={handleFilterChange}
-                                    placeholder="Search by title..."
-                                    className={`w-full pl-12 pr-4 py-3 rounded-2xl border outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-100'}`}
+                                    placeholder="Search in registry..."
+                                    className={`w-full pl-12 pr-4 py-4 rounded-full border text-xs font-bold outline-none transition-all ${isDark ? 'bg-[#0F1219] border-white/10 text-white' : 'bg-slate-50 border-slate-100'}`}
                                 />
                             </div>
                             <button 
                                 onClick={() => setShowFilters(!showFilters)}
-                                className={`relative flex items-center gap-2 px-5 py-3 rounded-2xl font-bold text-sm transition-all ${showFilters ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : (isDark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200')}`}
+                                className={`flex items-center gap-3 px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-[0.2em] transition-all border ${isDark ? 'bg-[#161B26] border-white/10 text-white' : 'bg-white border-slate-200 text-slate-600'}`}
                             >
-                                <Filter size={18} />
-                                Filters
-                                {activeFiltersCount > 0 && (
-                                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[10px] flex items-center justify-center rounded-full border-2 border-white dark:border-slate-900">
-                                        {activeFiltersCount}
-                                    </span>
-                                )}
+                                <Filter size={16} /> Filters
                             </button>
                         </div>
                     </div>
-
-                    {/* Expandable Filter Grid */}
-                    {showFilters && (
-                        <div className={`mt-6 p-6 rounded-3xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in slide-in-from-top-4 duration-300 ${isDark ? 'bg-slate-800/50' : 'bg-slate-50'}`}>
-                            {[
-                                { label: 'Price (Max)', name: 'price', type: 'number' },
-                                { label: 'Bedrooms', name: 'bedroom', type: 'number' },
-                                { label: 'City', name: 'city', type: 'text' },
-                                { label: 'Zipcode', name: 'zipcode', type: 'text' },
-                            ].map((f) => (
-                                <div key={f.name}>
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1.5 block">{f.label}</label>
-                                    <input 
-                                        type={f.type} name={f.name} value={filters[f.name]} onChange={handleFilterChange}
-                                        className={`w-full px-4 py-2.5 rounded-xl border outline-none focus:ring-2 focus:ring-indigo-500 ${isDark ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-200'}`}
-                                    />
-                                </div>
-                            ))}
-                            <div className="lg:col-span-4 flex justify-end gap-2 mt-2">
-                                <button onClick={clearFilters} className="px-4 py-2 text-xs font-bold text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all">Reset All</button>
-                            </div>
-                        </div>
-                    )}
                 </div>
 
-                {/* Table Section */}
+                {/* Registry Table */}
                 <div className="overflow-x-auto">
                     {loading ? (
-                        <div className="p-12"><LoadingModel loading={true} /></div>
+                        <div className="p-16 flex justify-center"><LoadingModel loading={true} /></div>
                     ) : propertyList.length === 0 ? (
-                        <EmptyStateModel title="No results found" message="Try adjusting your search or filters to find what you're looking for." />
+                        <div className="p-20">
+                             <EmptyStateModel 
+                                type="properties"
+                                title="No Assets Found"
+                                message={`The ${mode} registry is currently empty.`}
+                                onResetFilters={clearFilters}
+                            />
+                        </div>
                     ) : (
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className={`${isDark ? 'bg-slate-800/30' : 'bg-slate-50/50'} text-slate-500 text-[11px] font-black uppercase tracking-widest`}>
-                                    <th className="px-8 py-4">Property Info</th>
-                                    <th className="px-6 py-4">Categorization</th>
-                                    <th className="px-6 py-4">Pricing</th>
-                                    <th className="px-6 py-4 hidden lg:table-cell">Management</th>
-                                    <th className="px-8 py-4 text-right">Actions</th>
+                                <tr className={`${isDark ? 'bg-white/5' : 'bg-slate-50/50'} text-slate-500 text-[10px] font-black uppercase tracking-[0.2em]`}>
+                                    <th className="px-10 py-5">Sanctuary Details</th>
+                                    <th className="px-6 py-5">Classification</th>
+                                    <th className="px-6 py-5">Valuation</th>
+                                    <th className="px-10 py-5 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className={`divide-y ${isDark ? 'divide-slate-800' : 'divide-slate-100'}`}>
+                            <tbody className={`divide-y ${isDark ? 'divide-white/5' : 'divide-slate-50'}`}>
                                 {propertyList.map((property) => (
-                                    <tr key={property._id} className={`group transition-colors ${isDark ? 'hover:bg-slate-800/20' : 'hover:bg-slate-50/50'}`}>
-                                        <td className="px-8 py-5">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 shadow-md">
-                                                    <Swiper modules={[Autoplay, Pagination]} autoplay={{ delay: 3000 }} pagination={{ clickable: true }} className="w-full h-full">
+                                    <tr key={property._id} className="group hover:bg-slate-500/5 transition-all">
+                                        <td className="px-10 py-6">
+                                            <div className="flex items-center gap-5">
+                                                <div className="w-20 h-20 rounded-[1.5rem] overflow-hidden border border-white/5">
+                                                    <Swiper modules={[Autoplay, Pagination]} autoplay={{ delay: 3500 }} className="w-full h-full">
                                                         {property.image?.map((img, i) => (
                                                             <SwiperSlide key={i}><img src={img} className="w-full h-full object-cover" alt="" /></SwiperSlide>
                                                         ))}
                                                     </Swiper>
                                                 </div>
                                                 <div>
-                                                    <h4 className={`font-bold text-sm mb-1 ${isDark ? 'text-white' : 'text-slate-800'}`}>{property.propertyname}</h4>
-                                                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                                                        <MapPin size={12} className="text-indigo-500" />
-                                                        {property.city}, {property.zipcode}
-                                                    </div>
+                                                    <h4 className={`font-black italic tracking-tighter text-base ${isDark ? 'text-white' : 'text-slate-800'}`}>{property.propertyname}</h4>
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1">
+                                                        <MapPin size={10} style={{ color: config.color }} /> {property.city}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-5">
+                                        <td className="px-6 py-6">
                                             <div className="flex flex-col gap-1.5">
-                                                <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg w-fit uppercase tracking-tighter ${getBadgeStyle('property', property.propertytype)}`}>
+                                                <span className="text-[9px] font-black px-3 py-1 rounded-full border border-slate-700 text-slate-400 w-fit uppercase">
                                                     {property.propertytype}
                                                 </span>
-                                                <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg w-fit uppercase tracking-tighter ${getBadgeStyle('listing', property.listingtype)}`}>
+                                                <span className={`text-[9px] font-black px-3 py-1 rounded-full text-white w-fit uppercase`} style={{ backgroundColor: config.color }}>
                                                     {property.listingtype}
                                                 </span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-5">
-                                            <div className={`text-sm font-black flex items-center gap-0.5 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
-                                                <IndianRupee size={14} />
-                                                {property.price.toLocaleString()}
+                                        <td className="px-6 py-6">
+                                            <div className="text-xl font-black tracking-tighter" style={{ color: config.color }}>
+                                                AED {property.price.toLocaleString()}
                                             </div>
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{property.squarefoot} Sqft</p>
+                                            {property.propertyListingType === 'project' && <span className="text-[9px] text-amber-500 font-black uppercase">Handover: {property.deliveryDate}</span>}
                                         </td>
-                                        <td className="px-6 py-5 hidden lg:table-cell">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden">
-                                                    <img src={property?.agentId?.profilePhoto || "https://ui-avatars.com/api/?name=" + property?.agentId?.name} alt="" />
-                                                </div>
-                                                <span className={`text-xs font-bold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{property?.agentId?.name || 'Unassigned'}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-5">
-                                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <PermissionProtectedAction action="update" model="Property Management">
-                                                    <button onClick={() => navigate(`/updatepropertydetails/${property._id}`)} className={`p-2.5 rounded-xl transition-all ${isDark ? 'bg-slate-800 text-emerald-400 hover:bg-emerald-500/10' : 'bg-slate-100 text-emerald-600 hover:bg-emerald-50'}`}>
-                                                        <Pencil size={18} />
-                                                    </button>
-                                                </PermissionProtectedAction>
-                                                <PermissionProtectedAction action="delete" model="Property Management">
-                                                    <button onClick={() => deletePropertyById(property._id)} className={`p-2.5 rounded-xl transition-all ${isDark ? 'bg-slate-800 text-rose-400 hover:bg-rose-500/10' : 'bg-slate-100 text-rose-600 hover:bg-rose-50'}`}>
-                                                        <Trash2 size={18} />
-                                                    </button>
-                                                </PermissionProtectedAction>
+                                        <td className="px-10 py-6 text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <button onClick={() => navigate(`/updatepropertydetails/${property._id}`)} className="p-3 rounded-full bg-slate-800 text-emerald-400 hover:bg-emerald-400 hover:text-black transition-all">
+                                                    <Pencil size={14} />
+                                                </button>
+                                                <button onClick={() => deletePropertyById(property._id)} className="p-3 rounded-full bg-slate-800 text-rose-400 hover:bg-rose-400 hover:text-black transition-all">
+                                                    <Trash2 size={14} />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -209,39 +188,6 @@ const ViewPropertyList = () => {
                             </tbody>
                         </table>
                     )}
-                </div>
-
-                {/* Footer / Pagination */}
-                <div className={`p-6 border-t flex flex-col sm:flex-row justify-between items-center gap-4 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-100'}`}>
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                        Page {currentPage} of {pagination?.totalPages || 1}
-                    </span>
-                    <div className="flex items-center gap-2">
-                        <button 
-                            disabled={currentPage === 1}
-                            onClick={() => setCurrentPage(prev => prev - 1)}
-                            className={`p-3 rounded-xl border transition-all disabled:opacity-30 ${isDark ? 'border-slate-700 bg-slate-800 text-white' : 'border-slate-200 bg-white text-slate-600'}`}
-                        >
-                            <ChevronLeft size={18} />
-                        </button>
-                        <div className="flex gap-1">
-                            {Array.from({ length: pagination?.totalPages || 0 }).map((_, i) => (
-                                <button 
-                                    key={i} onClick={() => setCurrentPage(i + 1)}
-                                    className={`w-10 h-10 rounded-xl font-bold text-xs transition-all ${currentPage === i + 1 ? 'bg-indigo-600 text-white shadow-lg' : (isDark ? 'bg-slate-800 text-slate-400' : 'bg-white text-slate-400')}`}
-                                >
-                                    {i + 1}
-                                </button>
-                            ))}
-                        </div>
-                        <button 
-                            disabled={currentPage === pagination?.totalPages}
-                            onClick={() => setCurrentPage(prev => prev + 1)}
-                            className={`p-3 rounded-xl border transition-all disabled:opacity-30 ${isDark ? 'border-slate-700 bg-slate-800 text-white' : 'border-slate-200 bg-white text-slate-600'}`}
-                        >
-                            <ChevronRight size={18} />
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>

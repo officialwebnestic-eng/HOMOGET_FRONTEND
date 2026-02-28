@@ -32,3 +32,11 @@
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out forwards;
 }
+
+
+.animate-infinite-scroll {
+  display: flex;
+  /* Ensure this width is LARGE enough to hold all doubled images */
+  width: max-content; 
+  animation: scroll 40s linear infinite;
+}

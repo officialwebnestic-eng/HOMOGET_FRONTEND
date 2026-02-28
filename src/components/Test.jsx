@@ -1,99 +1,182 @@
-import { useState, useMemo, useCallback } from 'react';
-import { http } from '../axios/axios';
+import React, { useState, useCallback, useMemo } from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import {
+  Bed, Ruler, Bath, Phone, Mail, ArrowRight, MapPin, ChevronRight
+} from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
+import { useTheme } from "../../../context/ThemeContext";
+import useGetAllProperty from "../../../hooks/useGetAllProperty";
+import AgentHero from "./AgentHero";
+import { filterFields } from "../../../helpers/FiltersHelpers";
 
-const Test = ({ number = 0 }) => {
+const themeColors = {
+  light: { background: "bg-gray-50", card: "bg-white", text: "text-gray-900", textSecondary: "text-gray-600", border: "border-gray-200" },
+  dark: { background: "bg-[#0a0a0c]", card: "bg-[#141417]", text: "text-white", textSecondary: "text-gray-400", border: "border-white/5" },
+};
 
-  const [file, setFile] = useState(null);
-  const [fileUrl, setFileUrl] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [count, setCount] = useState(0);
-  const squaredNumber = useMemo(() => {
-    console.log("Calculating square...");
-    return number * number;
+const Agentfilter = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
-  }, [number]);
+  const [filters, setFilters] = useState({
+    state: "", listingtype: "", propertytype: "", price: "",
+    squarefoot: "", bedroom: "", bathroom: "", floor: "",
+    city: "", aminities: "",
+  });
+
+  const { theme } = useTheme();
+  const colors = themeColors[theme];
+  const navigate = useNavigate();
+  const memoizedFilters = useMemo(() => filters, [filters]);
+
+  // Ensure we fetch enough properties to fill both sections (20 per page)
+  const { propertyList = [], loading } = useGetAllProperty(currentPage, 20, memoizedFilters);
+
+  const handlePropertyClick = useCallback((property) => {
+    navigate(`/property/${property._id}`, { state: { propertyData: property } });
+  }, [navigate]);
 
 
-  const handleFileChange = useCallback((e) => {
-    setFile(e.target.files[0]);
-    setFileUrl(null);
-    setErrorMessage('');
-  }, []);
 
+    const getUniqueValues = (data, key) => {
+    if (!data || data.length === 0) return [];
+    return [...new Set(data.flatMap(item => item[key]))].filter(Boolean).sort();
+  };
 
-
-  const handleUpload = useCallback(async () => {
-    if (!file) {
-      setErrorMessage("Please select a file first.");
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await http.get(`/putawsimage?fileType=${encodeURIComponent(file.type)}`);
-      const { url, s3Url } = res.data;
-      const upload = await fetch(url, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-      if (upload.ok) {
-        console.log("✅ File uploaded to:", s3Url);
-        setFileUrl(s3Url);
-        setErrorMessage('');
-      } else {
-        const errorText = await upload.text();
-        console.error("❌ Upload failed:", errorText);
-        setErrorMessage("Upload failed. Please try again.");
-      }
-    } catch (err) {
-      console.error("❌ Error uploading file:", err);
-      setErrorMessage("Something went wrong during upload.");
-    } finally {
-      setLoading(false);
-    }
-  }, [file]);
+  // Logic to split the list
+  const eliteProperties = propertyList.slice(0, 9);
+  const insightProperties = propertyList.slice(9, 20);
 
   return (
-    <div className="max-w-md mx-auto p-4 border rounded shadow mt-10">
-      <h2 className="text-xl font-bold mb-4">Upload Image to S3</h2>
-      <input
-        type="file"
-        accept="image/*"
-        onChange={handleFileChange}
-        className="border p-2 w-full mb-4"
+    <div className={`${colors.background} min-h-screen pb-20 overflow-x-hidden transition-colors duration-300`}>
+         <AgentHero
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        showSuggestions={showSuggestions}
+        setShowSuggestions={setShowSuggestions}
+        propertyList={propertyList || []} // Safe fallback for .slice()
+        filters={filters}
+        showFilters={showFilters}
+        setShowFilters={setShowFilters}
+        filterFields={filterFields}
+        getUniqueValues={getUniqueValues}
+        handleFilterChange={(e) => setFilters({ ...filters, [e.target.name]: e.target.value })}
+        handleSubmit={() => setFilters((prev) => ({ ...prev, city: searchQuery }))}
+        resetFilters={() => setFilters({ state: "", listingtype: "", propertytype: "", price: "", squarefoot: "", bedroom: "", bathroom: "", floor: "", city: "", aminities: "" })}
       />
 
-      <button
-        onClick={handleUpload}
-        disabled={loading}
-        className={`w-full px-4 py-2 bg-blue-600 text-white rounded ${
-          loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'
-        }`}
-      >
-        {loading ? 'Uploading...' : 'Upload'}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20">
+        
+        {/* SECTION 1: ELITE SELECTION */}
+        <div className={`rounded-[3.5rem] ${colors.card} p-8 md:p-14 mb-16 border ${colors.border} shadow-2xl`} >
+          <div className="flex justify-between items-end mb-12">
+            <h2 className={`text-4xl md:text-5xl font-serif ${colors.text}`}>
+              Elite <span className="text-amber-500 italic">Selection</span>
+            </h2>
+          </div>
 
-      </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {eliteProperties.length > 0 ? (
+              eliteProperties.map((property) => (
+                <motion.div
+                  key={property._id}
+                  whileHover={{ y: -12 }}
+                  onClick={() => handlePropertyClick(property)}
+                  className="group relative h-[500px] w-full rounded-[3rem] overflow-hidden shadow-2xl bg-zinc-900 cursor-pointer"
+                >
+                  <img
+                    src={property.image?.[0]} 
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                    alt={property.propertyname}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/100 via-black/20 to-transparent z-10" />
 
-      {errorMessage && <p className="text-red-500 mt-3">{errorMessage}</p>}
+                  {/* Badges */}
+                  <div className="absolute top-6 left-6 flex gap-2 z-20">
+                    <span className="px-3 py-1 bg-amber-500 text-black text-[9px] font-black uppercase rounded-lg">
+                      {property.propertytype || "RESIDENCE"}
+                    </span>
+                    <span className="px-3 py-1 bg-white/10 backdrop-blur-md text-white text-[9px] font-black uppercase rounded-lg border border-white/20">
+                      {property.propertyListingType === 'project' ? 'Off-Plan' : property.listingtype || 'Ready'}
+                    </span>
+                  </div>
 
-      {fileUrl && (
-        <div className="mt-4">
-          <p className="text-green-600 font-medium mb-2">Uploaded Image:</p>
-          <img src={fileUrl} alt="Uploaded" className="w-full h-auto rounded border" />
+                  {/* Vertical Contact Icons */}
+                  <div className="absolute top-6 right-6 flex flex-col gap-3 z-30">
+                    <div className="w-9 h-9 bg-[#25D366] text-white rounded-full flex items-center justify-center"><FaWhatsapp size={18} /></div>
+                    <div className="w-9 h-9 bg-[#3b82f6] text-white rounded-full flex items-center justify-center"><Phone size={16} fill="currentColor" /></div>
+                    <div className="w-9 h-9 bg-amber-500 text-black rounded-full flex items-center justify-center"><Mail size={16} /></div>
+                  </div>
+
+                  <div className="absolute bottom-8 left-8 right-8 z-20">
+                    <p className="text-amber-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">{property.city}, UAE</p>
+                    <h3 className="text-2xl font-serif text-white leading-tight mb-6">{property.propertyname}</h3>
+                    <div className="flex items-center justify-between">
+                       <p className="text-xl font-bold text-white uppercase tracking-tighter">
+                         AED {Number(property.price).toLocaleString()}
+                       </p>
+                       <div className="w-11 h-11 bg-amber-500 rounded-2xl flex items-center justify-center text-black shadow-lg">
+                         <ArrowRight size={22} />
+                       </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            ) : (
+              !loading && <p className="text-gray-500">No elite properties found.</p>
+            )}
+          </div>
         </div>
-      )}
-      <div className="mt-6 p-4 border rounded bg-gray-100">
-        <p className="mb-2">📐 Squared: <strong>{squaredNumber}</strong></p>
-        <button
-          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          onClick={() => setCount(count + 1)}
-        >
-          Render ({count})
-        </button>
+
+        {/* SECTION 2: MARKET INSIGHTS */}
+        {insightProperties.length > 0 && (
+          <div className="mb-20">
+            <h2 className={`text-2xl font-serif mb-8 ${colors.text}`}>
+              Market <span className="text-amber-500 italic">Insights</span>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {insightProperties.map((property) => (
+                <motion.div
+                  key={property._id}
+                  onClick={() => handlePropertyClick(property)}
+                  whileHover={{ x: 8 }}
+                  className={`group p-4 rounded-[2rem] ${colors.card} border ${colors.border} flex items-center gap-5 cursor-pointer hover:border-amber-500 transition-all shadow-md`}
+                >
+                  <div className="w-24 h-24 rounded-[1.5rem] overflow-hidden shrink-0 relative bg-zinc-800">
+                    <img src={property.image?.[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" />
+                    <div className="absolute bottom-1 left-1 bg-amber-500 text-[7px] font-black px-1.5 py-0.5 rounded text-black uppercase">
+                      {property.propertyListingType === 'project' ? 'Off-Plan' : 'Ready'}
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <h4 className={`font-bold text-sm mb-1 truncate ${colors.text}`}>{property.propertyname}</h4>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <MapPin className="w-3 h-3 text-amber-500" />
+                      <span className={`text-[10px] font-black uppercase ${colors.textSecondary}`}>{property.city}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-amber-500 font-bold text-sm">AED {Number(property.price).toLocaleString()}</p>
+                      <ChevronRight className="w-4 h-4 text-amber-500 opacity-0 group-hover:opacity-100 transition-all" />
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {loading && (
+          <div className="flex justify-center py-10">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-amber-500"></div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default Test;
+export default Agentfilter;

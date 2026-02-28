@@ -7,13 +7,11 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
-import { Calendar, User, Phone, Mail, ArrowLeft, CheckCircle, MapPin, Landmark, ArrowUpRight } from "lucide-react";
+import { Calendar, User, Phone, Mail, ArrowLeft, CheckCircle, MapPin, Landmark, ArrowUpRight, Sparkles } from "lucide-react";
 import { AuthContext } from "../../../context/AuthContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { useToast } from "../../../model/SuccessToasNotification";
 import { motion } from "framer-motion";
-
-
 
 const CreateBooking = () => {
   const navigate = useNavigate();
@@ -22,6 +20,13 @@ const CreateBooking = () => {
   const { user, isAuthenticated } = useContext(AuthContext);
   const [bookingId, setBookingId] = useState(null);
   const { addToast } = useToast();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  
+  // Brand Color Tokens (Matching your Advisor Sync UI)
+  const brandOrange = "amber-500";
+  const brandGreen = "#00C853";
+
   const {
     register,
     handleSubmit,
@@ -63,23 +68,21 @@ const CreateBooking = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-neutral-950 pt-32 pb-20 px-4 transition-colors duration-500">
+    <div className={`min-h-screen pt-32 pb-20 px-4 transition-colors duration-700 ${isDark ? 'bg-[#0B0F17]' : 'bg-slate-50'}`}>
       <div className="max-w-7xl mx-auto">
         
         {/* Navigation Header */}
         <div className="flex items-center justify-between mb-12">
           <button
             onClick={() => navigate(-1)}
-            className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-amber-500 transition-colors"
+            className={`group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] transition-colors ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> 
-            Back to Property
+            Back to Registry
           </button>
           
-          <div className="hidden md:block h-[1px] flex-1 mx-8 bg-slate-200 dark:bg-white/10" />
-          
-          <h1 className="text-xl font-black text-slate-900 dark:text-white italic">
-            Secure <span className="text-amber-500 text-2xl">Viewing</span>
+          <h1 className={`text-2xl font-black italic tracking-tighter ${isDark ? 'text-white' : 'text-[#1A1A1A]'}`}>
+            Private <span style={{ color: brandOrange }}>Viewing.</span>
           </h1>
         </div>
 
@@ -87,160 +90,144 @@ const CreateBooking = () => {
           
           {/* LEFT: Property Visual Summary */}
           <div className="lg:col-span-5 space-y-8 sticky top-32">
-            <div className="relative group overflow-hidden rounded-[2.5rem] shadow-2xl">
+            <div className={`relative group overflow-hidden rounded-[2rem] border ${isDark ? 'border-white/10 shadow-2xl bg-[#111827]' : 'border-slate-100'}`}>
               <Swiper
                 pagination={{ clickable: true }}
-                autoplay={{ delay: 4000 }}
+                autoplay={{ delay: 5000 }}
                 modules={[Autoplay, Pagination]}
-                className="w-full aspect-[4/5]"
+                className="w-full aspect-square"
               >
                 {property?.image?.map((img, i) => (
                   <SwiperSlide key={i}>
-                    <img src={img} alt="Property" className="w-full h-full object-cover" />
+                    <img src={img} alt="Property" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
                   </SwiperSlide>
                 ))}
               </Swiper>
               <div className="absolute top-6 left-6 z-10">
-                <span className="px-4 py-2 bg-amber-500 text-black text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
+                <span style={{ backgroundColor: brandOrange }} className="px-5 py-2 text-white text-[9px] font-black uppercase tracking-[0.2em] rounded-md shadow-xl">
                   {property?.propertytype}
                 </span>
               </div>
             </div>
 
-            <div className="p-8 bg-white dark:bg-neutral-900 rounded-[2.5rem] border border-slate-200 dark:border-white/5">
-              <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-2 leading-tight">
+            <div className={`p-8 rounded-[2rem] border transition-all duration-500 ${isDark ? 'bg-[#111827] border-white/10 shadow-2xl' : 'bg-white border-slate-100'}`}>
+              <h2 className={`text-2xl font-black italic tracking-tighter mb-3 leading-none ${isDark ? 'text-white' : 'text-[#1A1A1A]'}`}>
                 {property?.propertyname}
               </h2>
-              <div className="flex items-center gap-2 text-slate-400 text-sm font-medium mb-6">
-                <MapPin size={16} className="text-amber-500" />
+              <div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-6">
+                <MapPin size={14} style={{ color: brandOrange }} />
                 {property?.city}, {property?.state}
               </div>
               
-              <div className="flex items-end justify-between py-6 border-t border-slate-100 dark:border-white/5">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Asking Price</p>
-                  <p className="text-3xl font-black text-amber-500 italic">
+              <div className={`flex items-end justify-between pt-6 border-t ${isDark ? 'border-white/5' : 'border-slate-50'}`}>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Listed Valuation</p>
+                  <p className="text-3xl font-black italic tracking-tighter" style={{ color: brandOrange }}>
                     AED {property?.price?.toLocaleString()}
                   </p>
                 </div>
-                <Landmark size={32} className="text-slate-200 dark:text-white/5" />
               </div>
             </div>
           </div>
 
           {/* RIGHT: Modern Booking Form */}
           <div className="lg:col-span-7">
-            <div className="bg-white dark:bg-neutral-900 p-8 md:p-12 rounded-[3rem] border border-slate-200 dark:border-white/5 shadow-xl relative overflow-hidden">
+            <div className={`p-10 md:p-14 rounded-[2.5rem] border relative overflow-hidden transition-all duration-500 ${isDark ? 'bg-[#111827] border-white/10 shadow-2xl' : 'bg-white border-slate-100'}`}>
               
-              {/* Decorative Blur */}
-              <div className="absolute -top-24 -right-24 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-
               {bookingId ? (
-                /* SUCCESS STATE */
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9 }} 
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-center py-20"
-                >
-                  <div className="inline-flex items-center justify-center w-24 h-24 bg-amber-500 rounded-full mb-8 shadow-2xl shadow-amber-500/20">
-                    <CheckCircle size={48} className="text-black" />
+                /* SUCCESS STATE - Using Brand Green */
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
+                  <div className="relative inline-flex items-center justify-center w-24 h-24 rounded-full mb-10" style={{ backgroundColor: brandGreen }}>
+                    <CheckCircle size={48} className="text-white" strokeWidth={2} />
                   </div>
-                  <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-4">Request Received</h2>
-                  <p className="text-slate-500 dark:text-slate-400 font-medium max-w-sm mx-auto mb-10 leading-relaxed">
-                    Our luxury property consultants will contact you within 24 hours to finalize your exclusive tour.
+                  <h2 className={`text-4xl font-black italic tracking-tighter mb-4 ${isDark ? 'text-white' : 'text-[#1A1A1A]'}`}>
+                    Sync <span style={{ color: brandGreen }}>Successful.</span>
+                  </h2>
+                  <p className="text-slate-400 text-[11px] font-bold uppercase tracking-[0.2em] mb-12">
+                    Your request has been logged into our internal registry.
                   </p>
-                  <button 
-                    onClick={() => navigate("/")}
-                    className="px-10 py-5 bg-slate-900 dark:bg-white text-white dark:text-black rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform"
-                  >
-                    Explore More Collections
+                  <button onClick={() => navigate("/")} style={{ backgroundColor: brandOrange }} className="px-12 py-5 text-white rounded-lg font-black text-[10px] uppercase tracking-[0.3em]">
+                    Back to Inventory
                   </button>
                 </motion.div>
               ) : (
                 /* FORM STATE */
                 <>
-                  <div className="mb-12">
-                    <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-4">Schedule a <span className="text-amber-500 italic">Tour</span></h2>
-                    <p className="text-slate-500 dark:text-slate-400 font-medium">Please provide your details for a personalized viewing experience.</p>
+                  <div className="mb-14">
+                    <h2 className={`text-4xl font-black italic tracking-tighter ${isDark ? 'text-white' : 'text-[#1A1A1A]'}`}>
+                      Property <span style={{ color: brandOrange }}>Registry.</span>
+                    </h2>
+                    <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em]">Schedule Private Access</p>
                   </div>
 
                   <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {/* Name */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-3">
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Full Name</label>
-                        <div className="relative group">
-                          <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-amber-500 transition-colors" />
+                        <label className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 ml-2">Client Identity</label>
+                        <div className="relative">
+                          <User className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                           <input
-                            {...register("fullName", { required: "Full name is required" })}
-                            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-neutral-800 border-none focus:ring-2 focus:ring-amber-500/50 font-bold dark:text-white transition-all"
-                            placeholder="John Doe"
-                          />
-                        </div>
-                        {errors.fullName && <span className="text-[10px] font-bold text-red-500 ml-1 uppercase">{errors.fullName.message}</span>}
-                      </div>
-
-                      {/* Email */}
-                      <div className="space-y-3">
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Contact Email</label>
-                        <div className="relative group">
-                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-amber-500 transition-colors" />
-                          <input
-                            {...register("email", { required: "Email is required" })}
-                            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-neutral-800 border-none focus:ring-2 focus:ring-amber-500/50 font-bold dark:text-white transition-all"
-                            placeholder="john@example.com"
+                            {...register("fullName", { required: "Required" })}
+                            className={`w-full pl-14 pr-6 py-4 rounded-xl border text-xs font-bold tracking-widest outline-none transition-all ${isDark ? 'bg-[#0B0F17] border-white/10 text-white focus:border-[#FF9900]' : 'bg-slate-50 border-slate-200 focus:border-[#FF9900]'}`}
+                            placeholder="NAME"
                           />
                         </div>
                       </div>
 
-                      {/* Phone */}
                       <div className="space-y-3">
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Phone Number</label>
-                        <div className="relative group">
-                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-amber-500 transition-colors" />
+                        <label className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 ml-2">Email</label>
+                        <div className="relative">
+                          <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                           <input
-                            {...register("phone", { required: "Phone number is required" })}
-                            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-neutral-800 border-none focus:ring-2 focus:ring-amber-500/50 font-bold dark:text-white transition-all"
-                            placeholder="+971 -- --- ----"
+                            {...register("email", { required: "Required" })}
+                            className={`w-full pl-14 pr-6 py-4 rounded-xl border text-xs font-bold tracking-widest outline-none transition-all ${isDark ? 'bg-[#0B0F17] border-white/10 text-white focus:border-[#FF9900]' : 'bg-slate-50 border-slate-200 focus:border-[#FF9900]'}`}
+                            placeholder="EMAIL"
                           />
                         </div>
                       </div>
 
-                      {/* Date */}
                       <div className="space-y-3">
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Preferred Date</label>
-                        <div className="relative group">
-                          <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-amber-500 transition-colors" />
+                        <label className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 ml-2">Contact</label>
+                        <div className="relative">
+                          <Phone className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                          <input
+                            {...register("phone", { required: "Required" })}
+                            className={`w-full pl-14 pr-6 py-4 rounded-xl border text-xs font-bold tracking-widest outline-none transition-all ${isDark ? 'bg-[#0B0F17] border-white/10 text-white focus:border-[#FF9900]' : 'bg-slate-50 border-slate-200 focus:border-[#FF9900]'}`}
+                            placeholder="PHONE"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <label className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 ml-2">Viewing Date</label>
+                        <div className="relative">
+                          <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                           <input
                             type="date"
-                            min={new Date().toISOString().split("T")[0]}
-                            {...register("date", { required: "Please select a date" })}
-                            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-neutral-800 border-none focus:ring-2 focus:ring-amber-500/50 font-bold dark:text-white transition-all cursor-pointer"
+                            {...register("date", { required: "Required" })}
+                            className={`w-full pl-14 pr-6 py-4 rounded-xl border text-xs font-bold tracking-widest outline-none transition-all ${isDark ? 'bg-[#0B0F17] border-white/10 text-white focus:border-[#FF9900]' : 'bg-slate-50 border-slate-200 focus:border-[#FF9900]'}`}
                           />
                         </div>
                       </div>
                     </div>
 
                     <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Additional Requirements</label>
+                      <label className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 ml-2">Message</label>
                       <textarea
                         {...register("message")}
                         rows="4"
-                        className="w-full p-6 rounded-[2rem] bg-slate-50 dark:bg-neutral-800 border-none focus:ring-2 focus:ring-amber-500/50 font-bold dark:text-white transition-all resize-none"
-                        placeholder="Tell us about your specific preferences..."
+                        className={`w-full p-6 rounded-2xl border text-xs font-bold tracking-widest outline-none transition-all resize-none ${isDark ? 'bg-[#0B0F17] border-white/10 text-white focus:border-[#FF9900]' : 'bg-slate-50 border-slate-200 focus:border-[#FF9900]'}`}
+                        placeholder="ADDITIONAL REQUIREMENTS..."
                       />
                     </div>
 
                     <button
                       type="submit"
-                      className="w-full py-6 bg-amber-500 text-black font-black text-[12px] uppercase tracking-[0.3em] rounded-2xl shadow-2xl shadow-amber-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                      className="w-full py-5 text-white font-black text-[11px] uppercase tracking-[0.4em] rounded-xl shadow-2xl transition-all flex items-center justify-center gap-3 hover:brightness-110 active:scale-[0.98]"
+                      style={{ backgroundColor: brandGreen }}
                     >
-                      Confirm Selection <ArrowUpRight size={20} />
+                      Push Registry <ArrowUpRight size={18} />
                     </button>
-                    
-                    <p className="text-center text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                      Your data is protected under UAE Federal Decree-Law No. 45
-                    </p>
                   </form>
                 </>
               )}

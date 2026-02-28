@@ -81,6 +81,10 @@ import Rent from "../components/Rent.jsx";
 import Buy from "../components/Buy.jsx";
 import OffPlan from "../components/OffPlan.jsx";
 import PropertyDetailsPage from "../components/common/homecommon/PropertyDetailsPage.jsx";
+import AddDeveloperForm from "../components/admin/Developer/AddDeveloperForm.jsx";
+import ViewAllDeveloperList from "../components/admin/Developer/ViewAllDeveloperList.jsx";
+import CreateAdminAppointment from "../components/admin/Appoinment/CreateAdminAppointment.jsx";
+import SelectAdminAppointmentProperty from "../components/admin/Appoinment/SelectAdminAppointmentProperty.jsx";
 
 
 export const AdminRoutes = () => {
@@ -92,6 +96,8 @@ export const AdminRoutes = () => {
         <Route element={<PrivateRoutes />}>
             <Route element={<BaseLayout />}>
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                <Route path="/createadminappointment" element={<CreateAdminAppointment />} />
+                <Route path="/selectadminappoinmentproperty" element={<SelectAdminAppointmentProperty/>}/>
                 <Route path="/addagent" element={<AddAgent />} />
                 <Route path="/user-profile" element={<UserProfile />} />
                 <Route path="/viewallagentlist" element={<ViewAllAgentList />} />
@@ -114,6 +120,9 @@ export const AdminRoutes = () => {
                 <Route path="/getappoinment" element={<GetAppoinment />} />
                 <Route path="/selectappoinmentproperty" element={<SelctAppoinmentProperty />} />
                 <Route path="/showuserappoinment" element={<ShowUserAppoinment />} />
+                <Route path="/createdeveloper" element={<AddDeveloperForm />} />
+                <Route path="/viewdevelopers" element={<ViewAllDeveloperList />} />
+                <Route path="/updatedeveloper/:id" element={<AddDeveloperForm />} />
                
                 <Route path="/bookings" element={<CreateBooking />} />
                 <Route path="/viewpropertyrequest" element={<GetShellPropertyRequest />} />

@@ -142,6 +142,9 @@ const ContactUs = () => {
               {[
                 { id: "fullName", label: "Full Name", type: "text", placeholder: "e.g. Alexander Sterling", req: "Name required" },
                 { id: "email", label: "Email Address", type: "email", placeholder: "alex@example.com", req: "Email required" },
+
+                // info@homoget.ae
+                // +971585852283
                 { id: "phoneno", label: "Phone Number", type: "tel", placeholder: "+971 XX XXX XXXX", req: "Contact required" }
               ].map((field) => (
                 <div key={field.id} className="flex flex-col gap-2">

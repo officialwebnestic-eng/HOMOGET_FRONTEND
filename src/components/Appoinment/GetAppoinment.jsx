@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Eye, Pencil, Trash2, Check, X, IndianRupee } from 'lucide-react';
+import { Eye, Pencil, Trash2, Check, X, IndianRupee, Search, Calendar, MapPin, Link as LinkIcon, MoreHorizontal } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import usegetAppoinment from './../../hooks/usegetAppoinment';
 import formatToLocalDateTime from '../../utils/DateConverter';
 import { http } from "../../axios/axios";
@@ -15,9 +16,18 @@ const GetAppoinment = () => {
   const [editingStatusId, setEditingStatusId] = useState(null);
   const [statusInput, setStatusInput] = useState('');
   const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   const limit = 10;
   const { Appointment, loading, error, pagination, refetch, handleDeleteAppointment } = usegetAppoinment(currentPage, limit, searchTerm);
+
+  // --- HOMOGET BRAND TOKENS ---
+  const brandGold = "#C5A059";
+  const bgColor = isDark ? "bg-[#0F1219]" : "bg-[#F9FAFB]";
+  const cardBg = isDark ? "bg-[#1A1F2B]" : "bg-white";
+  const textColor = isDark ? "text-white" : "text-[#1A1A1A]";
+  const subTextColor = isDark ? "text-slate-400" : "text-slate-500";
+  const borderColor = isDark ? "border-white/5" : "border-slate-200";
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -36,7 +46,6 @@ const GetAppoinment = () => {
       refetch();
     } catch (err) {
       alert('Failed to update meeting link');
-      console.error(err);
     }
   };
 
@@ -47,337 +56,242 @@ const GetAppoinment = () => {
       refetch();
     } catch (err) {
       alert('Failed to update status');
-      console.error(err);
     }
   };
 
   if (loading)
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex flex-col justify-center items-center h-96 gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C5A059]"></div>
+        <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${subTextColor}`}>Synchronizing Schedule...</p>
       </div>
     );
 
   if (error)
     return (
-      <EmptyStateModel
-        title="Failed to fetch appointments"
-        size="large"
-        message="Failed to fetch appointments. Please try again later."
-      />
+      <div className={`p-8 rounded-[2rem] border ${cardBg} ${borderColor}`}>
+        <EmptyStateModel title="Connection Error" message="Unable to fetch appointment data from the server." />
+      </div>
     );
 
   return (
-    <div className={`rounded-lg shadow-md transition-colors duration-300 ${theme === 'dark' ? 'dark:bg-gray-800' : 'bg-white'}`}>
-      {/* Header & Search */}
-      <div
-        className={`flex flex-col bg-gradient-to-r from-blue-600 to-cyan-600 md:flex-row justify-between items-start md:items-center mb-6 gap-4 p-4 rounded-lg ${theme === 'dark' ? 'dark:from-blue-800 dark:to-cyan-800' : ''}`}
-      >
+    <div className={`min-h-screen transition-all duration-500 ${bgColor}`}>
+      
+      {/* Header & Luxury Search Bar */}
+      <div className="flex flex-col lg:flex-row justify-between items-end mb-10 gap-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">Appointments</h2>
-          <p className={`text-white/90 ${theme === 'dark' ? 'dark:text-white/80' : ''}`}>
-            Manage and track property viewing appointments
-          </p>
+          <h1 className={`${textColor} text-3xl md:text-5xl font-bold tracking-tighter uppercase italic`}>
+            Property <span style={{ color: brandGold }}>Viewings</span>
+          </h1>
+          <div className="flex items-center gap-2 mt-2">
+            <div className="h-[2px] w-8" style={{ backgroundColor: brandGold }} />
+            <p className={`${subTextColor} text-[10px] font-bold uppercase tracking-[0.3em]`}>Schedule & Link Management</p>
+          </div>
         </div>
-        {/* Search input */}
-        <div className="w-full md:w-auto">
+
+        <div className="relative w-full lg:w-96 group">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#C5A059] transition-colors" />
           <input
             type="text"
-            placeholder="Search by AppointmentID, name, email, status..."
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-white backdrop-blur-sm ${theme === 'dark' ? 'dark:bg-gray-700/90 dark:border-gray-600 dark:text-white' : 'bg-white/90'}`}
+            placeholder="Search Registry..."
+            className={`w-full pl-12 pr-4 py-4 rounded-2xl outline-none border transition-all ${isDark ? 'bg-[#1A1F2B] border-white/10 text-white focus:border-[#C5A059]' : 'bg-white border-slate-200 text-slate-900 focus:shadow-xl'}`}
             value={searchTerm}
             onChange={handleSearch}
           />
         </div>
       </div>
 
-      {/* Table or Empty State */}
-      <div className="w-full overflow-x-auto">
-        {Appointment.length === 0 ? (
-          <div className="w-full mb-2">
-            <EmptyStateModel
-              type="Appointments"
-              title="No Appointments Match Your Search"
-              message="Try adjusting your filters to see more results."
-              showResetButton={true}
-              size="large"
-              actionButtonText="Create Booking"
-            />
-          </div>
-        ) : (
-          <table className={`min-w-full divide-y ${theme === 'dark' ? 'dark:divide-gray-700' : 'divide-gray-200'}`}>
-            {/* Table Header */}
-            <thead className={`bg-gradient-to-r from-blue-500 to-cyan-500 ${theme === 'dark' ? 'dark:from-blue-700 dark:to-cyan-700' : ''}`}>
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">AppointmentID</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Property</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Client</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Location</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Platform</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Date & Time</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Meeting Link</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            {/* Table Body */}
-            <tbody className={`divide-y ${theme === 'dark' ? 'dark:bg-gray-800 dark:divide-gray-700' : 'bg-white divide-gray-200'}`}>
-              {Appointment.map((appointment) => (
-                <tr key={appointment._id} className={`${theme === 'dark' ? 'dark:hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors`}>
-                  {/* Appointment ID */}
-                  <td className={`px-4 py-3 whitespace-nowrap text-sm ${theme === 'dark' ? 'dark:text-gray-400' : 'text-gray-500'}`}>
-                    {appointment.appointmentId}
-                  </td>
-                  {/* Property */}
-                  <td className="px-4 py-3 whitespace-nowrap flex items-center gap-2">
-                    {appointment.property?.images?.[0] && (
-                      <img
-                        src={appointment.property.images[0]}
-                        alt={appointment.property.propertytype}
-                        className="w-10 h-10 rounded-full object-cover border-2"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className={`text-sm font-medium ${theme === 'dark' ? 'dark:text-white' : 'text-gray-900'}`}>
-                        {appointment.property.propertytype}
+      {/* Main Table Content */}
+      <div className={`rounded-[2.5rem] border overflow-hidden shadow-2xl ${cardBg} ${borderColor}`}>
+        <div className="w-full overflow-x-auto">
+          {Appointment.length === 0 ? (
+            <div className="p-20 text-center">
+              <EmptyStateModel type="Appointments" title="No Results Found" message="Refine your search parameters to find specific viewings." />
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className={isDark ? "bg-white/5" : "bg-slate-900"}>
+                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/70">Ref ID</th>
+                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/70">Property Details</th>
+                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/70">Investor</th>
+                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/70">Schedule</th>
+                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/70">Virtual Access</th>
+                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/70 text-center">Status</th>
+                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/70 text-right">Ops</th>
+                </tr>
+              </thead>
+              <tbody className={`divide-y ${isDark ? 'divide-white/5' : 'divide-slate-100'}`}>
+                {Appointment.map((appointment) => (
+                  <tr key={appointment._id} className={`${isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-slate-50'} transition-colors`}>
+                    {/* ID */}
+                    <td className={`px-6 py-6 text-xs font-mono tracking-tighter ${subTextColor}`}>
+                      #{appointment.appointmentId}
+                    </td>
+
+                    {/* Property Card Style */}
+                    <td className="px-6 py-6 min-w-[240px]">
+                      <div className="flex items-center gap-4">
+                        <div className="relative h-14 w-14 rounded-2xl overflow-hidden border-2 border-[#C5A059]/20 shadow-lg">
+                          {appointment.property?.images?.[0] ? (
+                            <img src={appointment.property.images[0]} alt="Prop" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-slate-800 flex items-center justify-center text-[#C5A059]"><MapPin size={18} /></div>
+                          )}
+                        </div>
+                        <div>
+                          <p className={`text-sm font-black uppercase tracking-tight ${textColor}`}>{appointment.property.propertytype}</p>
+                          <p style={{ color: brandGold }} className="text-xs font-bold flex items-center">
+                            <IndianRupee size={12} className="mr-0.5" />
+                            {appointment.property?.price?.toLocaleString()}
+                          </p>
+                        </div>
                       </div>
-                      <div className={`text-sm font-semibold ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>
-                        <IndianRupee size={12} className="inline-block mr-1" />
-                        {appointment.property?.price}
+                    </td>
+
+                    {/* Client */}
+                    <td className="px-6 py-6">
+                      <p className={`text-sm font-bold ${textColor}`}>{appointment.user.firstname}</p>
+                      <p className={`text-[10px] uppercase font-bold opacity-40 ${textColor}`}>{appointment.user.email}</p>
+                    </td>
+
+                    {/* Schedule */}
+                    <td className="px-6 py-6">
+                      <div className="flex flex-col gap-1">
+                        <div className={`flex items-center gap-2 text-xs font-bold ${textColor}`}>
+                          <Calendar size={14} style={{ color: brandGold }} />
+                          {formatToLocalDateTime(appointment.date)}
+                        </div>
+                        <span className={`text-[10px] font-bold uppercase tracking-widest ${subTextColor}`}>
+                          via {appointment.meetingPlatform}
+                        </span>
                       </div>
-                    </div>
-                  </td>
-                  {/* Client */}
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <div className={`text-sm font-medium ${theme === 'dark' ? 'dark:text-white' : 'text-gray-900'}`}>
-                      {appointment.user.firstname}
-                    </div>
-                    <div className={`text-xs ${theme === 'dark' ? 'dark:text-gray-400' : 'text-gray-500'}`}>
-                      {appointment.user.email}
-                    </div>
-                  </td>
-                  {/* Location */}
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <div className={`text-sm ${theme === 'dark' ? 'dark:text-white' : 'text-gray-900'}`}>
-                      {appointment.property.city}
-                    </div>
-                    <div className={`text-xs ${theme === 'dark' ? 'dark:text-gray-400' : 'text-gray-500'}`}>
-                      {appointment.property.state}
-                    </div>
-                  </td>
-                  {/* Platform */}
-                  <td className={`px-4 py-3 whitespace-nowrap text-sm ${theme === 'dark' ? 'dark:text-gray-400' : 'text-gray-500'}`}>
-                    {appointment.meetingPlatform}
-                  </td>
-                  {/* Date & Time */}
-                  <td className={`px-4 py-3 whitespace-nowrap text-sm ${theme === 'dark' ? 'dark:text-gray-400' : 'text-gray-500'}`}>
-                    {formatToLocalDateTime(appointment.date)}
-                  </td>
-                  {/* Meeting Link */}
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    {editingMeetingLinkId === appointment._id ? (
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <input
-                          type="text"
-                          value={meetingLinkInput}
-                          onChange={(e) => setMeetingLinkInput(e.target.value)}
-                          className={`px-2 py-1 border rounded text-sm w-full max-w-xs ${theme === 'dark' ? 'dark:bg-gray-700 dark:border-gray-600 dark:text-white' : ''}`}
-                        />
-                        <button
-                          onClick={() => saveMeetingLink(appointment._id)}
-                          className={`${theme === 'dark' ? 'dark:text-green-400 dark:hover:text-green-300' : 'text-green-600 hover:text-green-800'}`}
-                          title="Save"
-                        >
-                          <Check size={16} />
-                        </button>
-                        <button
-                          onClick={() => setEditingMeetingLinkId(null)}
-                          className={`${theme === 'dark' ? 'dark:text-red-400 dark:hover:text-red-300' : 'text-red-600 hover:text-red-800'}`}
-                          title="Cancel"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {appointment.meetingLink ? (
-                          <a
-                            href={appointment.meetingLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`text-sm truncate max-w-[120px] ${theme === 'dark' ? 'dark:text-blue-400' : 'text-blue-600 hover:underline'}`}
-                          >
-                            Meeting Link
-                          </a>
-                        ) : (
-                          <span className={`text-sm ${theme === 'dark' ? 'dark:text-gray-500' : 'text-gray-400'}`}>No link</span>
-                        )}
-                        <PermissionProtectedAction action="view" module="Appoinment Management">
-                          <button
-                            onClick={() => handleEditMeetingLink(appointment._id, appointment.meetingLink)}
-                            className={`${theme === 'dark' ? 'dark:text-blue-400 dark:hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}
-                            title="Edit"
-                          >
-                            <Pencil size={16} />
-                          </button>
-                        </PermissionProtectedAction>
-                      </div>
-                    )}
-                  </td>
-                  {/* Status */}
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {editingStatusId === appointment._id ? (
-                        <>
-                          <select
-                            value={statusInput}
-                            onChange={(e) => setStatusInput(e.target.value)}
-                            className={`border rounded px-2 py-1 text-sm ${theme === 'dark' ? 'dark:bg-gray-700 dark:border-gray-600 dark:text-white' : ''}`}
-                          >
-                            {['pending', 'Confirmed', 'cancelled', 'complete'].map((option) => (
-                              <option key={option} value={option}>
-                                {option}
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            onClick={() => saveStatus(appointment._id)}
-                            className={`${theme === 'dark' ? 'dark:text-green-400 dark:hover:text-green-300' : 'text-green-600 hover:text-green-800'}`}
-                            title="Save"
-                          >
-                            <Check size={16} />
-                          </button>
-                          <button
-                            onClick={() => setEditingStatusId(null)}
-                            className={`${theme === 'dark' ? 'dark:text-red-400 dark:hover:text-red-300' : 'text-red-600 hover:text-red-800'}`}
-                            title="Cancel"
-                          >
-                            <X size={16} />
-                          </button>
-                        </>
+                    </td>
+
+                    {/* Meeting Link - Luxury Edit Flow */}
+                    <td className="px-6 py-6">
+                      {editingMeetingLinkId === appointment._id ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={meetingLinkInput}
+                            onChange={(e) => setMeetingLinkInput(e.target.value)}
+                            className={`px-3 py-2 rounded-xl text-xs outline-none border-2 border-[#C5A059] ${isDark ? 'bg-black text-white' : 'bg-white text-slate-900'}`}
+                          />
+                          <button onClick={() => saveMeetingLink(appointment._id)} className="p-2 text-emerald-500 hover:scale-110"><Check size={18} /></button>
+                          <button onClick={() => setEditingMeetingLinkId(null)} className="p-2 text-rose-500 hover:scale-110"><X size={18} /></button>
+                        </div>
                       ) : (
-                        <>
-                          <span
-                            className={`px-2 py-1 text-xs font-semibold rounded-full ${appointment.status === 'Confirmed'
-                                ? theme === 'dark'
-                                  ? 'dark:bg-green-900 dark:text-green-100'
-                                  : 'bg-green-100 text-green-800'
-                                : appointment.status === 'pending'
-                                  ? theme === 'dark'
-                                    ? 'dark:bg-yellow-900 dark:text-yellow-100'
-                                    : 'bg-yellow-100 text-yellow-800'
-                                  : appointment.status === 'cancelled'
-                                    ? theme === 'dark'
-                                      ? 'dark:bg-red-900 dark:text-red-100'
-                                      : 'bg-red-100 text-red-800'
-                                    : theme === 'dark'
-                                      ? 'dark:bg-gray-900 dark:text-gray-100'
-                                      : 'bg-gray-100 text-gray-800'
-                              }`}
-                          >
+                        <div className="flex items-center gap-3">
+                          {appointment.meetingLink ? (
+                            <a href={appointment.meetingLink} target="_blank" rel="noopener noreferrer" 
+                               className="p-2.5 rounded-xl bg-[#C5A059]/10 text-[#C5A059] hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">
+                              <LinkIcon size={16} />
+                            </a>
+                          ) : (
+                            <span className="text-[10px] font-bold uppercase text-slate-600">No Access Set</span>
+                          )}
+                          <PermissionProtectedAction action="view" module="Appoinment Management">
+                            <button onClick={() => handleEditMeetingLink(appointment._id, appointment.meetingLink)}
+                                    className={`p-2 rounded-lg ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-100'} ${subTextColor}`}>
+                              <Pencil size={14} />
+                            </button>
+                          </PermissionProtectedAction>
+                        </div>
+                      )}
+                    </td>
+
+                    {/* Status Select */}
+                    <td className="px-6 py-6 text-center">
+                      {editingStatusId === appointment._id ? (
+                        <select
+                          value={statusInput}
+                          onChange={(e) => setStatusInput(e.target.value)}
+                          onBlur={() => setEditingStatusId(null)}
+                          autoFocus
+                          className="bg-black text-[#C5A059] border border-[#C5A059] rounded-lg px-2 py-1 text-[10px] font-bold uppercase"
+                        >
+                          {['pending', 'Confirmed', 'cancelled', 'complete'].map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1 group">
+                          <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                            appointment.status === 'Confirmed' ? 'border-emerald-500/30 text-emerald-500 bg-emerald-500/5' :
+                            appointment.status === 'pending' ? 'border-amber-500/30 text-amber-500 bg-amber-500/5' :
+                            'border-rose-500/30 text-rose-500 bg-rose-500/5'
+                          }`}>
                             {appointment.status}
                           </span>
                           <PermissionProtectedAction action="update" module="Appoinment Management">
-                            <button
-                              onClick={() => {
-                                setEditingStatusId(appointment._id);
-                                setStatusInput(appointment.status);
-                              }}
-                              className={`${theme === 'dark' ? 'dark:text-blue-400 dark:hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}
-                              title="Edit"
-                            >
-                              <Pencil size={16} />
-                            </button>
+                            <button onClick={() => { setEditingStatusId(appointment._id); setStatusInput(appointment.status); }}
+                                    className="opacity-0 group-hover:opacity-100 text-[10px] font-bold text-[#C5A059] transition-opacity">Change</button>
                           </PermissionProtectedAction>
-                        </>
+                        </div>
                       )}
-                    </div>
-                  </td>
-                  {/* Actions */}
-                  <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <PermissionProtectedAction action="delete" module="Appoinment Management">
-                        <button
-                          onClick={() => handleDeleteAppointment(appointment._id)}
-                          className={`${theme === 'dark' ? 'dark:text-red-400 dark:hover:text-red-300' : 'text-red-600 hover:text-red-900'}`}
-                          title="Delete"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </PermissionProtectedAction>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-6 py-6 text-right">
+                      <div className="flex justify-end gap-2">
+                         <PermissionProtectedAction action="delete" module="Appoinment Management">
+                          <button onClick={() => handleDeleteAppointment(appointment._id)}
+                                  className="p-3 rounded-2xl hover:bg-rose-500/10 text-rose-500 transition-all">
+                            <Trash2 size={20} />
+                          </button>
+                        </PermissionProtectedAction>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
 
-      {/* Pagination */}
+      {/* Luxury Pagination */}
       {pagination?.totalPages > 1 && (
-        <div className="flex flex-col md:flex-row items-center justify-between mt-6 px-4 md:px-6">
-          <div className={`text-sm ${theme === 'dark' ? 'dark:text-gray-300' : 'text-gray-700'}`}>
-            Showing <span className="font-medium">{(currentPage - 1) * limit + 1}</span> to{' '}
-            <span className="font-medium">{Math.min(currentPage * limit, pagination.totalCount)}</span> of{' '}
-            <span className="font-medium">{pagination.totalCount}</span> results
-          </div>
-          {/* Pagination buttons */}
-          <div className="flex flex-wrap justify-center md:justify-end gap-2 mt-4 md:mt-0">
+        <div className="flex flex-col md:flex-row items-center justify-between mt-10 px-4 md:px-10">
+          <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${subTextColor}`}>
+            Page <span style={{ color: brandGold }}>{currentPage}</span> of {pagination.totalPages} • Registry Count {pagination.totalCount}
+          </p>
+          
+          <div className="flex items-center gap-2 mt-4 md:mt-0">
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className={`px-4 py-2 border rounded-md ${currentPage === 1
-                ? theme === 'dark'
-                  ? 'dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed'
-                  : 'bg-gray-100 cursor-not-allowed text-gray-400'
-                : theme === 'dark'
-                  ? 'dark:hover:bg-gray-700 dark:text-gray-300'
-                  : 'hover:bg-gray-50 text-gray-700'
-                }`}
+              className={`p-3 rounded-xl border transition-all ${isDark ? 'border-white/10 hover:bg-white/5' : 'border-slate-200 hover:bg-slate-100'} disabled:opacity-20`}
             >
-              Previous
+              <ChevronLeft size={18} />
             </button>
-            {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-              let pageNum;
-              if (pagination.totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (currentPage <= 3) {
-                pageNum = i + 1;
-              } else if (currentPage >= pagination.totalPages - 2) {
-                pageNum = pagination.totalPages - 4 + i;
-              } else {
-                pageNum = currentPage - 2 + i;
-              }
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`px-4 py-2 border rounded-md ${currentPage === pageNum
-                    ? 'bg-blue-500 text-white dark:bg-blue-600'
-                    : 'hover:bg-gray-50 text-gray-700'
+            
+            <div className="flex gap-2">
+              {[...Array(Math.min(5, pagination.totalPages))].map((_, i) => {
+                const pageNum = i + 1;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`w-12 h-12 rounded-xl text-xs font-black transition-all border ${
+                      currentPage === pageNum 
+                      ? 'bg-[#C5A059] border-[#C5A059] text-white shadow-lg shadow-[#C5A059]/20' 
+                      : isDark ? 'border-white/10 text-slate-400' : 'border-slate-200 text-slate-600'
                     }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-            {pagination.totalPages > 5 && (
-              <span className={`px-4 py-2 ${theme === 'dark' ? 'dark:text-gray-300' : 'text-gray-700'}`}>...</span>
-            )}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
+
             <button
               onClick={() => setCurrentPage((prev) => Math.min(prev + 1, pagination.totalPages))}
               disabled={currentPage === pagination.totalPages}
-              className={`px-4 py-2 border rounded-md ${currentPage === pagination.totalPages
-                ? theme === 'dark'
-                  ? 'dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed'
-                  : 'bg-gray-100 cursor-not-allowed text-gray-400'
-                : theme === 'dark'
-                  ? 'dark:hover:bg-gray-700 dark:text-gray-300'
-                  : 'hover:bg-gray-50 text-gray-700'
-                }`}
+              className={`p-3 rounded-xl border transition-all ${isDark ? 'border-white/10 hover:bg-white/5' : 'border-slate-200 hover:bg-slate-100'} disabled:opacity-20`}
             >
-              Next
+              <ChevronRight size={18} />
             </button>
           </div>
         </div>

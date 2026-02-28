@@ -1,241 +1,227 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Download, Search, ChevronDown, ArrowRight, MoveDiagonal, Briefcase } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
+import { 
+  Phone, Mail, Calendar, ArrowRight, 
+  Search, ChevronDown, MapPin, 
+  User, Home, IndianRupee, Briefcase
+} from 'lucide-react';
+import { FaWhatsapp } from "react-icons/fa";
+import useGetAllProperty from "../hooks/useGetAllProperty";
+import { useTheme } from '../context/ThemeContext';
 
-// Mock data following your Off-plan card logic
-const commercialData = [
-  {
-    id: 1,
-    developer: "EMAAR BUSINESS",
-    title: "The Executive Hub",
-    location: "Business Bay, Dubai",
-    price: "1,850,000",
-    handover: "Q4 2027",
-    statusLabel: "Foundation Stage",
-    progress: 15,
-    type: "Office",
-    sqft: "2,500",
-    fitout: "Fully Fitted",
-    image: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1000"
-  },
-  {
-    id: 2,
-    developer: "AZIZI COMMERCIAL",
-    title: "Retail Pulse Plaza",
-    location: "Meydan, Dubai",
-    price: "1,200,000",
-    handover: "Q2 2026",
-    statusLabel: "Structural Completion",
-    progress: 65,
-    type: "Retail",
-    sqft: "5,800",
-    fitout: "Shell & Core",
-    image: "https://images.unsplash.com/photo-1582037928769-181f2644ecb7?auto=format&fit=crop&q=80&w=1000"
-  },
-  {
-    id: 3,
-    developer: "SOBHA REALTY",
-    title: "Global Logistics Hub",
-    location: "JAFZA, Dubai",
-    price: "2,400,000",
-    handover: "Q1 2025",
-    statusLabel: "Finishing Touches",
-    progress: 85,
-    type: "Industrial",
-    sqft: "12,000",
-    fitout: "Standard",
-    image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=1000"
-  }
-];
+// --- EMPTY STATE MODEL ---
+const EmptyStateModel = ({ isDark }) => (
+  <motion.div 
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="flex flex-col items-center justify-center py-32 px-6 text-center w-full"
+  >
+    <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
+      <Briefcase size={40} className="text-[#ff8a00]/50" />
+    </div>
+    <h3 className={`text-2xl font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>No Assets Found</h3>
+    <p className="text-slate-500 max-w-xs mx-auto text-sm leading-relaxed">
+      We couldn't find any off-plan commercial projects matching your current filters.
+    </p>
+  </motion.div>
+);
 
 const Commercial = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const { theme } = useTheme(); 
+  const isDark = theme === 'dark';
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredProperties = commercialData.filter(item =>
-    item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // --- PROJECT-BASED FILTER FIELDS ---
+  const filterFields = [
+    { name: "city", label: "CITY", icon: <MapPin size={14} className="text-[#ff8a00]" /> },
+    { name: "propertytype", label: "ASSET TYPE", icon: <Home size={14} className="text-[#ff8a00]" /> },
+    { name: "price", label: "BUDGET", icon: <IndianRupee size={14} className="text-[#ff8a00]" /> },
+    { name: "developerName", label: "DEVELOPER", icon: <User size={14} className="text-[#ff8a00]" /> },
+    { name: "deliveryDate", label: "HANDOVER", icon: <Calendar size={14} className="text-[#ff8a00]" /> },
+  ];
+
+  const [filters, setFilters] = useState({
+    propertyListingType: "project", 
+    usageType: "Commercial",
+    developerName: "",
+    deliveryDate: "",
+    city: "",
+    propertytype: "",
+    price: ""
+  });
+
+  const { propertyList = [], loading } = useGetAllProperty(1, 100, filters);
+
+  // --- STRICT VALIDATION & SEARCH ---
+  const validatedList = useMemo(() => {
+    return propertyList.filter(item => {
+      const isCommercialProject = item.propertyListingType === "project" && item.usageType === "Commercial";
+      const matchesSearch = item.propertyname?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            item.developerName?.toLowerCase().includes(searchQuery.toLowerCase());
+      return isCommercialProject && matchesSearch;
+    });
+  }, [propertyList, searchQuery]);
+
+  const handleFilterChange = (e) => {
+    setFilters({ ...filters, [e.target.name]: e.target.value });
+  };
+
+  const getOptions = (name) => {
+    const options = propertyList.map(item => item[name]).filter(Boolean);
+    return [...new Set(options)].sort();
+  };
+
+  const handlePropertyClick = (item) => {
+    navigate(`/property/${item._id}`, { state: { propertyData: item } });
+  };
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className={`w-full min-h-screen transition-colors duration-700 ${isDark ? 'bg-[#0a0a0c]' : 'bg-slate-50'}`}>
       
-      {/* --- HERO SECTION WITH FULL BG IMAGE --- */}
-      <section className="relative h-screen w-full flex items-center overflow-hidden">
-        {/* Background Image Layer */}
+      {/* --- HERO SECTION --- */}
+      <section className="relative w-full h-[65vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1523374228107-6e44bd2b524e?auto=format&fit=crop&q=80&w=2000" 
-            className="w-full h-full object-cover"
-            alt="Dubai Commercial Skyline"
+            src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2000" 
+            className="w-full h-full object-cover opacity-50"
+            alt="Commercial Real Estate"
           />
-          {/* Subtle gradient overlay to ensure text readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent" />
+          <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-b from-[#0a0a0c]/80 to-[#0a0a0c]' : 'bg-gradient-to-b from-white/20 to-white'}`} />
         </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-4xl"
-          >
-            <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full border border-slate-200 bg-white/50 backdrop-blur-md mb-10">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600">
-                Commercial Collections • 2026
-              </span>
-            </div>
-
-            <h1 className="text-[5.5rem] md:text-[10rem] font-black leading-[0.75] tracking-tighter text-[#0f172a] mb-8 uppercase">
-              Prime <br />
-              <span className="font-serif italic font-light text-amber-500 capitalize">Commerce.</span>
-            </h1>
-
-            <p className="text-xl md:text-2xl text-slate-600 font-medium max-w-2xl mb-12 leading-tight">
-              Invest in Dubai's next business milestones. Secure high-appreciation 
-              commercial assets before they break ground.
-            </p>
-
-            <div className="flex flex-wrap gap-4">
-              <button className="px-12 py-6 bg-amber-500 text-black rounded-2xl font-black uppercase text-[11px] tracking-widest hover:scale-105 transition-all shadow-2xl shadow-amber-500/30">
-                Explore Projects
-              </button>
-              <button className="px-12 py-6 bg-[#0f172a] text-white rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-amber-600 transition-all flex items-center gap-3">
-                Asset Intelligence <ArrowRight size={16} />
-              </button>
-            </div>
-          </motion.div>
+        <div className="max-w-7xl mx-auto w-full px-6 relative z-10 mt-[-50px]">
+          <h1 className={`text-7xl md:text-9xl font-black uppercase tracking-tighter ${isDark ? 'text-white' : 'text-[#1a1a1e]'} leading-[0.8]`}>
+            Prime <span className="font-serif italic font-light text-[#ff8a00] lowercase">Assets.</span>
+          </h1>
+          <p className={`max-w-md text-sm font-medium mt-6 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+            Explore premium off-plan commercial opportunities across the UAE's most strategic business hubs.
+          </p>
         </div>
-        
-        <motion.div 
-          animate={{ y: [0, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="absolute bottom-12 left-1/2 -translate-x-1/2 text-slate-400"
-        >
-          <ChevronDown size={32} strokeWidth={1} />
-        </motion.div>
       </section>
 
-      {/* --- SEARCH TRANSITION BAR --- */}
-      <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-y border-slate-100 py-6 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-4">
-            <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Market Filters</span>
-            <div className="h-4 w-[1px] bg-slate-200" />
-            <span className="text-[11px] font-medium text-slate-400">Districts & Asset Types</span>
-          </div>
-          
-          <div className="relative w-full md:w-80 group">
+      {/* --- DYNAMIC FILTER PANEL (EXACT DESIGN) --- */}
+      <div className="max-w-7xl mx-auto px-6 -mt-24 relative z-50">
+        <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-100">
+          {/* SEARCH BAR TOP */}
+          <div className="flex items-center bg-slate-50 rounded-2xl border border-slate-100 p-2 mb-8 w-full md:max-w-md">
+            <Search className="text-[#ff8a00] ml-4" size={20} />
             <input 
-              type="text"
-              placeholder="Search by District or Title..."
-              className="w-full pl-6 pr-12 py-3 bg-slate-100 border-none rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500 transition-all text-sm"
-              onChange={(e) => setSearchTerm(e.target.value)}
+              type="text" 
+              placeholder="Search project or developer..." 
+              className="w-full bg-transparent border-none outline-none px-4 py-2 text-sm font-bold text-slate-800 placeholder-slate-400"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <Search className="absolute right-4 top-3 text-slate-400" size={18} />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-y-8 gap-x-4">
+            {filterFields.map((field, index) => (
+              <div key={field.name} className={`relative px-2 ${index !== 4 ? 'md:border-r border-slate-100' : ''}`}>
+                <label className="flex items-center gap-2 text-[10px] font-black text-[#1a1a1e] mb-2 tracking-widest uppercase">
+                  {field.icon} {field.label}
+                </label>
+                <div className="relative">
+                  <select
+                    name={field.name}
+                    onChange={handleFilterChange}
+                    className="w-full bg-transparent text-[11px] font-bold text-slate-400 outline-none appearance-none cursor-pointer uppercase pr-6"
+                  >
+                    <option value="">SELECT {field.label}</option>
+                    {getOptions(field.name).map(opt => <option key={opt} value={opt} className="text-black">{opt}</option>)}
+                  </select>
+                  <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" size={14} />
+                </div>
+              </div>
+            ))}
+            <button className="bg-[#ff8a00] text-white text-[11px] font-black uppercase rounded-2xl py-4 hover:bg-[#e67c00] transition-all tracking-widest shadow-lg shadow-orange-100">
+              Apply
+            </button>
           </div>
         </div>
       </div>
 
-      {/* --- PROPERTY CARDS GRID (Off-plan Style) --- */}
-      <section className="py-24 px-6 bg-slate-50/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            <AnimatePresence>
-              {filteredProperties.map((item) => (
-                <motion.div 
-                  layout
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  key={item.id}
-                  className="group bg-white rounded-[3.5rem] overflow-hidden shadow-2xl shadow-slate-200/60 flex flex-col border-none"
-                >
-                  {/* Image Section */}
-                  <div className="relative h-72 overflow-hidden">
-                    <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={item.title} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                    
-                    <div className="absolute top-6 left-6">
-                      <span className="px-4 py-2 bg-black/40 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-widest rounded-full border border-white/10">
-                        {item.type}
-                      </span>
-                    </div>
+      {/* --- PROJECT GRID --- */}
+      <div className="max-w-7xl mx-auto px-6 py-24">
+        {loading ? (
+          <div className="text-center py-20 text-[#ff8a00] font-black animate-pulse uppercase tracking-widest">Validating Portfolio...</div>
+        ) : (
+          <>
+            {validatedList.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <AnimatePresence>
+                  {validatedList.map((item) => (
+                    <motion.div 
+                      key={item._id}
+                      whileHover={{ y: -10 }}
+                      className={`group relative h-[500px] rounded-[3.5rem] overflow-hidden border shadow-2xl transition-all duration-500 ${isDark ? 'bg-zinc-900 border-white/5' : 'bg-white border-slate-100'}`}
+                    >
+                      {/* Image Layer */}
+                      <img 
+                        src={item.image?.[0]} 
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+                        alt={item.propertyname} 
+                        onClick={() => handlePropertyClick(item)}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10" />
 
-                    <div className="absolute bottom-6 left-8">
-                      <p className="text-amber-500 text-[9px] font-black uppercase tracking-widest mb-1">
-                        {item.developer}
-                      </p>
-                      <h3 className="text-3xl font-bold text-white tracking-tighter uppercase leading-none">
-                        {item.title}
-                      </h3>
-                    </div>
-                  </div>
-
-                  {/* Data Section */}
-                  <div className="p-10 space-y-8">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center lg:text-left">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Start Price</p>
-                        <p className="text-xl font-black text-slate-900 leading-none">
-                          <span className="text-xs text-slate-400 mr-1 font-bold">AED</span>
-                          {item.price}
-                        </p>
-                      </div>
-                      <div className="border-l border-slate-100 pl-6 text-center lg:text-left">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Handover</p>
-                        <p className="text-xl font-black text-slate-900 leading-none">{item.handover}</p>
-                      </div>
-                    </div>
-
-                    {/* Progress Bar Component */}
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
-                          {item.statusLabel}
+                      {/* Badges */}
+                      <div className="absolute top-8 left-8 flex gap-2 z-20">
+                        <span className="px-4 py-1.5 rounded-lg bg-[#ff8a00] text-white text-[9px] font-black uppercase tracking-widest">
+                          {item.propertytype}
                         </span>
-                        <span className="text-[10px] font-black text-amber-500">
-                          {item.progress}%
+                        <span className="px-4 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white text-[9px] font-black uppercase tracking-widest">
+                          OFF-PLAN
                         </span>
                       </div>
-                      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                        <motion.div 
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${item.progress}%` }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 1.5, ease: "circOut" }}
-                          className="h-full bg-amber-500 rounded-full"
-                        />
+
+                      {/* Always Visible Action Icons */}
+                      <div className="absolute top-8 right-6 flex flex-col gap-3 z-30">
+                        <a href={`https://wa.me/${item.agentId?.phone?.replace(/\s+/g, '')}`} target="_blank" rel="noreferrer" className="w-10 h-10 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-lg transform active:scale-90 transition-transform">
+                          <FaWhatsapp size={20} />
+                        </a>
+                        <a href={`tel:${item.agentId?.phone}`} className="w-10 h-10 bg-[#3b82f6] text-white rounded-full flex items-center justify-center shadow-lg transform active:scale-90 transition-transform">
+                          <Phone size={18} fill="currentColor" />
+                        </a>
+                        <a href={`mailto:${item.agentId?.email}`} className="w-10 h-10 bg-[#ff8a00] text-white rounded-full flex items-center justify-center shadow-lg transform active:scale-90 transition-transform">
+                          <Mail size={18} />
+                        </a>
                       </div>
-                    </div>
 
-                    {/* Technical Icons (Optional Row) */}
-                    <div className="flex items-center gap-6 text-slate-400">
-                        <div className="flex items-center gap-2">
-                            <MoveDiagonal size={14} className="text-amber-500/50" />
-                            <span className="text-[10px] font-bold uppercase">{item.sqft} sqft</span>
+                      {/* Content Overlay */}
+                      <div className="absolute bottom-0 left-0 right-0 p-10 z-20" onClick={() => handlePropertyClick(item)}>
+                        <p className="text-[#ff8a00] text-[10px] font-black uppercase tracking-widest mb-1">{item.developerName || "Premium Developer"}</p>
+                        <h3 className="text-2xl font-serif text-white mb-4 leading-tight group-hover:text-[#ff8a00] transition-colors uppercase tracking-tighter">
+                          {item.propertyname}
+                        </h3>
+                        
+                        <div className="flex items-center justify-between mb-6">
+                           <div>
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Starting From</p>
+                              <p className="text-xl font-bold text-white tracking-tighter">
+                                AED {Number(item.price).toLocaleString()}
+                              </p>
+                           </div>
+                           <button className="w-11 h-11 bg-[#ff8a00] rounded-full flex items-center justify-center text-white shadow-lg">
+                             <ArrowRight size={22} />
+                           </button>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Briefcase size={14} className="text-amber-500/50" />
-                            <span className="text-[10px] font-bold uppercase">{item.fitout}</span>
-                        </div>
-                    </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-3 pt-2">
-                      <button className="flex-1 py-5 bg-amber-500 text-black rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-900 hover:text-white transition-all shadow-xl shadow-amber-500/20 active:scale-95">
-                        Asset Intelligence
-                      </button>
-                      <button className="p-5 bg-white text-slate-400 rounded-2xl hover:bg-amber-500 hover:text-black transition-all border border-slate-100 shadow-sm active:scale-95">
-                        <Download size={20} />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        </div>
-      </section>
+                        <div className="flex gap-6 pt-5 border-t border-white/10 text-white/70 text-[10px] font-bold uppercase tracking-widest">
+                          <span className="flex items-center gap-2"><MapPin size={14} className="text-[#ff8a00]" /> {item.city}</span>
+                          <span className="flex items-center gap-2"><Calendar size={14} className="text-[#ff8a00]" /> {item.deliveryDate || "2026"}</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <EmptyStateModel isDark={isDark} />
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,270 +1,236 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import {
-  Ruler, Bed, Bath, MapPin, IndianRupee, Home, Building2, Barcode, Wrench,
-  Search, ArrowRight, X, ChevronDown, Filter, Sparkles
+import { 
+  FiArrowRight, FiCheckCircle, FiSearch 
+} from "react-icons/fi";
+import { 
+  MapPin, Home, IndianRupee, Ruler, Bed, Bath, Barcode, Wrench, ChevronDown, 
+  Crown, Layers, Sparkles, Phone, Mail, ChevronRight, ArrowRight
 } from "lucide-react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination, EffectFade } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/effect-fade";
-
+import { FaWhatsapp } from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
 import useGetAllProperty from "../../hooks/useGetAllProperty";
-import { useLoading } from "../../model/LoadingModel";
 
 const SelectAppointmentProperty = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
-  
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState({ city: "", propertytype: "", listingtype: "" });
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState(null);
 
-  const limit = 6;
-  const { propertyList, loading, pagination } = useGetAllProperty(currentPage, limit, filters);
-  const LoadingModel = useLoading({ type: "cards", count: 3 });
+  // --- 1. CONFIGURATION ---
+  const filterFields = [
+    { name: "city", label: "City", icon: <MapPin size={14} /> },
+    { name: "propertytype", label: "Type", icon: <Home size={14} /> },
+    { name: "bedroom", label: "Beds", icon: <Bed size={14} /> },
+    { name: "bathroom", label: "Baths", icon: <Bath size={14} /> },
+  ];
 
-  // Luxury Theme Palette
   const colors = {
-    brand: "#C5A059", // Dubai Gold
-    bg: isDark ? "bg-slate-950" : "bg-slate-50",
-    card: isDark ? "bg-slate-900/40 border-slate-800" : "bg-white border-slate-200",
-    text: isDark ? "text-slate-100" : "text-slate-900",
-    sub: isDark ? "text-slate-400" : "text-slate-500",
-    accent: "from-amber-600 to-amber-400"
+    background: isDark ? "bg-[#0a0a0c]" : "bg-gray-50",
+    card: isDark ? "bg-[#141417]" : "bg-white",
+    text: isDark ? "text-white" : "text-gray-900",
+    textSecondary: isDark ? "text-gray-400" : "text-gray-600",
+    border: isDark ? "border-white/5" : "border-gray-200"
   };
 
-  const handleBuyNow = (property) => navigate("/createappoinment", { state: { property } });
+  // --- 2. STATE MANAGEMENT ---
+  const [filters, setFilters] = useState({
+    listingtype: "",
+    propertyListingType: "",
+    search: "",
+    city: "",
+    propertytype: "",
+    bedroom: "",
+    bathroom: "",
+  });
+
+  const [selectedPropId, setSelectedPropId] = useState(null);
+
+  // --- 3. DATA FETCHING ---
+  const memoizedFilters = useMemo(() => filters, [filters]);
+  const { propertyList = [], loading } = useGetAllProperty(1, 20, memoizedFilters);
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+    setSelectedPropId(null);
+  };
+
+  const handleConfirmSelection = (property) => {
+    if (!property) return;
+    navigate("/createappoinment", { state: { property } });
+  };
+
+  // Split results for the two design sections
+  const eliteProperties = propertyList.slice(0, 9);
+  const insightProperties = propertyList.slice(9, 20);
 
   return (
-    <div className={`min-h-screen ${colors.bg} transition-colors duration-500 pb-20`}>
+    <div className={`w-full min-h-screen transition-colors duration-700 pb-32 ${colors.background}`}>
       
-      {/* --- HERO HEADER --- */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-amber-500/10 to-transparent pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-black uppercase tracking-[0.3em]">
-              <Sparkles size={12} /> Personalized Viewings
-            </span>
-            <h1 className={`text-5xl md:text-7xl font-black tracking-tighter ${colors.text}`}>
-              Pick Your <span className="italic font-serif font-light text-amber-600">Sanctuary.</span>
+      {/* --- HERO SECTION --- */}
+      <section className="relative w-full h-[60vh] flex items-center overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2000&auto=format&fit=crop" className="w-full h-full object-cover" alt="Luxury Rental" />
+          <div className={`absolute inset-0 ${isDark ? 'bg-black/60' : 'bg-white/60'}`} />
+        </div>
+        <div className="max-w-[1400px] mx-auto w-full px-6 md:px-12 relative z-10">
+          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-amber-500 text-black mb-8 shadow-xl">
+              <Crown size={14} />
+              <span className="text-[10px] font-black uppercase tracking-widest">Premium Selection</span>
+            </div>
+            <h1 className={`text-7xl md:text-[130px] leading-[0.8] font-black uppercase tracking-tighter mb-8 ${colors.text}`}>
+              Book <br />
+              <span className="text-amber-500 font-serif italic font-light lowercase">viewing</span>
             </h1>
-            <p className={`max-w-xl mx-auto text-lg ${colors.sub}`}>
-              Select a property from our signature collection to schedule your private tour.
-            </p>
           </motion.div>
         </div>
       </section>
 
-      {/* --- SEARCH & FILTER COMMAND CENTER --- */}
-      <div className="max-w-5xl mx-auto px-6 mb-16 sticky top-24 z-30">
-        <div className={`p-2 rounded-[2rem] border backdrop-blur-xl shadow-2xl ${colors.card} flex flex-col md:flex-row gap-2`}>
-          <div className="flex-1 flex items-center px-4 gap-3">
-            <Search className="text-slate-500" size={20} />
-            <input
-              type="text"
-              placeholder="Search by city or property name..."
-              className="w-full bg-transparent py-4 outline-none text-sm font-medium"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <div className="flex gap-2 p-1">
-            <button 
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`px-6 py-3 rounded-2xl border ${isFilterOpen ? 'bg-amber-600 border-amber-600 text-white' : colors.card} text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-all`}
-            >
-              <Filter size={14} /> Filters
-            </button>
-            <button 
-              onClick={() => setFilters({ ...filters, city: searchQuery })}
-              className="px-8 py-3 rounded-2xl bg-amber-600 text-white text-xs font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-900/20"
-            >
-              Find
-            </button>
+      {/* --- FILTER BAR --- */}
+      <div className="max-w-[1400px] mx-auto px-6 md:px-12 -mt-16 relative z-30">
+        <div className={`w-full p-6 rounded-[3rem] border shadow-2xl backdrop-blur-2xl ${isDark ? 'bg-neutral-900/90 border-white/10' : 'bg-white/90 border-slate-200'}`}>
+          <div className="flex flex-wrap lg:flex-nowrap gap-4 items-center">
+            <div className="relative flex-grow lg:max-w-sm">
+              <FiSearch className="absolute left-6 top-1/2 -translate-y-1/2 text-amber-500" size={18} />
+              <input
+                type="text"
+                name="search"
+                placeholder="SEARCH PROPERTIES..."
+                value={filters.search}
+                onChange={handleFilterChange}
+                className={`w-full pl-14 pr-6 py-5 rounded-full text-[10px] font-black uppercase tracking-widest outline-none border transition-all ${isDark ? 'bg-black/40 border-white/5 text-white focus:border-amber-500' : 'bg-slate-50 border-slate-200 text-black focus:border-amber-500'}`}
+              />
+            </div>
+            {filterFields.map((field) => (
+              <div key={field.name} className="relative flex-grow min-w-[140px]">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-amber-500">{field.icon}</div>
+                <select
+                  name={field.name}
+                  value={filters[field.name]}
+                  onChange={handleFilterChange}
+                  className={`w-full pl-12 pr-10 py-5 rounded-full text-[10px] font-black uppercase tracking-widest appearance-none outline-none border cursor-pointer transition-all ${isDark ? 'bg-black/40 border-white/5 text-white focus:border-amber-500' : 'bg-slate-50 border-slate-200 text-black focus:border-amber-500'}`}
+                >
+                  <option value="">{field.label}</option>
+                  <option value="Dubai">Dubai</option>
+                  <option value="Apartment">Apartment</option>
+                  <option value="1">1 Bed</option>
+                </select>
+                <ChevronDown size={14} className="absolute right-5 top-1/2 -translate-y-1/2 opacity-30 pointer-events-none" />
+              </div>
+            ))}
           </div>
         </div>
-
-        {/* Extended Filters Drawer */}
-        <AnimatePresence>
-          {isFilterOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className={`mt-4 overflow-hidden rounded-[2rem] border ${colors.card} p-8 shadow-2xl`}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {['propertytype', 'listingtype', 'state'].map((key) => (
-                  <div key={key} className="space-y-3">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-amber-600">{key.replace('type', ' Type')}</label>
-                    <select 
-                      onChange={(e) => setFilters({...filters, [key]: e.target.value})}
-                      className={`w-full p-4 rounded-xl border outline-none ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'} text-sm`}
-                    >
-                      <option value="">All {key.replace('type', 's')}</option>
-                      {/* Mapping unique values here */}
-                    </select>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
-      {/* --- PROPERTY GRID --- */}
-      <div className="max-w-7xl mx-auto px-6">
-        {loading ? (
-          <LoadingModel loading={true} />
-        ) : (
+      {/* --- RESULTS SECTIONS --- */}
+      <div className="max-w-[1400px] mx-auto px-6 md:px-12 py-20">
+        
+        {/* 1. ELITE SELECTION GRID */}
+        <div className={`rounded-[3.5rem] ${colors.card} p-8 md:p-14 mb-16 border ${colors.border} shadow-2xl`}>
+          <div className="flex justify-between items-end mb-12">
+            <h2 className={`text-4xl md:text-5xl font-serif ${colors.text}`}>
+              Elite <span className="text-amber-500 italic">Selection</span>
+            </h2>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {propertyList.map((property, idx) => (
+            {loading ? (
+              <div className="col-span-full py-20 text-center text-amber-500 animate-pulse font-black uppercase tracking-[0.3em]">Scanning Database...</div>
+            ) : eliteProperties.map((property) => (
               <motion.div
-                key={property.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                viewport={{ once: true }}
-                className={`group relative rounded-[2.5rem] border overflow-hidden transition-all duration-500 ${colors.card} hover:shadow-2xl hover:shadow-amber-900/10`}
+                key={property._id}
+                whileHover={{ y: -12 }}
+                onClick={() => setSelectedPropId(property._id)}
+                className={`group relative h-[500px] w-full rounded-[3rem] overflow-hidden shadow-2xl bg-zinc-900 cursor-pointer  transition-all duration-500 ${selectedPropId === property._id ? 'border-amber-500 scale-[1.02]' : 'border-transparent'}`}
               >
-                {/* Media Section */}
-                <div className="h-72 relative overflow-hidden">
-                  <Swiper
-                    modules={[Autoplay, Pagination, EffectFade]}
-                    effect="fade"
-                    autoplay={{ delay: 3000 + idx * 500 }}
-                    pagination={{ clickable: true }}
-                    className="h-full"
-                  >
-                    {property.image?.map((img, i) => (
-                      <SwiperSlide key={i}>
-                        <img src={img} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="property" />
-                      </SwiperSlide>
-                    ))}
-                  </Swiper>
-                  <div className="absolute top-6 left-6 z-10">
-                    <span className="px-4 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-black text-[10px] font-black uppercase tracking-widest shadow-lg">
-                      {property.listingtype}
-                    </span>
+                <img src={property.image?.[0]} className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/100 via-black/20 to-transparent z-10" />
+
+                {selectedPropId === property._id && (
+                  <div className="absolute inset-0 bg-amber-500/20 backdrop-blur-[2px] z-20 flex items-center justify-center">
+                    <div className="bg-amber-500 text-black p-4 rounded-full shadow-2xl"><FiCheckCircle size={32} /></div>
                   </div>
-                  <div className="absolute bottom-6 right-6 z-10">
-                    <div className="px-4 py-2 rounded-xl bg-amber-600 text-white font-black text-sm flex items-center gap-1 shadow-xl">
-                      <IndianRupee size={14} /> {property.price}
-                    </div>
-                  </div>
+                )}
+
+                {/* Contact Icons design from AgentFilter */}
+                <div className="absolute top-6 right-6 flex flex-col gap-3 z-30">
+                  <div className="w-9 h-9 bg-[#25D366] text-white rounded-full flex items-center justify-center"><FaWhatsapp size={18} /></div>
+                  <div className="w-9 h-9 bg-amber-500 text-black rounded-full flex items-center justify-center"><Phone size={16} /></div>
                 </div>
 
-                {/* Content Section */}
-                <div className="p-8 space-y-6">
-                  <div>
-                    <h3 className={`text-2xl font-bold tracking-tight mb-2 group-hover:text-amber-600 transition-colors ${colors.text}`}>
-                      {property.propertyname}
-                    </h3>
-                    <div className={`flex items-center gap-1 text-xs font-medium ${colors.sub}`}>
-                      <MapPin size={14} className="text-amber-600" /> {property.city}, {property.state}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4 py-6 border-y border-slate-800/50">
-                    <div className="text-center">
-                      <Bed size={16} className="mx-auto mb-1 text-amber-600" />
-                      <p className={`text-[10px] font-black uppercase tracking-tighter ${colors.text}`}>{property.bedroom} Bed</p>
-                    </div>
-                    <div className="text-center">
-                      <Bath size={16} className="mx-auto mb-1 text-amber-600" />
-                      <p className={`text-[10px] font-black uppercase tracking-tighter ${colors.text}`}>{property.bathroom} Bath</p>
-                    </div>
-                    <div className="text-center">
-                      <Ruler size={16} className="mx-auto mb-1 text-amber-600" />
-                      <p className={`text-[10px] font-black uppercase tracking-tighter ${colors.text}`}>{property.squarefoot} ft²</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
+                <div className="absolute bottom-8 left-8 right-8 z-20">
+                  <p className="text-amber-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">{property.city}, UAE</p>
+                  <h3 className="text-2xl font-serif text-white leading-tight mb-6 truncate">{property.propertyname}</h3>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xl font-bold text-white uppercase tracking-tighter">AED {Number(property.price).toLocaleString()}</p>
                     <button 
-                      onClick={() => setSelectedProperty(property)}
-                      className={`flex-1 py-4 rounded-2xl border ${colors.card} text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all`}
+                      onClick={(e) => { e.stopPropagation(); handleConfirmSelection(property); }}
+                      className="w-11 h-11 bg-amber-500 rounded-2xl flex items-center justify-center text-black shadow-lg"
                     >
-                      Details
-                    </button>
-                    <button 
-                      onClick={() => handleBuyNow(property)}
-                      className="flex-[2] py-4 rounded-2xl bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-amber-700 transition-all shadow-lg shadow-amber-900/20"
-                    >
-                      Schedule viewing <ArrowRight size={14} />
+                      <ArrowRight size={22} />
                     </button>
                   </div>
                 </div>
               </motion.div>
             ))}
           </div>
+        </div>
+
+        {/* 2. MARKET INSIGHTS LIST */}
+        {!loading && insightProperties.length > 0 && (
+          <div className="mb-20">
+            <h2 className={`text-2xl font-serif mb-8 ${colors.text}`}>
+              Market <span className="text-amber-500 italic">Insights</span>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {insightProperties.map((property) => (
+                <motion.div
+                  key={property._id}
+                  onClick={() => setSelectedPropId(property._id)}
+                  whileHover={{ x: 8 }}
+                  className={`group p-4 rounded-[2rem] ${colors.card} border ${selectedPropId === property._id ? 'border-amber-500 ring-1 ring-amber-500' : colors.border} flex items-center gap-5 cursor-pointer hover:border-amber-500 transition-all shadow-md`}
+                >
+                  <div className="w-24 h-24 rounded-[1.5rem] overflow-hidden shrink-0 relative bg-zinc-800">
+                    <img src={property.image?.[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className={`font-bold text-sm mb-1 truncate ${colors.text}`}>{property.propertyname}</h4>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <MapPin className="w-3 h-3 text-amber-500" />
+                      <span className={`text-[10px] font-black uppercase ${colors.textSecondary}`}>{property.city}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-amber-500 font-bold text-sm">AED {Number(property.price).toLocaleString()}</p>
+                      <ChevronRight className="w-4 h-4 text-amber-500 opacity-0 group-hover:opacity-100 transition-all" />
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
 
-      {/* --- DETAILED OVERLAY MODAL --- */}
+      {/* --- FLOATING CONFIRMATION BAR --- */}
       <AnimatePresence>
-        {selectedProperty && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10"
-          >
-            <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-xl" onClick={() => setSelectedProperty(null)} />
-            <motion.div 
-              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-              className={`relative w-full max-w-6xl h-full ${colors.card} border rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row`}
-            >
-               {/* Left Media (60%) */}
-               <div className="md:w-3/5 h-64 md:h-auto relative">
-                 <img src={selectedProperty.image[0]} className="w-full h-full object-cover" alt="hero" />
-                 <button onClick={() => setSelectedProperty(null)} className="absolute top-8 left-8 p-4 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-amber-600 transition-all">
-                   <X size={20} />
-                 </button>
-               </div>
-
-               {/* Right Info (40%) */}
-               <div className="md:w-2/5 p-12 overflow-y-auto custom-scrollbar flex flex-col justify-between">
-                 <div>
-                    <span className="text-amber-600 font-black uppercase tracking-widest text-[10px]">{selectedProperty.propertytype}</span>
-                    <h2 className={`text-4xl font-black tracking-tighter mt-2 mb-8 ${colors.text}`}>{selectedProperty.propertyname}</h2>
-                    
-                    <div className="space-y-8">
-                       <div className="flex justify-between items-end border-b border-slate-800 pb-4">
-                          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Pricing</p>
-                          <p className="text-2xl font-black text-amber-500">₹{selectedProperty.price}</p>
-                       </div>
-                       <div className="grid grid-cols-2 gap-6">
-                          <div>
-                            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Location</p>
-                            <p className={`text-sm font-bold ${colors.text}`}>{selectedProperty.city}, {selectedProperty.state}</p>
-                          </div>
-                          <div>
-                            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Floor</p>
-                            <p className={`text-sm font-bold ${colors.text}`}>{selectedProperty.floor} of 20</p>
-                          </div>
-                       </div>
-                    </div>
-                 </div>
-
-                 <button 
-                   onClick={() => { handleBuyNow(selectedProperty); setSelectedProperty(null); }}
-                   className="mt-12 w-full py-5 rounded-2xl bg-amber-600 text-white text-xs font-black uppercase tracking-[0.3em] shadow-2xl shadow-amber-900/40 hover:bg-amber-700 transition-all"
-                 >
-                    Confirm Tour
-                 </button>
-               </div>
-            </motion.div>
+        {selectedPropId && (
+          <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-6">
+            <div className={`p-6 rounded-[2.5rem] shadow-2xl border flex items-center justify-between gap-6 backdrop-blur-2xl ${isDark ? 'bg-neutral-900/90 border-white/20' : 'bg-white/90 border-amber-500'}`}>
+              <div className="flex flex-col">
+                <span className="text-amber-500 text-[9px] font-black uppercase tracking-tighter">Ready to proceed</span>
+                <span className={`text-sm font-black truncate max-w-[180px] ${colors.text}`}>
+                  {propertyList.find(p => p._id === selectedPropId)?.propertyname}
+                </span>
+              </div>
+              <button 
+                onClick={() => handleConfirmSelection(propertyList.find(p => p._id === selectedPropId))}
+                className="bg-amber-500 text-black px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform shadow-xl shadow-amber-500/20"
+              >
+                Schedule Tour
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

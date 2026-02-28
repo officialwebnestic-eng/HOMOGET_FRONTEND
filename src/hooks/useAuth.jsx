@@ -13,26 +13,32 @@ export const useAuth = () => {
   const { addToast } = useToast()
 
 
+const registerUser = async (data) => {
+  try {
+    const response = await http.post("/verify-email", data);
 
-  const registerUser = async (data) => {
-    try {
-      const response = await http.post("/verify-email", data);
-      
-      console.log(response.data.data.email)
-      if (response.data?.success) {
+   // Inside registerUser
+if (response?.data?.success) {
+  // Check every possible location for the email
+  const userEmail = response.data?.user?.email || 
+                    response.data?.data?.email || 
+                    response.data?.email ||
+                    data.email; // Fallback to the email the user typed in the form
 
-        console.log(response.data.data.email)
-        setEmail(response.data.data.email)
-        addToast("Verification Code Sent Successsfully", "success");
-        navigate("/verifyemail");
-      } else {
-        toast.error(response.data?.message || "Something went wrong");
-      }
-    } catch (err) {
-      toast.error("Server error");
-      console.error("Error registering user:", err);
-    }
-  };
+  if (!userEmail) {
+    return addToast("Registration error: Could not verify email address.", "error");
+  }
+
+  setEmail(userEmail);
+  addToast("Verification code sent to your email!", "success");
+  navigate("/verifyemail", { state: { email: userEmail } });
+}
+  } catch (err) {
+    // If backend returns "No token provided", it lands here
+    const msg = err.response?.data?.message || "Server Error";
+    addToast(msg, "error");
+  }
+};
 
   const LoginUser = async (data) => {
   try {
@@ -42,9 +48,6 @@ export const useAuth = () => {
 
     if (response.status === 200 && response.data?.success) {
       const { userData: user } = response.data;
-
-      // 1. Update Global Auth State
-      // Ensure we map the database fields (like _id) to your context fields
       setUserDetails({
         id: user._id,
         role: user.role,
@@ -54,11 +57,7 @@ export const useAuth = () => {
 
       addToast("Login successful", "success");
 
-      // 2. Prepare for Navigation
       const role = user.role?.trim().toLowerCase();
-
-      // Use a small timeout or wait for state to propagate if using Protected Routes
-      // This ensures the AuthContext is fully updated before the new route mounts
       setTimeout(() => {
         switch (role) {
           case "admin":

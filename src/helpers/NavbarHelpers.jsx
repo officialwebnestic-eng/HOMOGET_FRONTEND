@@ -1,5 +1,6 @@
   export const sidebarLinks = [
   { name: "MORTGAGE", href: "/mortgage", badge: "NEW" },
+  { name: "PROPERTY LISTING", href: "/propertylisting" },
   { name: "FIND AGENT", href: "/agentsupport" },
   { name: "FIND DEVELOPER", href: "/find-developer" },
   { name: "DUBAI TRANSACTION", href: "/transactions", badge: "HOT" },
@@ -8,7 +9,6 @@
   { name: "TRENDS", href: "/trends", badge: "TRENDING" },
   { name: "EXPLORE", href: "/explore" },
   { name: "BLOG", href: "/blog" },
-  { name: "PROPERTY LISTING", href: "/propertylisting" },
   { name: "TESTIMONIALS", href: "/testimonials" },
 ];
 

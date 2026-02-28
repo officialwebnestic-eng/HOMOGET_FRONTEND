@@ -8,9 +8,11 @@ import {
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
- import { http } from "../../axios/axios";
- import { useTheme } from "../../context/ThemeContext";
- import { useToast } from "../../model/SuccessToasNotification";
+
+import { useToast } from "../../../model/SuccessToasNotification";
+import { useTheme } from "../../../context/ThemeContext";
+import { http } from "../../../axios/axios";
+
 
 const meetingPlatforms = [
   { name: 'In Person', icon: Users, desc: 'Physical Visit' },
@@ -19,11 +21,10 @@ const meetingPlatforms = [
   { name: 'Phone Call', icon: Phone, desc: 'Direct Audio' }
 ];
 
-const CreateAppointment = () => {
+const CreateAdminAppointment = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const brandGold = "#C5A059";
-  const navyDark = "#161B26";
+  
 
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -236,4 +237,4 @@ const CreateAppointment = () => {
   );
 };
 
-export default CreateAppointment;
+export default CreateAdminAppointment;

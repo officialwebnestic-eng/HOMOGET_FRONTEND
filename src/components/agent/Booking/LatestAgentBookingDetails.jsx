@@ -1,280 +1,90 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { http } from '../../../axios/axios'
-import { DollarSign, Eye, Home, ReceiptIndianRupee, Users, ArrowLeft } from 'lucide-react'
-import { AuthContext } from '../../../context/AuthContext'
-import { motion } from 'framer-motion'
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { http } from '../../../axios/axios';
+import { Home, ReceiptIndianRupee, Users, ArrowLeft, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useTheme } from '../../../context/ThemeContext';
 
 const LatestAgentBookingDetails = () => {
-    const [transaction, setTransaction] = useState(null)
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
-    const { user } = useContext(AuthContext)
-    const { id } = useParams()
-
-    const getData = async () => {
-        try {
-            setLoading(true)
-            const response = await http.get(`/getBookingDetails/${id}`, {
-                withCredentials: true
-            })
-            if (response.data?.success === true) {
-                setTransaction(response.data?.data)
-            }
-        } catch (error) {
-            setError(error.message || "Failed to fetch transaction data")
-            console.error("Error fetching transaction:", error)
-        } finally {
-            setLoading(false)
-        }
-    }
+    const [transaction, setTransaction] = useState(null);
+    const { id } = useParams();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+    const brandGold = "#C5A059";
 
     useEffect(() => {
-        if (id) {
-            getData()
-        }
-    }, [id])
+        const fetch = async () => {
+            const res = await http.get(`/getBookingDetails/${id}`, { withCredentials: true });
+            if (res.data?.success) setTransaction(res.data.data);
+        };
+        if (id) fetch();
+    }, [id]);
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50">
-                <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="h-16 w-16 rounded-full border-4 border-indigo-400 border-t-transparent"
-                ></motion.div>
-            </div>
-        )
-    }
-
-    if (error) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center p-4">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white/80 backdrop-blur-lg rounded-xl shadow-lg p-6 max-w-md w-full"
-                >
-                    <div className="flex flex-col items-center text-center">
-                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">Error Loading Data</h3>
-                        <p className="text-gray-600 mb-6">{error}</p>
-                        <button
-                            onClick={getData}
-                            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                        >
-                            Retry
-                        </button>
-                    </div>
-                </motion.div>
-            </div>
-        )
-    }
-
-
-
-    if (!transaction) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center p-4">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white/80 backdrop-blur-lg rounded-xl shadow-lg p-6 max-w-md w-full text-center"
-                >
-                    <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">No Booking Found</h3>
-                    <p className="text-gray-600">The requested transaction data could not be found.</p>
-                </motion.div>
-            </div>
-        )
-    }
+    if (!transaction) return null;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-4 md:p-8">
-
-            <motion.button
-                whileHover={{ x: -4 }}
-                className="flex items-center text-indigo-600 mb-6"
-                onClick={() => window.history.back()}
-            >
-                <ArrowLeft className="mr-2" size={20} />
-                Back to Home
-            </motion.button>
-
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden"
-            >
-
-                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 text-white">
-                    <h1 className="text-2xl md:text-3xl font-bold">Booking Details</h1>
-                    <p className="text-indigo-100">ID: {transaction._id}</p>
-                </div>
-
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
-
-                    <motion.div
-                        whileHover={{ y: -5 }}
-                        className="bg-gradient-to-br from-white/90 to-indigo-50 rounded-xl shadow-md border border-white/30 overflow-hidden"
-                    >
-                        <div className="bg-indigo-500/10 p-4 border-b border-indigo-100 flex items-center">
-                            <Home className="text-indigo-600 mr-3" size={20} />
-                            <h3 className="text-lg font-semibold text-indigo-800">Property Information</h3>
+        <div className={`min-h-screen p-10 transition-colors duration-700 ${isDark ? 'bg-[#0F1219]' : 'bg-slate-50'}`}>
+            <div className="max-w-6xl mx-auto">
+                <button onClick={() => window.history.back()} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-10"><ArrowLeft size={16}/> Back to Dashboard</button>
+                
+                <div className={`rounded-[3rem] border overflow-hidden ${isDark ? 'bg-[#161B26] border-white/5' : 'bg-white border-slate-100 shadow-xl'}`}>
+                    <div className="p-12 border-b border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <Sparkles size={20} style={{ color: brandGold }} />
+                                <h1 className={`text-3xl font-black italic tracking-tighter ${isDark ? 'text-white' : 'text-slate-900'}`}>Asset <span style={{ color: brandGold }}>Brief.</span></h1>
+                            </div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">REF: {transaction._id}</p>
                         </div>
-                        <div className="p-5 space-y-4">
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Name</span>
-                                <span className="font-medium text-gray-800">{transaction.propertyId?.propertyname || 'N/A'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Type</span>
-                                <span className="font-medium text-gray-800 capitalize">{transaction.propertyId?.propertytype?.toLowerCase() || 'N/A'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Location</span>
-                                <span className="font-medium text-gray-800">{transaction.propertyId?.city}, {transaction.propertyId?.state}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Price</span>
-                                <span className="font-bold text-green-600">₹{transaction.propertyId?.price.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Status</span>
-                                <span className="font-medium text-gray-600">{transaction.propertyId?.status}</span>
-                            </div>
+                        <div className="text-right">
+                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-1">Settlement Status</p>
+                            <span className="text-xs font-black uppercase tracking-widest px-4 py-2 rounded-full bg-[#C5A059]/10" style={{ color: brandGold }}>{transaction.status}</span>
                         </div>
-                    </motion.div>
-                    <motion.div
-                        whileHover={{ y: -5 }}
-                        className="bg-gradient-to-br from-white/90 to-blue-50 rounded-xl shadow-md border border-white/30 overflow-hidden"
-                    >
-                        <div className="bg-blue-500/10 p-4 border-b border-blue-100 flex items-center">
-                            <ReceiptIndianRupee className="text-blue-600 mr-3" size={20} />
-                            <h3 className="text-lg font-semibold text-blue-800">Transaction Details</h3>
-                        </div>
-                        <div className="p-5 space-y-4">
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Date</span>
-                                <span className="font-medium text-gray-800">{new Date(transaction.createdAt).toLocaleDateString()}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Method</span>
-                                <span className="font-medium text-gray-800 capitalize">{transaction.paymentMethod?.toLowerCase()}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Price</span>
-                                <span className="font-bold text-green-600 ">₹{transaction.propertyId?.price}</span>
-                            </div>
-                             <div className="flex justify-between">
-                                <span className="text-gray-600">Transaction Id </span>
-                                <span className="font-bold text-green-600 ">{transaction.transactionId || "N/A"}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-gray-600">Status</span>
-                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${transaction.status === "confirmed" ? "bg-green-100 text-green-800" : transaction.status === "pending" ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800"}`}>
-                                    {transaction.status?.charAt(0).toUpperCase() + transaction.status?.slice(1)}
-                                </span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-gray-600">Payment Status</span>
-                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${transaction.paymentStatus === "paid" ? "bg-green-100 text-green-800" : transaction.status === "pending" ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800"}`}>
-                                    {transaction.paymentStatus?.charAt(0).toUpperCase() + transaction.paymentStatus?.slice(1)}
-                                </span>
-                            </div>
-                        </div>
-                    </motion.div>
+                    </div>
 
-
-                    <motion.div
-                        whileHover={{ y: -5 }}
-                        className="bg-gradient-to-br from-white/90 to-purple-50 rounded-xl shadow-md border border-white/30 overflow-hidden"
-                    >
-                        <div className="bg-purple-500/10 p-4 border-b border-purple-100 flex items-center">
-                            <Users className="text-purple-600 mr-3" size={20} />
-                            <h3 className="text-lg font-semibold text-purple-800">Agent Information</h3>
-                        </div>
-                        <div className="p-5">
-                            <div className="flex items-center space-x-4 mb-4">
-                                <div className="relative">
-                                    
-                                    <img
-                                        src={transaction.sale.agent?.image || '/default-avatar.png'}
-                                        alt={transaction.agentId?.name}
-                                        className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
-                                    />
-                                    <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${transaction.agentId?.status === "Active" ? "bg-green-500" : "bg-red-500"}`}></div>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x border-white/5">
+                        {/* Section 1: Asset */}
+                        <div className="p-10 space-y-6">
+                            <div className="flex items-center gap-3"><Home size={18} style={{ color: brandGold }} /><h3 className="text-[10px] font-black uppercase tracking-widest">Property Information</h3></div>
+                            <div className="space-y-4">
+                                <Detail label="Name" value={transaction.propertyId?.propertyname} isDark={isDark} />
+                                <div className="pt-4 border-t border-dashed border-white/10">
+                                    <p className="text-[9px] font-black uppercase text-slate-500 mb-1">Asset Value</p>
+                                    <p className="text-2xl font-black italic tracking-tighter" style={{ color: brandGold }}>AED {transaction.propertyId?.price?.toLocaleString()}</p>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Section 2: Financials */}
+                        <div className="p-10 space-y-6">
+                            <div className="flex items-center gap-3"><ReceiptIndianRupee size={18} style={{ color: brandGold }} /><h3 className="text-[10px] font-black uppercase tracking-widest">Financial Records</h3></div>
+                            <div className="space-y-4">
+                                <Detail label="Settlement Date" value={new Date(transaction.createdAt).toLocaleDateString()} isDark={isDark} />
+                                <Detail label="Method" value={transaction.paymentMethod} isDark={isDark} />
+                                <Detail label="Reference" value={transaction.transactionId || 'Pending'} isDark={isDark} />
+                            </div>
+                        </div>
+
+                        {/* Section 3: Custodian */}
+                        <div className="p-10 space-y-6">
+                            <div className="flex items-center gap-3"><Users size={18} style={{ color: brandGold }} /><h3 className="text-[10px] font-black uppercase tracking-widest">Assigned Custodian</h3></div>
+                            <div className="flex items-center gap-4">
+                                <img src={transaction.agentId?.profilePhoto} className="w-12 h-12 rounded-2xl border border-white/10" alt="" />
                                 <div>
-                                    <h4 className="font-semibold text-gray-800">{transaction.agentId?.name || 'N/A'}</h4>
-                                    <p className="text-sm text-gray-600">{transaction.agentId?.email}</p>
-                                </div>
-                            </div>
-                            <div className="space-y-3">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Location</span>
-                                    <span className="font-medium text-gray-800">{transaction.agentId?.city}, {transaction.agentId?.state}</span>
-                                </div>
-                                                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Phone No</span>
-                                    <span className="font-medium text-gray-800">{transaction.agentId?.phone}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Status</span>
-                                    <span className={`font-medium ${transaction.agentId?.status === "Active" ? "text-green-600" : "text-red-600"}`}>
-                                        {transaction.agentId?.status}
-                                    </span>
+                                    <p className="text-xs font-black uppercase tracking-tight">{transaction.agentId?.name}</p>
+                                    <p className="text-[9px] font-bold text-slate-500">{transaction.agentId?.email}</p>
                                 </div>
                             </div>
                         </div>
-                    </motion.div>
+                    </div>
                 </div>
-
-
-
-
-
-                {transaction.propertyId?.image?.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="bg-gradient-to-r from-amber-50 to-orange-50 border-t border-amber-100 p-6"
-                    >
-                        <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-                            <Eye className="text-amber-600 mr-3" size={20} />
-                            Property Images
-                        </h3>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {transaction.sale.property.images.map((img, index) => (
-                                <motion.div
-                                    key={index}
-                                    whileHover={{ scale: 1.03 }}
-                                    className="overflow-hidden rounded-xl shadow-md border border-white/50 bg-white/90 backdrop-blur-sm"
-                                >
-                                    <img
-                                        src={img}
-                                        alt={`Property ${index + 1}`}
-                                        className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300"
-                                    />
-                                </motion.div>
-                            ))}
-                        </div>
-                    </motion.div>
-                )}
-            </motion.div>
+            </div>
         </div>
-    )
-}
+    );
+};
 
-export default LatestAgentBookingDetails
+const Detail = ({ label, value, isDark }) => (
+    <div><p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-0.5">{label}</p><p className={`text-xs font-bold ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>{value || '—'}</p></div>
+);
+
+export default LatestAgentBookingDetails;

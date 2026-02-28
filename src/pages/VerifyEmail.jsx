@@ -1,86 +1,93 @@
-import { motion } from "framer-motion";
-import { useTheme } from "../context/ThemeContext";
+import React, { useEffect, useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import { useLocation, useNavigate } from "react-router-dom";
-
-
-
-
+import { useLocation, useNavigate, Link } from "react-router-dom";
+import { Loader2, MailCheck, ChevronLeft, RefreshCcw, ShieldAlert } from "lucide-react";
+import { navbarlogo } from "../ExportImages";
+import { useTheme } from "../context/ThemeContext";
 import { http } from "../axios/axios";
 import { useToast } from "../model/SuccessToasNotification";
 
 const VerifyEmail = () => {
   const { theme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { addToast } = useToast();
+  const isDark = theme === "dark";
+
+  // 1. Session & State Management
+  const emailFromState = location.state?.email;
+  const hasRedirected = useRef(false);
+
   const [currentBg, setCurrentBg] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [countdown, setCountdown] = useState(30);
-  const navigate = useNavigate();
-  const { addToast } = useToast()
 
+  const backgrounds = [
+    "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=2070&q=80",
+    "https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?auto=format&fit=crop&w=2070&q=80",
+    "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=2070&q=80"
+  ];
 
+  const { register, handleSubmit, formState: { errors } } = useForm();
 
+  // Redirect if no email is found (Prevents direct URL access)
+  useEffect(() => {
+    if (!emailFromState && !hasRedirected.current) {
+      hasRedirected.current = true;
+      addToast("Session expired. Please sign up again.", "error");
+      navigate("/signup");
+    }
+  }, [emailFromState, navigate, addToast]);
 
-    const bg1 =
-    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
-
-  const bg2 =
-    "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cHJvcGVydHl8ZW58MHx8MHx8fDA%3D";
-  const bg3 =
-    "https://images.unsplash.com/photo-1602941525421-8f8b81d3edbb?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvcGVydHl8ZW58MHx8MHx8fDA%3D";
-
-
-  const backgrounds = [bg1,bg2,bg3];
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
-
-
+  // 2. Submit Verification Code
   const onSubmit = async (data) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     try {
-      setIsSubmitting(true);
-
-
-      const response = await http.post(`/createuser`, data);
-
-
+      const response = await http.post(`/createuser`, {
+        code: data.code,
+        email: emailFromState 
+      });
 
       if (response.data?.success) {
-        addToast(" registered successfully!", "success");
-        navigate("/login");
-      } else {
-        addToast(response.data?.message || "Invalid OTP. Please try again.");
+        addToast("Account Verified Successfully!", "success");
+        setTimeout(() => navigate("/login", { replace: true }), 1500);
       }
-
     } catch (error) {
-      console.error("OTP verification error:", error);
-      addToast(
-        error.response?.data?.message || "Failed to verify OTP. Please try again.", "error"
-      );
+      const message = error.response?.data?.message || "Invalid or expired code.";
+      addToast(message, "error");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // 3. Resend OTP Functionality
   const handleResendOtp = async () => {
-    try {
+    if (countdown > 0 || isSubmitting) return;
 
-      setCountdown(30);
-      addToast("New OTP sent to your email!", "success");
+    try {
+      setIsSubmitting(true);
+      const response = await http.post("/resend-otp", { email: emailFromState });
+
+      if (response.data?.success) {
+        setCountdown(30);
+        addToast("A new security code has been sent to your inbox.", "success");
+      }
     } catch (error) {
-      addToast(error.message || "Failed to resend OTP", "error");
+      addToast(error.response?.data?.message || "Failed to resend code.", "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-
+  // Timers & Background Cycle
   useEffect(() => {
-    const timer = countdown > 0 && setInterval(() => {
-      setCountdown(countdown - 1);
-    }, 1000);
+    let timer;
+    if (countdown > 0) {
+      timer = setInterval(() => setCountdown((prev) => prev - 1), 1000);
+    }
     return () => clearInterval(timer);
   }, [countdown]);
 
@@ -89,148 +96,117 @@ const VerifyEmail = () => {
       setCurrentBg((prev) => (prev + 1) % backgrounds.length);
     }, 6000);
     return () => clearInterval(interval);
-  }, []);
+  }, [backgrounds.length]);
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen p-4 overflow-hidden">
-      {/* Animated background slider */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
-        {backgrounds.map((bg, index) => (
+    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
+      {/* Cinematic Background */}
+      <div className="absolute inset-0 z-0">
+        <AnimatePresence mode="wait">
           <motion.div
-            key={index}
-            className="absolute top-0 left-0 w-full h-full bg-cover bg-center"
-            style={{
-              backgroundImage: `url(${bg})`,
-              zIndex: 0,
-            }}
-            initial={{ opacity: 0 }}
-            animate={{
-              opacity: currentBg === index ? 1 : 0,
-              scale: currentBg === index ? 1 : 1.05,
-            }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
+            key={currentBg}
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 2.5 }}
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${backgrounds[currentBg]})` }}
           />
-        ))}
-        <div className="absolute top-0 left-0 w-full h-full bg-black/40"></div>
+        </AnimatePresence>
+        <div className={`absolute inset-0 ${isDark ? "bg-black/75" : "bg-black/55"}`} />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, type: "spring" }}
-        className={`relative w-full max-w-md rounded-3xl p-8 shadow-2xl backdrop-blur-sm bg-white/15 border-2 border-white/40 ${theme === "dark" ? "bg-gray-900/40" : "bg-white/20"
-          }`}
-      >
-        <motion.div
-          initial={{ scale: 0.9 }}
-          animate={{ scale: 1 }}
-          transition={{
-            type: "spring",
-            stiffness: 500,
-            damping: 15
-          }}
-          className="text-center mb-8"
-        >
-          <h2 className="text-4xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
-            Verify OTP
-          </h2>
-          <p className="text-white/80">Enter the 6-digit code sent to your email</p>
-        </motion.div>
+      {/* Navigation */}
+      <div className="absolute top-8 left-8 z-20">
+        <Link to="/signup" className="flex items-center gap-2 text-white/70 hover:text-[#C5A059] transition-colors font-bold text-[10px] tracking-widest uppercase">
+          <ChevronLeft size={14} /> Back to Signup
+        </Link>
+      </div>
 
-        <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <label className="block text-sm font-medium mb-2" htmlFor="otp">
-              OTP Code
-            </label>
+      {/* Verification Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`relative z-10 w-full max-w-[460px] p-8 sm:p-12 rounded-[3rem] backdrop-blur-3xl border shadow-2xl ${
+          isDark ? "bg-black/40 border-white/10" : "bg-white/90 border-white/20"
+        }`}
+      >
+        <div className="text-center mb-10">
+          <div className="inline-block relative mb-6">
+            <div className="absolute inset-0 rounded-full bg-[#C5A059] blur-3xl opacity-20 animate-pulse" />
+            <img src={navbarlogo} alt="Logo" className={`w-20 h-20 object-contain relative z-10 mx-auto ${isDark ? 'brightness-150' : ''}`} />
+          </div>
+          <h2 className={`text-2xl font-black tracking-tight uppercase mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            Security <span className="text-[#C5A059]">Verification</span>
+          </h2>
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] opacity-40 mb-2">Verification code sent to</p>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#C5A059]/10 border border-[#C5A059]/20">
+            <p className="text-xs font-bold text-[#C5A059]">{emailFromState || "Waiting for session..."}</p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <div className="relative">
+            <label className="text-[10px] font-black uppercase tracking-widest text-center block mb-4 opacity-60">Enter 6-Digit Code</label>
             <input
-              className="w-full p-3 rounded-xl bg-white/25 border-2 border-white/40 placeholder-white/60 text-white focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all text-center text-2xl tracking-widest"
-              id="otp"
               type="text"
-              placeholder="••••••"
               maxLength="6"
-              {...register("code", {
-                required: "OTP is required",
-                pattern: {
-                  value: /^[0-9]{6}$/,
-                  message: "Please enter a valid 6-digit OTP",
-                },
+              autoComplete="one-time-code"
+              placeholder="· · · · · ·"
+              className={`w-full py-6 rounded-2xl text-center text-4xl font-black tracking-[0.4em] border transition-all duration-300 outline-none shadow-inner ${
+                isDark 
+                  ? "bg-black/40 border-white/10 text-white focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059]/30" 
+                  : "bg-gray-100 border-gray-200 text-gray-900 focus:border-[#C5A059]"
+              }`}
+              {...register("code", { 
+                required: true, 
+                pattern: { value: /^[0-9]{6}$/, message: "Must be 6 digits" } 
               })}
             />
-            {errors.otp && (
-              <motion.p
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="text-pink-300 mt-2 text-sm"
-              >
-                {errors.code.message}
+            {errors.code && (
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[#C5A059] text-[10px] font-black mt-3 text-center uppercase tracking-widest">
+                <ShieldAlert size={12} className="inline mr-1 mb-0.5" /> {errors.code.message || "Invalid Code Format"}
               </motion.p>
             )}
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-center"
-          >
-            {countdown > 0 ? (
-              <p className="text-white/70 text-sm">
-                Resend OTP in {countdown} seconds
-              </p>
-            ) : (
-              <button
-                type="button"
-                onClick={handleResendOtp}
-                className="text-purple-300 hover:text-pink-300 font-medium text-sm hover:underline transition"
-              >
-                Resend OTP
-              </button>
-            )}
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
+          <div className="space-y-4">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               disabled={isSubmitting}
-              className={`w-full py-3 px-4 rounded-xl font-bold text-white shadow-lg transition-all duration-300 ${isSubmitting
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500"
-                }`}
               type="submit"
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#C5A059] to-[#8E7037] text-black font-black uppercase text-[11px] tracking-[0.2em] shadow-xl shadow-[#C5A059]/20 flex items-center justify-center gap-3 disabled:opacity-50 transition-all"
             >
-              {isSubmitting ? "Verifying..." : "Verify OTP"}
+              {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <MailCheck size={18} />}
+              {isSubmitting ? "Authenticating..." : "Confirm & Activate"}
             </motion.button>
-          </motion.div>
+
+            <div className="text-center pt-2">
+              {countdown > 0 ? (
+                <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest opacity-30">
+                  <RefreshCcw size={12} className="animate-spin-slow" />
+                  <span>Resend available in {countdown}s</span>
+                </div>
+              ) : (
+                <button 
+                  type="button" 
+                  onClick={handleResendOtp}
+                  disabled={isSubmitting}
+                  className="text-[10px] font-black text-[#C5A059] uppercase tracking-widest hover:text-[#8E7037] hover:underline transition-all disabled:opacity-30"
+                >
+                  {isSubmitting ? "Sending..." : "Resend Security Code"}
+                </button>
+              )}
+            </div>
+          </div>
         </form>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="text-center mt-6 text-sm"
-        >
-          <p className="text-white/70">
-            Remember your password?{' '}
-            <a
-              href="/login"
-              className="text-purple-300 hover:text-pink-300 font-medium hover:underline transition"
-            >
-              Sign In
-            </a>
+        <div className="mt-10 pt-6 border-t border-white/5 text-center">
+          <p className="text-[9px] uppercase tracking-widest font-bold opacity-30">
+            Secure Encrypted Session • 256-bit AES
           </p>
-          <p className="text-xs mt-4 text-white/50">
-            © {new Date().getFullYear()} Cartoon Network. All rights reserved.
-          </p>
-        </motion.div>
+        </div>
       </motion.div>
     </div>
   );

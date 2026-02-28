@@ -1,5 +1,6 @@
-import { motion } from "framer-motion";
-import { useTheme } from "../context/ThemeContext"; // Adjust path as needed
+import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "../context/ThemeContext";
 import {
   Search,
   FileX,
@@ -14,6 +15,7 @@ import {
   Wifi,
   RefreshCw,
   Plus,
+  Sparkles,
 } from "lucide-react";
 
 const EmptyStateModel = ({
@@ -26,9 +28,14 @@ const EmptyStateModel = ({
   actionButtonText = "Add New",
   onActionClick,
   customIcon,
-  size = "medium", // small, medium, large
+  size = "medium",
 }) => {
   const { theme } = useTheme();
+  const isDark = theme === "dark";
+  
+  // Brand Color Tokens
+  const brandGold = "#C5A059";
+  const brandOrange = "#F28C05"; // From your "FIND" button screenshot
 
   const iconMap = {
     inquiries: MessageSquare,
@@ -48,138 +55,56 @@ const EmptyStateModel = ({
 
   const sizeConfig = {
     small: {
-      padding: "p-6",
-      iconSize: "h-16 w-16 mb-3",
-      titleSize: "text-base",
-      messageSize: "text-xs",
-      buttonPadding: "px-3 py-1.5 text-xs",
+      container: "p-6 max-w-sm",
+      iconBox: "w-16 h-16",
+      iconSize: 24,
+      titleSize: "text-lg",
+      messageSize: "text-[10px]",
     },
     medium: {
-      padding: "p-8",
-      iconSize: "h-24 w-24 mb-4",
-      titleSize: "text-lg",
-      messageSize: "text-sm",
-      buttonPadding: "px-4 py-2 text-sm",
+      container: "p-12 max-w-xl",
+      iconBox: "w-24 h-24",
+      iconSize: 40,
+      titleSize: "text-3xl",
+      messageSize: "text-xs",
     },
     large: {
-      padding: "p-12",
-      iconSize: "h-32 w-32 mb-6",
-      titleSize: "text-xl",
-      messageSize: "text-base",
-      buttonPadding: "px-6 py-3 text-base",
+      container: "p-20 max-w-3xl",
+      iconBox: "w-32 h-32",
+      iconSize: 56,
+      titleSize: "text-5xl",
+      messageSize: "text-sm",
     },
   };
+
   const config = sizeConfig[size] || sizeConfig.medium;
 
-  const colorSchemes = {
-    inquiries: {
-      iconBg: theme === "dark" ? "bg-blue-900/20" : "bg-blue-50",
-      iconColor: theme === "dark" ? "text-blue-400" : "text-blue-500",
-    },
-    properties: {
-      iconBg: theme === "dark" ? "bg-emerald-900/20" : "bg-emerald-50",
-      iconColor: theme === "dark" ? "text-emerald-400" : "text-emerald-500",
-    },
-    users: {
-      iconBg: theme === "dark" ? "bg-purple-900/20" : "bg-purple-50",
-      iconColor: theme === "dark" ? "text-purple-400" : "text-purple-500",
-    },
-    bookings: {
-      iconBg: theme === "dark" ? "bg-amber-900/20" : "bg-amber-50",
-      iconColor: theme === "dark" ? "text-amber-400" : "text-amber-500",
-    },
-    appointments: {
-      iconBg: theme === "dark" ? "bg-cyan-900/20" : "bg-cyan-50",
-      iconColor: theme === "dark" ? "text-cyan-400" : "text-cyan-500",
-    },
-    search: {
-      iconBg: theme === "dark" ? "bg-indigo-900/20" : "bg-indigo-50",
-      iconColor: theme === "dark" ? "text-indigo-400" : "text-indigo-500",
-    },
-    filter: {
-      iconBg: theme === "dark" ? "bg-pink-900/20" : "bg-pink-50",
-      iconColor: theme === "dark" ? "text-pink-400" : "text-pink-500",
-    },
-    error: {
-      iconBg: theme === "dark" ? "bg-red-900/20" : "bg-red-50",
-      iconColor: theme === "dark" ? "text-red-400" : "text-red-500",
-    },
-    network: {
-      iconBg: theme === "dark" ? "bg-orange-900/20" : "bg-orange-50",
-      iconColor: theme === "dark" ? "text-orange-400" : "text-orange-500",
-    },
-    database: {
-      iconBg: theme === "dark" ? "bg-teal-900/20" : "bg-teal-50",
-      iconColor: theme === "dark" ? "text-teal-400" : "text-teal-500",
-    },
-    default: {
-      iconBg: theme === "dark" ? "bg-slate-800/50" : "bg-slate-100",
-      iconColor: theme === "dark" ? "text-slate-400" : "text-slate-500",
-    },
-  };
-
-  const colors = colorSchemes[type] || colorSchemes.default;
-
+  // Luxury Animation Variants
   const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, scale: 0.98, y: 10 },
     visible: {
       opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: "easeOut", staggerChildren: 0.1 },
-    },
-  };
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
-  };
-  const iconVariants = {
-    hidden: { scale: 0, rotate: -180 },
-    visible: {
       scale: 1,
-      rotate: 0,
-      transition: { type: "spring", stiffness: 200, damping: 10, delay: 0.2 },
-    },
-    hover: { scale: 1.1, rotate: 5, transition: { duration: 0.2 } },
-  };
-  const floatingVariants = {
-    float: {
-      y: [-2, 2, -2],
-      transition: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+      y: 0,
+      transition: { 
+        duration: 0.8, 
+        ease: [0.16, 1, 0.3, 1], 
+        staggerChildren: 0.15 
+      },
     },
   };
 
-  const getDefaultTitle = () => {
-    const titles = {
-      inquiries: "No Inquiries Found",
-      properties: "No Properties Available",
-      users: "No Users Found",
-      bookings: "No Bookings Yet",
-      appointments: "No Appointments Scheduled",
-      search: "No Search Results",
-      filter: "No Results Found",
-      error: "Something Went Wrong",
-      network: "Connection Issue",
-      database: "No Data Available",
-      default: "Nothing Here Yet",
-    };
-    return title || titles[type] || titles.default;
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
   };
 
-  const getDefaultMessage = () => {
-    const messages = {
-      inquiries: "You haven't received any inquiries yet. Check back later or adjust your filters.",
-      properties: "No properties match your current criteria. Try adjusting your search parameters.",
-      users: "No users found in the system. They may not have registered yet.",
-      bookings: "No bookings have been made yet. Start by creating your first booking.",
-      appointments: "No appointments are scheduled. Book your first appointment to get started.",
-      search: "We couldn't find any results matching your search terms. Try different keywords.",
-      filter: "No items match your current filters. Try broadening your search criteria.",
-      error: "We encountered an unexpected error. Please try again or contact support.",
-      network: "Unable to connect to the server. Please check your internet connection.",
-      database: "The database appears to be empty or unavailable at the moment.",
-      default: "This section is currently empty. Content will appear here when available.",
-    };
-    return message || messages[type] || messages.default;
+  const ringVariants = {
+    animate: {
+      scale: [1, 1.15, 1],
+      opacity: [0.1, 0.25, 0.1],
+      transition: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+    }
   };
 
   return (
@@ -187,98 +112,113 @@ const EmptyStateModel = ({
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className={`rounded-2xl shadow-xl text-center relative overflow-hidden transition-all duration-500
-  ${theme === "dark"
-    ? "bg-gradient-to-br from-red-400 via-rose-00 to-red-400 border-red-800/50 hover:shadow-pink-900/40"
-    : "bg-gradient-to-br from-pink-100 via-rose-200 to-amber-200 border-rose-200 hover:shadow-rose-400/40"
-  }
-  border backdrop-blur-xl hover:scale-[1.03]`}
+      className={`relative mx-auto overflow-hidden rounded-[3rem] border text-center transition-all duration-700
+        ${config.container}
+        ${isDark 
+          ? "bg-[#0F1219] border-white/5 shadow-[0_40px_80px_rgba(0,0,0,0.7)]" 
+          : "bg-white border-slate-100 shadow-[0_40px_80px_rgba(0,0,0,0.04)]"
+        }`}
     >
-      {/* Background Effects */}
-      <div
-        className={`absolute top-0 right-0 w-32 h-32 ${colors.iconBg} rounded-full blur-3xl opacity-30`}
-      ></div>
-      <div
-        className={`absolute bottom-0 left-0 w-24 h-24 ${colors.iconBg} rounded-full blur-2xl opacity-20`}
-      ></div>
+      {/* 1. Subtle Background Accents */}
+      <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#C5A059] to-transparent opacity-30" />
+      <motion.div 
+        animate={{ opacity: [0.03, 0.08, 0.03], scale: [1, 1.1, 1] }}
+        transition={{ duration: 8, repeat: Infinity }}
+        className="absolute -bottom-32 -left-32 w-80 h-80 rounded-full blur-[120px]" 
+        style={{ backgroundColor: brandGold }} 
+      />
 
-      {/* Icon with animation and glow */}
-      <motion.div variants={itemVariants} className="relative z-10 p-4">
-        <motion.div
-          variants={iconVariants}
-          whileHover="hover"
-          animate="float"
-          className={`mx-auto ${sizeConfig[size]?.iconSize} ${colors.iconBg} rounded-2xl flex items-center justify-center backdrop-blur-sm relative overflow-hidden cursor-pointer`}
-        >
-          {/* Glow overlay */}
-          <div
-            className={`absolute inset-0 ${colors.iconBg} opacity-0 group-hover:opacity-50 transition-opacity duration-300`}
-          ></div>
+      {/* 2. Animated Central Icon Hub */}
+      <motion.div variants={itemVariants} className="relative flex justify-center mb-10">
+        <div className={`relative ${config.iconBox} flex items-center justify-center`}>
+          
+          {/* Pulsing Aura */}
+          <motion.div 
+            variants={ringVariants}
+            animate="animate"
+            className="absolute inset-0 rounded-full border border-[#C5A059] opacity-20" 
+          />
+          
+          {/* Rotating Orbital Border */}
+          <motion.div 
+            animate={{ rotate: -360 }}
+            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+            className="absolute -inset-6 rounded-full border border-dashed border-[#C5A059]/10" 
+          />
 
-          {/* Animated Icon */}
-          <motion.div animate={floatingVariants.float} className="relative z-10">
-            <IconComponent className={`${sizeConfig[size]?.iconSize} ${colors.iconColor}`} />
+          {/* Main Icon Vessel */}
+          <motion.div
+            whileHover={{ scale: 1.03, rotate: -2 }}
+            className={`relative z-10 w-full h-full flex items-center justify-center rounded-[2.5rem] overflow-hidden border border-[#C5A059]/20 shadow-inner
+              ${isDark ? "bg-[#161B22]" : "bg-slate-50"}`}
+          >
+            <IconComponent 
+              size={config.iconSize} 
+              style={{ color: brandGold }} 
+              strokeWidth={1}
+            />
+            {/* Glass Reflection */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
           </motion.div>
 
-          {/* Sparkle effects */}
-          <div className="absolute inset-0">
-            {[...Array(3)].map((_, i) => (
-              <motion.div
-                key={i}
-                className={`absolute w-1 h-1 ${colors.iconColor} rounded-full opacity-0`}
-                style={{
-                  top: `${20 + i * 20}%`,
-                  left: `${30 + i * 15}%`,
-                }}
-                animate={{
-                  opacity: [0, 1, 0],
-                  scale: [0, 1, 0],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  delay: i * 0.5,
-                }}
-              />
-            ))}
-          </div>
-        </motion.div>
+          <motion.div
+            animate={{ opacity: [0.2, 1, 0.2], y: [0, -5, 0] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            className="absolute -top-4 -right-4"
+          >
+            <Sparkles size={24} style={{ color: brandGold }} />
+          </motion.div>
+        </div>
       </motion.div>
 
-      {/* Title and message */}
-      <motion.div variants={itemVariants} className="relative z-10 px-4">
-        <h3 className={`font-semibold mb-2 ${theme === "dark" ? "text-slate-100" : "text-slate-900"} ${sizeConfig[size]?.titleSize}`}>
-          {title || getDefaultTitle()}
+      {/* 3. Sanctuary Typography Pattern */}
+      <motion.div variants={itemVariants} className="relative z-10 space-y-4">
+        <h3 className={`font-extrabold tracking-tighter leading-none
+          ${isDark ? "text-white" : "text-[#1A1A1A]"} ${config.titleSize}`}>
+          {title || "Empty"} <span className="italic font-serif" style={{ color: brandGold }}>Registry.</span>
         </h3>
-        <p className={`leading-relaxed ${theme === "dark" ? "text-slate-400" : "text-slate-600"} ${sizeConfig[size]?.messageSize}`}>
-          {message || getDefaultMessage()}
-        </p>
+        
+        <div className="flex items-center justify-center gap-3">
+            <div className="h-[1px] w-8 opacity-30" style={{ backgroundColor: brandGold }} />
+            <p className={`font-black uppercase tracking-[0.4em] opacity-60 
+              ${isDark ? "text-slate-400" : "text-slate-500"} ${config.messageSize}`}>
+              {message || "The requested portfolio collection is currently unavailable."}
+            </p>
+            <div className="h-[1px] w-8 opacity-30" style={{ backgroundColor: brandGold }} />
+        </div>
       </motion.div>
 
-      {/* Action Buttons */}
+      {/* 4. Luxury Action Controls */}
       {(showResetButton || showActionButton) && (
         <motion.div
           variants={itemVariants}
-          className="flex flex-col sm:flex-row gap-3 justify-center mt-6 px-4 relative z-10"
+          className="flex flex-col sm:flex-row gap-5 justify-center mt-14 relative z-10"
         >
           {showResetButton && onResetFilters && (
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ y: -2, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.02)" }}
+              whileTap={{ scale: 0.97 }}
               onClick={onResetFilters}
-              className={`${sizeConfig[size]?.buttonPadding} ${theme === "dark" ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 border-emerald-500/30" : "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 border-emerald-200"} rounded-xl font-semibold transition-all duration-300 border backdrop-blur-sm flex items-center gap-2 justify-center hover:shadow-xl hover:shadow-emerald-500/30`}
+              className={`group flex items-center gap-3 justify-center px-10 py-4 rounded-full font-black uppercase text-[10px] tracking-[0.3em] transition-all border
+                ${isDark 
+                  ? "border-white/10 text-white" 
+                  : "border-slate-200 text-[#1A1A1A]"}`}
             >
-              <RefreshCw className="w-4 h-4" /> Reset Filters
+              <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-700" />
+              Sync Database
             </motion.button>
           )}
+
           {showActionButton && onActionClick && (
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ y: -3, boxShadow: `0 20px 40px -10px rgba(242, 140, 5, 0.4)` }}
+              whileTap={{ scale: 0.97 }}
               onClick={onActionClick}
-              className={`${sizeConfig[size]?.buttonPadding} ${theme === "dark" ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 border-indigo-500/30" : "bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 border-indigo-200"} rounded-xl font-semibold transition-all duration-300 border backdrop-blur-sm flex items-center gap-2 justify-center hover:shadow-xl hover:shadow-indigo-500/30`}
+              className="group flex items-center gap-3 justify-center px-10 py-4 rounded-full font-black uppercase text-[10px] tracking-[0.3em] text-white transition-all shadow-xl"
+              style={{ backgroundColor: brandOrange }}
             >
-              <Plus className="w-4 h-4" /> {actionButtonText}
+              <Plus size={16} strokeWidth={3} />
+              {actionButtonText}
             </motion.button>
           )}
         </motion.div>
