@@ -12,7 +12,6 @@ const Roles = () => {
   const { theme } = useTheme(); 
   const isDark = theme === 'dark';
   const navigate = useNavigate();
-
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({ roleName: "" });
   const [showFilters, setShowFilters] = useState(false);
@@ -24,9 +23,8 @@ const Roles = () => {
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm();
   const LoadingModel = useLoading({ type: "list", count: 3, showIcon: true });
 
-  // --- HOMOGET BRAND THEME TOKENS ---
-  const brandGold = "#C5A059";
   
+  const brandGold = "#C5A059";
   const themeStyles = {
     light: {
       background: 'bg-[#F9FAFB]',

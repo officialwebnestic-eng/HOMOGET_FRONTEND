@@ -40,7 +40,7 @@ if (response?.data?.success) {
   }
 };
 
-  const LoginUser = async (data) => {
+ const LoginUser = async (data) => {
   try {
     const response = await http.post("/loginuser", data, {
       withCredentials: true,
@@ -48,46 +48,41 @@ if (response?.data?.success) {
 
     if (response.status === 200 && response.data?.success) {
       const { userData: user } = response.data;
+      
+      // Update Context State
       setUserDetails({
         id: user._id,
         role: user.role,
-        firstname: user.firstname || user.name || "", // Check both possible name fields
+        firstname: user.firstname || user.name || "",
         email: user.email,
       });
 
       addToast("Login successful", "success");
 
-      const role = user.role?.trim().toLowerCase();
+      // Normalize role for comparison
+      const role = user.role?.toLowerCase().trim();
+
       setTimeout(() => {
-        switch (role) {
-          case "admin":
-            navigate("/admin-dashboard");
-            break;
-          case "user":
-            navigate("/");
-            break;
-          case "agent":
-            navigate("/agent-dashboard");
-            break;
-          default:
-            navigate("/"); // Safe fallback
-            break;
+        if (role === "admin") {
+          // 1. Role is Admin
+          navigate("/admin-dashboard");
+        } else if (role !== "admin" && role !== "user") {
+          // 2. Role is NOT admin AND NOT user (Agent/Staff/etc)
+          navigate("/agent-dashboard");
+        } else {
+          // 3. Role is User (or anything else)
+          navigate("/");
         }
-      }, 100); 
+      }, 100);
 
     } else {
       addToast(response.data?.message || "Invalid credentials", "error");
     }
   } catch (err) {
-    // Standardize error message extraction
-    const errorMessage = err.response?.data?.message || "Something went wrong. Please try again.";
+    const errorMessage = err.response?.data?.message || "Something went wrong.";
     addToast(errorMessage, "error");
-    console.error("Login process error:", err);
   }
 };
-
-
-
 
   return {
     registerUser,
