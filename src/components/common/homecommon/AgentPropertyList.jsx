@@ -1,13 +1,22 @@
 import { useEffect, useState } from "react";
 import { http } from "../../../axios/axios";
 import { useTheme } from "../../../context/ThemeContext";
-import { motion } from "framer-motion";
-import { MapPin, Bed, Ruler, Bath, Phone, Mail, ArrowRight, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  MapPin, Bed, Ruler, Bath, Phone, Mail, 
+  ArrowUpRight, Search, Filter, LayoutGrid, List,
+  Building2, Wallet, Tag,
+  ArrowRight
+} from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 
 const AgentPropertyList = () => {
   const [latestProperty, setLatestProperty] = useState([]);
+  const [filteredProperties, setFilteredProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -15,7 +24,10 @@ const AgentPropertyList = () => {
     const fetchProperties = async () => {
       try {
         const res = await http.get("/getlatestproperty");
-        if (res.data.success) setLatestProperty(res.data.data);
+        if (res.data.success) {
+          setLatestProperty(res.data.data);
+          setFilteredProperties(res.data.data);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -25,109 +37,143 @@ const AgentPropertyList = () => {
     fetchProperties();
   }, []);
 
+  // Filter Logic
+  useEffect(() => {
+    let result = latestProperty;
+    if (activeFilter !== "All") {
+      result = result.filter(p => p.listingtype === activeFilter || p.propertyListingType === activeFilter.toLowerCase());
+    }
+    if (searchQuery) {
+      result = result.filter(p => 
+        p.propertyname.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        p.city?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    setFilteredProperties(result);
+  }, [activeFilter, searchQuery, latestProperty]);
+
   if (loading) return null;
 
+  const cardBg = isDark ? 'bg-[#11141B] border-white/5' : 'bg-white border-slate-100 shadow-sm';
+
   return (
-    <section className={` px-6 mb-5 md:mb-10 ${isDark ? 'bg-[#0a0a0c] ' : 'bg-gray-50'} `}>
+    <section className={`py-16 px-6 ${isDark ? 'bg-[#0a0a0c]' : 'bg-slate-50'}`}>
       <div className="max-w-7xl mx-auto">
         
-        {/* SECTION 1: ELITE SELECTION (Top 3 Large Cards) */}
-        <h2 className={`text-4xl md:text-5xl font-serif mb-12 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-          Featured <span className="text-amber-500 italic">Living</span>
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mb-24">
-          {(latestProperty || []).slice(0, 3).map((property, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -10 }}
-              className="group relative h-[520px] w-full rounded-[3.5rem] overflow-hidden shadow-2xl bg-zinc-900 cursor-pointer"
-            >
-              <img
-                src={property.image?.[0]}
-                alt={property.propertyname}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/100 via-black/20 to-transparent" />
-
-              {/* Top Left Badges */}
-              <div className="absolute top-8 left-8 flex gap-2 z-20">
-                <span className="px-4 py-1.5 bg-amber-500 text-black text-[9px] font-black uppercase rounded-lg shadow-xl">
-                  {property.propertytype || "RESIDENCE"}
-                </span>
-                <span className="px-4 py-1.5 bg-white/10 backdrop-blur-md text-white text-[9px] font-black uppercase rounded-lg border border-white/20">
-                  {property.propertyListingType === 'project' ? 'Off-Plan' : property.listingtype || 'Ready'}
-                </span>
-              </div>
-
-              {/* VERTICAL ACTION ICONS (Top Right) */}
-              <div className="absolute top-8 right-6 flex flex-col gap-3 z-30">
-                <div className="w-10 h-10 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-lg"><FaWhatsapp size={20} /></div>
-                <div className="w-10 h-10 bg-[#3b82f6] text-white rounded-full flex items-center justify-center shadow-lg"><Phone size={18} fill="currentColor" /></div>
-                <div className="w-10 h-10 bg-amber-500 text-black rounded-full flex items-center justify-center shadow-lg"><Mail size={18} /></div>
-              </div>
-
-              {/* Bottom Content */}
-              <div className="absolute bottom-8 left-8 right-8 z-10">
-                <p className="text-amber-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">{property.city}, UAE</p>
-                <h3 className="text-2xl font-serif text-white leading-tight mb-4 group-hover:text-amber-400 transition-colors">{property.propertyname}</h3>
-                
-                <div className="flex items-center justify-between mb-4">
-                   <p className="text-xl font-bold text-white uppercase tracking-tighter">
-                     AED {Number(property.price).toLocaleString()}
-                   </p>
-                   <button className="w-11 h-11 bg-amber-500 rounded-full flex items-center justify-center text-black shadow-lg"><ArrowRight size={22} /></button>
-                </div>
-
-                <div className="flex items-center gap-5 pt-4 border-t border-white/10">
-                  <div className="flex items-center gap-1.5"><Bed size={14} className="text-amber-500" /><span className="text-xs font-bold text-white/80">{property.bedroom || 0}</span></div>
-                  <div className="flex items-center gap-1.5"><Bath size={14} className="text-amber-500" /><span className="text-xs font-bold text-white/80">{property.bathroom || 0}</span></div>
-                  <div className="flex items-center gap-1.5"><Ruler size={14} className="text-amber-500" /><span className="text-[10px] font-bold text-white/80 uppercase">{property.squarefoot} SQFT</span></div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+        {/* --- HEADER & FILTERS --- */}
+         <div className="flex flex-col md:flex-row justify-between  items-center mb-10 gap-4">
+          <div className="flex items-center gap-4">
+             <div className="h-1 w-12  bg-amber-500 rounded-full" />
+             <h2 className={`text-2xl    md:text-4xl font-serif`}>
+                Latest <span className="text-amber-500 italic">Properties</span>
+             </h2>
+          </div>
+          <button 
+            onClick={() => navigate("/propertylisting")}
+            className="px-8 py-3 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center gap-3 hover:bg-black transition-all shadow-lg"
+          >
+            View All Properties <ArrowRight size={16} />
+          </button>
         </div>
 
-        {/* SECTION 2: MARKET INSIGHTS (Properties 4 onwards) */}
-        {latestProperty.length > 3 && (
-          <div className="mt-10">
-            <h2 className={`text-2xl font-serif mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Market <span className="text-amber-500 italic">Insights</span>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {latestProperty.slice(3, 12).map((property, idx) => (
-                <motion.div
-                  key={idx}
-                  whileHover={{ x: 10 }}
-                  className={`group p-4 rounded-[2rem] flex items-center gap-5 cursor-pointer transition-all shadow-lg border ${isDark ? 'bg-[#141417] border-white/5 hover:border-amber-500' : 'bg-white border-gray-100 hover:border-amber-500'}`}
-                >
-                  {/* Small Thumb Image */}
-                  <div className="w-24 h-24 rounded-[1.5rem] overflow-hidden shrink-0 relative bg-zinc-800">
-                    <img src={property.image?.[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" />
-                    <div className="absolute bottom-1 left-1 bg-amber-500 text-[7px] font-black px-1.5 py-0.5 rounded text-black uppercase">
-                       {property.propertyListingType === 'project' ? 'Off-Plan' : 'Ready'}
+      
+        {/* --- PROPERTY GRID --- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <AnimatePresence mode="popLayout">
+            {filteredProperties.map((property, idx) => (
+              <motion.div
+                layout
+                key={property._id || idx}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className={`group rounded-[2.5rem] border overflow-hidden transition-all hover:shadow-2xl ${cardBg}`}
+              >
+                {/* Image Section */}
+                <div className="relative h-72 overflow-hidden">
+                  <img
+                    src={property.image?.[0]}
+                    alt={property.propertyname}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  {/* Floating Badges */}
+                  <div className="absolute top-5 left-5 flex flex-col gap-2">
+                    <span className="px-3 py-1 bg-black/60 backdrop-blur-md text-amber-500 text-[9px] font-black uppercase rounded-lg border border-amber-500/30">
+                      {property.propertytype}
+                    </span>
+                    <span className="px-3 py-1 bg-amber-500 text-black text-[9px] font-black uppercase rounded-lg shadow-lg">
+                      {property.propertyListingType === 'project' ? 'Off-Plan' : property.listingtype}
+                    </span>
+                  </div>
+
+                  {/* Quick Connect Bar */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/40 backdrop-blur-xl p-1.5 rounded-2xl border border-white/10 translate-y-20 group-hover:translate-y-0 transition-transform duration-500">
+                    <button className="p-3 bg-[#25D366] text-white rounded-xl hover:scale-110 transition-all"><FaWhatsapp size={16} /></button>
+                    <button className="p-3 bg-blue-500 text-white rounded-xl hover:scale-110 transition-all"><Phone size={16} /></button>
+                    <button className="p-3 bg-amber-500 text-black rounded-xl hover:scale-110 transition-all"><Mail size={16} /></button>
+                  </div>
+                </div>
+
+                {/* Content Section */}
+                <div className="p-8">
+                  <div className="flex items-center gap-2 mb-3">
+                    <MapPin size={12} className="text-amber-500 shrink-0" />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 truncate">{property.city}, UAE</p>
+                  </div>
+
+                  <h3 className={`text-xl font-bold leading-tight mb-4 group-hover:text-amber-500 transition-colors truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    {property.propertyname}
+                  </h3>
+
+                  {/* Stats Row */}
+                  <div className="grid grid-cols-3 gap-2 py-4 border-y border-slate-500/10 mb-6">
+                    <div className="text-center border-r border-slate-500/10">
+                      <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">Beds</p>
+                      <div className="flex items-center justify-center gap-1">
+                        <Bed size={12} className="text-amber-500"/>
+                        <span className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{property.bedroom || 'S'}</span>
+                      </div>
+                    </div>
+                    <div className="text-center border-r border-slate-500/10">
+                      <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">Baths</p>
+                      <div className="flex items-center justify-center gap-1">
+                        <Bath size={12} className="text-amber-500"/>
+                        <span className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{property.bathroom || 0}</span>
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">Area</p>
+                      <div className="flex items-center justify-center gap-1">
+                        <Ruler size={12} className="text-amber-500"/>
+                        <span className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{property.squarefoot}</span>
+                      </div>
                     </div>
                   </div>
-                  
-                  {/* Small Content */}
-                  <div className="flex-1 min-w-0">
-                    <h4 className={`font-bold text-sm mb-1 truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{property.propertyname}</h4>
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <MapPin className="w-3 h-3 text-amber-500" />
-                      <span className={`text-[10px] font-black uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{property.city}</span>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[9px] font-black uppercase text-slate-500 tracking-tighter mb-0.5">Premium Listing Price</p>
+                      <p className="text-2xl font-black text-amber-500 tracking-tighter">
+                        <span className="text-[10px] mr-1">AED</span>
+                        {Number(property.price).toLocaleString()}
+                      </p>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-amber-500 font-bold text-sm">AED {Number(property.price).toLocaleString()}</p>
-                      <ChevronRight className="w-4 h-4 text-amber-500 opacity-0 group-hover:opacity-100 transition-all" />
-                    </div>
+                    <button className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-black transition-all duration-500">
+                      <ArrowUpRight size={24} />
+                    </button>
                   </div>
-                </motion.div>
-              ))}
-            </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+
+        {/* --- NO RESULTS --- */}
+        {filteredProperties.length === 0 && (
+          <div className="text-center py-40 border-2 border-dashed border-slate-500/20 rounded-[3rem]">
+            <Search size={48} className="mx-auto text-slate-500 mb-4 opacity-20" />
+            <h3 className="text-xl font-bold text-slate-500 uppercase tracking-widest">No matching assets found</h3>
+            <p className="text-xs text-slate-600 mt-2">Try adjusting your filters or search query</p>
           </div>
         )}
 

@@ -27,7 +27,7 @@ function App() {
         <Route path="/verifyemail" element={<VerifyEmail />} />
         <Route path="/forget-password" element={<ResetPassword />} />
         <Route path="/forget-password-request" element={<ResetPasswordRequest />} />
-        <Route path="/verifytoken" element={<VerifyOtp />} />
+        <Route path="/verify-otp  " element={<VerifyOtp />} />
         
         {/* PROTECTED ROUTES */}
         <Route element={<PrivateRoutes />}>

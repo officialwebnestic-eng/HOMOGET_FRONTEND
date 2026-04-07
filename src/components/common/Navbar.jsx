@@ -25,22 +25,14 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
   
   const navigate = useNavigate();
   const location = useLocation();
   const profileDropdownRef = useRef();
   const isDark = theme === "dark";
 
-  // Logic Flags
   const showSidebarToggle = isAuthenticated && user?.role !== "user";
   const showFullMenus = !isAuthenticated || user?.role === "user";
-
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   useEffect(() => { setIsMobileMenuOpen(false); }, [location]);
 
@@ -60,10 +52,9 @@ export default function Navbar() {
     navigate("/login");
   };
 
+  // REPLACED: Removed scroll-based conditional logic
   const currentTheme = {
-    bg: scrollY > 20 
-      ? (isDark ? "bg-black/95 backdrop-blur-xl" : "bg-white/95 backdrop-blur-xl") 
-      : (isDark ? "bg-black" : "bg-white"),
+    bg: isDark ? "bg-black" : "bg-white",
     text: isDark ? "text-white" : "text-slate-900",
     border: isDark ? "border-white/10" : "border-slate-200",
     dropdown: isDark ? "bg-neutral-900 border-white/10 shadow-2xl" : "bg-white border-slate-200 shadow-xl",
@@ -82,14 +73,12 @@ export default function Navbar() {
 
   return (
     <>
-
-
-
-      <nav className={`sticky top-0 z-[50] transition-all duration-500 ${currentTheme.bg} border-b ${currentTheme.border}`}>
+      {/* FIXED: Removed transition-all duration-500 and sticky scroll logic */}
+      <nav className={`sticky top-0 z-[50] ${currentTheme.bg} border-b ${currentTheme.border}`}>
         <div className="max-w-[1700px] mx-auto px-4 md:px-8">
-          <div className={`flex items-center justify-between transition-all duration-300 ${scrollY > 20 ? 'h-16 lg:h-20' : 'h-20 lg:h-24'}`}>
+          {/* FIXED: Height is now constant at h-20 */}
+          <div className="flex items-center justify-between h-20">
             <div className="flex items-center gap-4">
-              
               {showSidebarToggle && (
                 <button 
                   onClick={toggleSidebar} 
@@ -99,9 +88,11 @@ export default function Navbar() {
                 </button>
               )}
               <Link to="/">
-                <img src={navbarlogo} alt="Logo" className={`${scrollY > 20 ? 'h-20 w-20 md:h-30 md:w-30' : 'h-15 w-15  md:h-30 md:w-30'} transition-all`} />
+                {/* FIXED: Logo size is now constant */}
+                <img src={navbarlogo} alt="Logo" className="h-16 w-16 md:h-24 md:w-24 object-contain" />
               </Link>
             </div>
+            
             <div className="hidden xl:flex items-center space-x-5">
               {showFullMenus && (
                 <>
@@ -135,7 +126,6 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* RIGHT: ACTIONS */}
             <div className="flex items-center gap-2 md:gap-4">
               {showFullMenus && isAuthenticated && (
                 <Link to="/userpropertyregister" className={`hidden md:flex items-center gap-2 px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg ${currentTheme.addBtn}`}>
@@ -152,12 +142,11 @@ export default function Navbar() {
                   <Link to="/login" className={`px-4 md:px-6 py-2 text-[10px] font-black uppercase rounded-full border ${currentTheme.border} ${currentTheme.text} hover:bg-slate-50 dark:hover:bg-white/5 transition-colors`}>
                     Login
                   </Link>
-                  <Link to="/signup" className={`px-4 md:px-6 py-2 text-[10px] font-black uppercase rounded-full bg-black text-white shadow-lg hover:bg-slate-800 transition-all`}>
-                  Sign Up
-                    </Link>
+                  <Link to="/signup" className={`px-4 md:px-6 py-2 text-[10px] font-black uppercase rounded-full bg-amber-500 text-black shadow-lg  transition-all`}>
+                    Sign Up
+                  </Link>
                 </div>
               ) : (
-                /* PROFILE DROPDOWN */
                 <div className="relative" ref={profileDropdownRef}>
                   <button 
                     onClick={() => setIsProfileOpen(!isProfileOpen)} 
@@ -171,7 +160,6 @@ export default function Navbar() {
                         initial={{ opacity: 0, y: 10, scale: 0.95 }} 
                         animate={{ opacity: 1, y: 0, scale: 1 }} 
                         exit={{ opacity: 0, y: 10, scale: 0.95 }} 
-                        /* 'absolute right-0' pins this to the right side of the avatar button */
                         className={`absolute right-0 mt-3 w-64 rounded-2xl border p-2 z-[110] ${currentTheme.dropdown}`}
                       >
                         <div className="px-4 py-3 border-b border-black/5 dark:border-white/10 mb-2">
@@ -203,7 +191,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* MOBILE MENU OVERLAY */}
+      {/* MOBILE MENU OVERLAY REMAINS THE SAME */}
       <AnimatePresence>
         {isMobileMenuOpen && showFullMenus && (
           <motion.div 
@@ -213,7 +201,6 @@ export default function Navbar() {
             transition={{ type: "tween", duration: 0.3 }}
             className={`fixed inset-0 z-[200] flex flex-col ${isDark ? 'bg-black text-white' : 'bg-white text-slate-900'}`}
           >
-            {/* Mobile Header */}
             <div className={`flex items-center justify-between p-6 border-b ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
               <div className="flex items-center gap-4">
                 <img src={navbarlogo} alt="Logo" className="h-8" />
@@ -226,7 +213,6 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* Mobile Content */}
             <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8">
               <div className="space-y-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-3 ml-2">Main Menu</p>
@@ -267,12 +253,11 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* Mobile Footer */}
             <div className={`p-6 border-t ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
               {!isAuthenticated ? (
                 <div className="grid grid-cols-2 gap-4">
                   <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className={`py-4 text-center rounded-2xl font-black uppercase text-[10px] border ${currentTheme.border}`}>Login</Link>
-                  <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)} className="py-4 bg-indigo-600 text-white text-center rounded-2xl font-black uppercase text-[10px]">Sign Up</Link>
+                  <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)} className="py-4 bg-amber-400 text-white text-center rounded-2xl font-black uppercase text-[10px]">Sign Up</Link>
                 </div>
               ) : (
                 <Link to="/userpropertyregister" onClick={() => setIsMobileMenuOpen(false)} className="w-full py-4 bg-amber-500 text-black text-center rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-2">

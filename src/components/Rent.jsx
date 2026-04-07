@@ -5,7 +5,6 @@ import {
  
  FiArrowRight,
 } from "react-icons/fi";
-
 import { 
   MapPin,  Home, IndianRupee, Ruler, Bed, Bath, Barcode, Wrench, ChevronDown, 
   Crown
@@ -17,7 +16,6 @@ const Rent = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
-
 
   // --- 1. ALL FILTER FIELDS DEFINITION ---
   const filterFields = [

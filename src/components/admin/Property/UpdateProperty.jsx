@@ -14,7 +14,7 @@ import { useToast } from "../../../model/SuccessToasNotification";
 
 import { 
   DUBAI_AREAS, PROPERTY_TYPES, AMENITIES, 
-  DUBAI_CATEGORIES 
+  
 } from "../../../helpers/AddPropertyHelpers";
 
 const UpdateProperty = () => {

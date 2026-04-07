@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
   Building2, Save, X, Upload, Calendar, 
-  MapPin, Hash, Award, Layers, FileText, Info 
+  MapPin, Hash, Award, Layers, FileText, Info,
+  Mail, Phone, ShieldCheck, Briefcase, Globe, Sparkles
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { http } from "../../../axios/axios";
 import { useTheme } from "../../../context/ThemeContext";
 import { useToast } from "../../../model/SuccessToasNotification";
@@ -17,14 +19,12 @@ const AddDeveloperForm = () => {
   
   const isDark = theme === "dark";
   const brandGold = "#C5A059";
-
   const BACKEND_URL = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:5000";
 
   const [logoPreview, setLogoPreview] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // --- INITIAL STATE (Includes all previous + new fields) ---
   const [formData, setFormData] = useState({
     companyName: "",
     tradeLicenseNumber: "",
@@ -33,13 +33,12 @@ const AddDeveloperForm = () => {
     officialEmail: "",
     contactNumber: "",
     officeAddress: "",
-    developerType: "Private", // New Field
+    developerType: "Private",
     specialization: "", 
-    totalProjects: 0,        // New Field
+    totalProjects: 0,
     details: "",
   });
 
-  // 1. FETCH DATA FOR UPDATE (Maps all fields from DB)
   useEffect(() => {
     if (id) {
       const fetchDeveloper = async () => {
@@ -47,26 +46,11 @@ const AddDeveloperForm = () => {
           const response = await http.get(`/developers/${id}`);
           if (response.data.success) {
             const dev = response.data.data;
-            
             setFormData({
-              companyName: dev.companyName || "",
-              tradeLicenseNumber: dev.tradeLicenseNumber || "",
-              reraRegistrationNumber: dev.reraRegistrationNumber || "",
-              establishedYear: dev.establishedYear || "",
-              officialEmail: dev.officialEmail || "",
-              contactNumber: dev.contactNumber || "",
-              officeAddress: dev.officeAddress || "",
-              developerType: dev.developerType || "Private", // Added
-              specialization: Array.isArray(dev.specialization) 
-                ? dev.specialization.join(", ") 
-                : dev.specialization || "",
-              totalProjects: dev.totalProjects || 0,        // Added
-              details: dev.details || "",
+              ...dev,
+              specialization: Array.isArray(dev.specialization) ? dev.specialization.join(", ") : dev.specialization || ""
             });
-
-            if (dev.companyLogo) {
-              setLogoPreview(`${BACKEND_URL}/agents/${dev.companyLogo}`);
-            }
+            if (dev.companyLogo) setLogoPreview(`${BACKEND_URL}/agents/${dev.companyLogo}`);
           }
         } catch (err) {
           addToast("Failed to load developer data", "error");
@@ -76,7 +60,6 @@ const AddDeveloperForm = () => {
     }
   }, [id, addToast, BACKEND_URL]);
 
-  // 2. HANDLERS
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -90,37 +73,20 @@ const AddDeveloperForm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 3. SUBMIT (MULTIPART/FORM-DATA)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
     const data = new FormData();
-    
-    // Process specialization string into array safely
-    const specializationArray = formData.specialization
-      .split(",")
-      .map((item) => item.trim())
-      .filter((item) => item !== "");
+    const specializationArray = formData.specialization.split(",").map(i => i.trim()).filter(i => i !== "");
 
-    // Append all text fields
     Object.keys(formData).forEach((key) => {
-      if (key === "specialization") {
-        data.append(key, JSON.stringify(specializationArray));
-      } else {
-        data.append(key, formData[key]);
-      }
+      if (key === "specialization") data.append(key, JSON.stringify(specializationArray));
+      else data.append(key, formData[key]);
     });
-
-    if (logoFile) {
-      data.append("companyLogo", logoFile);
-    }
+    if (logoFile) data.append("companyLogo", logoFile);
 
     try {
-      const response = id 
-        ? await http.put(`/developers/${id}`, data)
-        : await http.post(`/developers`, data);
-
+      const response = id ? await http.put(`/developers/${id}`, data) : await http.post(`/developers`, data);
       if (response.data.success) {
         addToast(id ? "Registry Updated" : "Developer Enrolled", "success");
         navigate("/viewdevelopers");
@@ -132,152 +98,191 @@ const AddDeveloperForm = () => {
     }
   };
 
-  // Styles
-  const inputStyle = `w-full px-6 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none border transition-all ${
-    isDark ? "bg-[#161B26] border-white/5 text-white focus:border-[#C5A059]" : "bg-white border-slate-200 focus:border-[#C5A059]"
-  }`;
-
-  const labelStyle = "text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 mb-3 block";
+  // Shared Styles
+  const cardClass = `p-8 rounded-[2.5rem] border transition-all duration-500 ${isDark ? "bg-[#161B26]/50 border-white/5 backdrop-blur-xl" : "bg-white border-slate-100 shadow-xl shadow-slate-200/50"}`;
+  const inputClass = `w-full px-6 py-4 rounded-2xl text-[11px] font-bold uppercase tracking-widest outline-none border transition-all duration-300 ${isDark ? "bg-[#0F1219] border-white/5 text-white focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059]/20" : "bg-slate-50 border-slate-200 text-slate-900 focus:border-[#C5A059] focus:bg-white"}`;
+  const labelClass = "text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 block flex items-center gap-2";
 
   return (
-    <div className={`p-6 md:p-10 min-h-screen ${isDark ? "bg-[#0F1219]" : "bg-slate-50"}`}>
-      <div className="max-w-5xl mx-auto">
+    <div className={`min-h-screen p-6 md:p-12 ${isDark ? "bg-[#0A0C10] text-white" : "bg-[#F8FAFC] text-slate-900"}`}>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-6xl mx-auto">
         
-        {/* Header */}
-        <div className="flex justify-between items-center mb-10">
-          <div>
-            <h2 className={`text-3xl font-black italic tracking-tighter ${isDark ? "text-white" : "text-slate-900"}`}>
-              {id ? "Modify" : "Enroll"} <span style={{ color: brandGold }}>Developer.</span>
-            </h2>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Dubai HQ Asset Management</p>
+        {/* TOP NAVIGATION BAR */}
+        <div className="flex justify-between items-center mb-12">
+          <div className="flex items-center gap-5">
+            <div className="w-14 h-14 rounded-2xl bg-[#C5A059] flex items-center justify-center shadow-lg shadow-[#C5A059]/20">
+              <Building2 className="text-white" size={28} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black tracking-tighter uppercase italic">
+                {id ? "Edit" : "New"} <span style={{ color: brandGold }}>Developer</span>
+              </h1>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]">Institutional Asset Registry</p>
+            </div>
           </div>
-          <button onClick={() => navigate(-1)} className="p-4 rounded-2xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 transition-all">
+          <button onClick={() => navigate(-1)} className={`p-4 rounded-2xl border transition-all ${isDark ? "border-white/5 hover:bg-white/5 text-slate-400" : "border-slate-200 hover:bg-slate-100 text-slate-600"}`}>
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className={`rounded-[2.5rem] p-10 shadow-2xl border ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100"}`}>
+        <form onSubmit={handleSubmit} className="space-y-8">
           
-          {/* Logo Section */}
-          <div className="mb-12 flex flex-col items-center">
-            <label className={labelStyle}>Corporate Brandmark</label>
-            <div 
-              onClick={() => fileInputRef.current.click()}
-              className={`relative w-44 h-44 rounded-[2.5rem] border-2 border-dashed flex items-center justify-center cursor-pointer transition-all overflow-hidden ${
-                isDark ? "border-white/10 bg-white/5 hover:border-[#C5A059]/50" : "border-slate-200 bg-slate-50 hover:border-[#C5A059]"
-              }`}
-            >
-              {logoPreview ? (
-                <img src={logoPreview} alt="Preview" className="w-full h-full object-contain p-6" />
-              ) : (
-                <div className="text-center">
-                  <Upload size={24} className="mx-auto mb-2 text-slate-500" />
-                  <span className="text-[8px] font-black uppercase text-slate-400">Upload Logo</span>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* COLUMN 1: IDENTITY & LOGO */}
+            <div className="lg:col-span-1 space-y-8">
+              <div className={cardClass}>
+                <div className="flex items-center gap-3 mb-8">
+                    <Sparkles className="text-[#C5A059]" size={18} />
+                    <h3 className="text-[11px] font-black uppercase tracking-widest">Brand Identity</h3>
                 </div>
-              )}
+                
+                <div className="flex flex-col items-center">
+                  <div 
+                    onClick={() => fileInputRef.current.click()}
+                    className={`group relative w-full aspect-square rounded-[3rem] border-2 border-dashed flex items-center justify-center cursor-pointer transition-all overflow-hidden ${isDark ? "border-white/10 bg-[#0F1219] hover:border-[#C5A059]/50" : "border-slate-200 bg-slate-50 hover:border-[#C5A059]"}`}
+                  >
+                    {logoPreview ? (
+                      <img src={logoPreview} alt="Preview" className="w-full h-full object-contain p-8 group-hover:scale-110 transition-transform duration-500" />
+                    ) : (
+                      <div className="text-center p-6">
+                        <div className="w-16 h-16 rounded-full bg-[#C5A059]/10 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                          <Upload size={24} className="text-[#C5A059]" />
+                        </div>
+                        <span className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">Click to upload brandmark</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <span className="text-[10px] text-white font-bold uppercase tracking-widest">Update Logo</span>
+                    </div>
+                  </div>
+                  <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+                </div>
+              </div>
+
+              <div className={cardClass}>
+                 <label className={labelClass}><Layers size={14} className="text-[#C5A059]"/> Portfolio Size</label>
+                 <input name="totalProjects" value={formData.totalProjects} onChange={handleChange} type="number" className={inputClass} placeholder="Total Projects" />
+                 <p className="text-[9px] text-slate-500 font-bold mt-4 italic uppercase tracking-tighter">* Total units or individual projects</p>
+              </div>
             </div>
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+
+            {/* COLUMN 2 & 3: FORM DETAILS */}
+            <div className="lg:col-span-2 space-y-8">
+              
+              {/* BENTO SECTION: CORE DETAILS */}
+              <div className={cardClass}>
+                <div className="flex items-center gap-3 mb-8">
+                    <ShieldCheck className="text-[#C5A059]" size={18} />
+                    <h3 className="text-[11px] font-black uppercase tracking-widest">Corporate & Compliance</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                        <label className={labelClass}><Building2 size={14} className="text-[#C5A059]"/> Commercial Name</label>
+                        <input name="companyName" value={formData.companyName} onChange={handleChange} type="text" className={inputClass} required />
+                    </div>
+                    
+                    <div>
+                        <label className={labelClass}><Hash size={14} className="text-[#C5A059]"/> Trade License</label>
+                        <input name="tradeLicenseNumber" value={formData.tradeLicenseNumber} onChange={handleChange} type="text" className={inputClass} required />
+                    </div>
+                    
+                    <div>
+                        <label className={labelClass}><Award size={14} className="text-[#C5A059]"/> RERA Registration</label>
+                        <input name="reraRegistrationNumber" value={formData.reraRegistrationNumber} onChange={handleChange} type="text" className={inputClass} required />
+                    </div>
+
+                    <div>
+                        <label className={labelClass}><Calendar size={14} className="text-[#C5A059]"/> Founded Year</label>
+                        <input name="establishedYear" value={formData.establishedYear} onChange={handleChange} type="number" className={inputClass} required />
+                    </div>
+
+                    <div>
+                        <label className={labelClass}><Briefcase size={14} className="text-[#C5A059]"/> Developer Type</label>
+                        <select name="developerType" value={formData.developerType} onChange={handleChange} className={inputClass}>
+                            <option value="Private">Private</option>
+                            <option value="Government">Government</option>
+                            <option value="Semi-Government">Semi-Government</option>
+                        </select>
+                    </div>
+                </div>
+              </div>
+
+              {/* BENTO SECTION: CONTACT & LOCATION */}
+              <div className={cardClass}>
+                 <div className="flex items-center gap-3 mb-8">
+                    <Globe className="text-[#C5A059]" size={18} />
+                    <h3 className="text-[11px] font-black uppercase tracking-widest">Contact & Headquarters</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className={labelClass}><Mail size={14} className="text-[#C5A059]"/> Corporate Email</label>
+                        <input name="officialEmail" value={formData.officialEmail} onChange={handleChange} type="email" className={inputClass} required />
+                    </div>
+                    <div>
+                        <label className={labelClass}><Phone size={14} className="text-[#C5A059]"/> Contact Number</label>
+                        <input name="contactNumber" value={formData.contactNumber} onChange={handleChange} type="text" className={inputClass} required />
+                    </div>
+                    <div className="md:col-span-2">
+                        <label className={labelClass}><MapPin size={14} className="text-[#C5A059]"/> Official HQ Address</label>
+                        <input name="officeAddress" value={formData.officeAddress} onChange={handleChange} type="text" className={inputClass} required />
+                    </div>
+                </div>
+              </div>
+
+              {/* BENTO SECTION: NARRATIVE */}
+              <div className={cardClass}>
+                <div className="flex items-center gap-3 mb-8">
+                    <FileText className="text-[#C5A059]" size={18} />
+                    <h3 className="text-[11px] font-black uppercase tracking-widest">Market Presence</h3>
+                </div>
+                <div className="space-y-6">
+                    <div>
+                        <label className={labelClass}><Info size={14} className="text-[#C5A059]"/> Specialization</label>
+                        <input name="specialization" value={formData.specialization} onChange={handleChange} type="text" placeholder="Luxury, Waterfront, Commercial..." className={inputClass} />
+                    </div>
+                    <div>
+                        <label className={labelClass}>Company Bio / History</label>
+                        <textarea 
+                            name="details" 
+                            value={formData.details} 
+                            onChange={handleChange} 
+                            rows="5" 
+                            className={`${inputClass} h-40 resize-none normal-case py-5`}
+                            placeholder="Describe the developer's journey and notable achievements..."
+                        />
+                    </div>
+                </div>
+              </div>
+
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-2">
-              <label className={labelStyle}>Company Name</label>
-              <div className="relative">
-                <Building2 size={16} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input name="companyName" value={formData.companyName} onChange={handleChange} type="text" className={`${inputStyle} pl-14`} required />
-              </div>
+          {/* FLOATING ACTION BAR */}
+          <motion.div 
+            initial={{ y: 100 }} 
+            animate={{ y: 0 }} 
+            className={`sticky bottom-10 p-6 rounded-[2.5rem] border flex justify-between items-center backdrop-blur-2xl ${isDark ? "bg-[#161B26]/80 border-[#C5A059]/20" : "bg-white/80 border-slate-200 shadow-2xl"}`}
+          >
+            <div className="hidden md:block">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Status: Ready for Sync</p>
+                <p className="text-[9px] text-[#C5A059] font-bold">Authenticated Admin Session</p>
             </div>
-
-            <div className="space-y-2">
-              <label className={labelStyle}>Trade License</label>
-              <div className="relative">
-                <Hash size={16} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input name="tradeLicenseNumber" value={formData.tradeLicenseNumber} onChange={handleChange} type="text" className={`${inputStyle} pl-14`} required />
-              </div>
-            </div>
-
-            {/* --- ADDED: TOTAL PROJECTS --- */}
-            <div className="space-y-2">
-              <label className={labelStyle}>Total Projects</label>
-              <div className="relative">
-                <Layers size={16} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input name="totalProjects" value={formData.totalProjects} onChange={handleChange} type="number" className={`${inputStyle} pl-14`} required />
-              </div>
-            </div>
-
-            {/* --- ADDED: DEVELOPER TYPE --- */}
-            <div className="space-y-2">
-              <label className={labelStyle}>Developer Type</label>
-              <select name="developerType" value={formData.developerType} onChange={handleChange} className={inputStyle}>
-                <option value="Private">Private</option>
-                <option value="Government">Government</option>
-                <option value="Semi-Government">Semi-Government</option>
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className={labelStyle}>RERA Number</label>
-              <div className="relative">
-                <Award size={16} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input name="reraRegistrationNumber" value={formData.reraRegistrationNumber} onChange={handleChange} type="text" className={`${inputStyle} pl-14`} required />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className={labelStyle}>Establishment Year</label>
-              <div className="relative">
-                <Calendar size={16} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input name="establishedYear" value={formData.establishedYear} onChange={handleChange} type="number" className={`${inputStyle} pl-14`} required />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className={labelStyle}>Corporate Email</label>
-              <input name="officialEmail" value={formData.officialEmail} onChange={handleChange} type="email" className={inputStyle} required />
-            </div>
-
-            <div className="space-y-2">
-              <label className={labelStyle}>Contact Number</label>
-              <input name="contactNumber" value={formData.contactNumber} onChange={handleChange} type="text" className={inputStyle} required />
-            </div>
-
-            <div className="md:col-span-2 space-y-2">
-              <label className={labelStyle}>Official Office Address</label>
-              <div className="relative">
-                <MapPin size={16} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input name="officeAddress" value={formData.officeAddress} onChange={handleChange} type="text" className={`${inputStyle} pl-14`} required />
-              </div>
-            </div>
-
-            <div className="md:col-span-2 space-y-2">
-                <label className={labelStyle}>Specialization (Comma Separated)</label>
-                <input name="specialization" value={formData.specialization} onChange={handleChange} type="text" placeholder="Residential, Luxury, Commercial" className={inputStyle} />
-            </div>
-
-            <div className="md:col-span-2 space-y-2">
-              <label className={labelStyle}>Portfolio Details</label>
-              <textarea 
-                name="details" 
-                value={formData.details} 
-                onChange={handleChange} 
-                rows="4" 
-                className={`${inputStyle} h-32 resize-none normal-case`}
-              />
-            </div>
-          </div>
-
-          <div className="mt-12 pt-8 border-t border-slate-700/50 flex justify-end">
             <button 
               type="submit" 
               disabled={isLoading}
-              style={{ backgroundColor: brandGold }} 
-              className="px-12 py-4 rounded-2xl text-[10px] font-black uppercase text-white tracking-[0.2em] shadow-2xl hover:scale-105 transition-all flex items-center gap-3 disabled:opacity-50"
+              className="w-full md:w-auto px-16 py-5 rounded-2xl bg-[#C5A059] text-white text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-[#C5A059]/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
             >
-              {isLoading ? "Processing..." : <><Save size={16} /> {id ? "Confirm Changes" : "Save Developer"}</>}
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <><Save size={18} /> {id ? "Update Registry" : "Enshrine Developer"}</>
+              )}
             </button>
-          </div>
+          </motion.div>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 };

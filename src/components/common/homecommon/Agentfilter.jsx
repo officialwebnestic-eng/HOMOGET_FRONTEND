@@ -5,9 +5,14 @@ import {
   ArrowUpRight,
   Phone,
   Mail,
-  ArrowRight,
   MapPin,
   ChevronRight,
+  Share2,
+  Heart,
+  Plus,
+  Square,
+  BedDouble,
+  ArrowRight
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { useTheme } from "../../../context/ThemeContext";
@@ -19,9 +24,10 @@ const themeColors = {
   light: {
     background: "bg-gray-50",
     card: "bg-white",
-    text: "text-gray-900",
-    textSecondary: "text-gray-600",
-    border: "border-gray-200",
+    text: "text-slate-900",
+    textSecondary: "text-slate-500",
+    border: "border-slate-200/60",
+    shadow: "shadow-[0_8px_30px_rgb(0,0,0,0.04)]",
   },
   dark: {
     background: "bg-[#0a0a0c]",
@@ -29,6 +35,7 @@ const themeColors = {
     text: "text-white",
     textSecondary: "text-gray-400",
     border: "border-white/5",
+    shadow: "shadow-2xl",
   },
 };
 
@@ -54,12 +61,12 @@ const Agentfilter = () => {
   const { theme } = useTheme();
   const colors = themeColors[theme];
   const navigate = useNavigate();
-  const memoizedFilters = useMemo(() => filters, [filters]);
+  const isDark = theme === "dark";
 
   const { propertyList = [], loading } = useGetAllProperty(
     currentPage,
     20,
-    memoizedFilters,
+    useMemo(() => filters, [filters])
   );
 
   const handlePropertyClick = useCallback(
@@ -68,34 +75,17 @@ const Agentfilter = () => {
         state: { propertyData: property },
       });
     },
-    [navigate],
+    [navigate]
   );
 
-  const getUniqueValues = (data, key) => {
-    if (!data || data.length === 0) return [];
-    return [...new Set(data.flatMap((item) => item[key]))]
-      .filter(Boolean)
-      .sort();
+  const handleSuggestionClick = (locationName) => {
+    setSearchQuery(locationName);
+    setShowSuggestions(false);
+    const mainLocation = locationName.split(" ")[0];
+    setFilters((prev) => ({ ...prev, city: mainLocation }));
   };
 
-  // Logic for the Hero component
-  // Inside your Parent Component (Agentfilter.js)
-const handleSuggestionClick = (locationName) => {
-  setSearchQuery(locationName);
-  setShowSuggestions(false);
-  
-  // Extract the main project/area name to ensure the database finds a match
-  // (e.g., "Seagate Building 3" -> "Seagate")
-  const mainLocation = locationName.split(' ')[0]; 
-
-  setFilters(prev => ({ 
-    ...prev, 
-    city: mainLocation 
-  }));
-};
-
   const handleSearchButtonClick = () => {
-    // Redirect to property listing page with the current search query
     navigate("/propertylisting", { state: { initialSearch: searchQuery } });
   };
 
@@ -103,9 +93,7 @@ const handleSuggestionClick = (locationName) => {
   const insightProperties = propertyList.slice(9, 20);
 
   return (
-    <div
-      className={`${colors.background} min-h-screen pb-20 overflow-x-hidden transition-colors duration-300`}
-    >
+    <div className={`${colors.background} min-h-screen pb-20 transition-colors duration-300`}>
       <AgentHero
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -115,151 +103,134 @@ const handleSuggestionClick = (locationName) => {
         onSearchButtonClick={handleSearchButtonClick}
         propertyList={propertyList}
         filters={filters}
-        handleFilterChange={(e) =>
-          setFilters({ ...filters, [e.target.name]: e.target.value })
-        }
+        handleFilterChange={(e) => setFilters({ ...filters, [e.target.name]: e.target.value })}
         filterFields={filterFields}
-        getUniqueValues={getUniqueValues}
+        getUniqueValues={(data, key) => [...new Set(data.flatMap((item) => item[key]))].filter(Boolean).sort()}
         setShowFilters={setShowFilters}
         showFilters={showFilters}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20">
-        {/* SECTION 1: ELITE SELECTION */}
-        <div
-          className={`rounded-[3.5rem] ${colors.card} p-8 md:p-14 mb-16 border ${colors.border} shadow-2xl`}
-        >
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
-            <div>
-              <h2 className={`text-4xl md:text-5xl font-serif ${colors.text}`}>
-                Elite <span className="text-amber-500 italic">Selection</span>
-              </h2>
-              <p className="text-gray-500 text-[10px] uppercase tracking-widest mt-2 font-bold">
-                Handpicked Luxury Residences
-              </p>
-            </div>
-
-            <button
-              onClick={() => navigate("/propertylisting")}
-              className="hidden md:flex items-center gap-3 text-amber-500 text-[10px] font-black uppercase tracking-[0.2em] group transition-all"
-            >
-              View Full Collection
-              <div className="w-10 h-10 rounded-full border border-amber-500/20 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-black transition-all">
-                <ArrowUpRight size={18} />
-              </div>
-            </button>
+      <div className="max-w-7xl mx-auto px-4   sm:px-6 lg:px-8  py-24  relative z-20">
+        
+        {/* HEADER SECTION */}
+        <div className="flex flex-col md:flex-row justify-between  items-center mb-10 gap-4">
+          <div className="flex items-center gap-4">
+             <div className="h-1 w-12  bg-amber-500 rounded-full" />
+             <h2 className={`text-2xl    md:text-4xl font-serif ${colors.text}`}>
+                Exclusive <span className="text-amber-500 italic">Properties</span>
+             </h2>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {eliteProperties.length > 0
-              ? eliteProperties.map((property) => (
-                  <motion.div
-                    key={property._id}
-                    whileHover={{ y: -12 }}
-                    onClick={() => handlePropertyClick(property)}
-                    className="group relative h-[500px] w-full rounded-[3rem] overflow-hidden shadow-2xl bg-zinc-900 cursor-pointer"
-                  >
-                    <img
-                      src={property.image?.[0]}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                      alt={property.propertyname}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/100 via-black/20 to-transparent z-10" />
-                    <div className="absolute top-6 left-6 flex gap-2 z-20">
-                      <span className="px-3 py-1 bg-amber-500 text-black text-[9px] font-black uppercase rounded-lg">
-                        {property.propertytype || "RESIDENCE"}
-                      </span>
-                      <span className="px-3 py-1 bg-white/10 backdrop-blur-md text-white text-[9px] font-black uppercase rounded-lg border border-white/20">
-                        {property.propertyListingType === "project"
-                          ? "Off-Plan"
-                          : property.listingtype || "Ready"}
-                      </span>
-                    </div>
-                    <div className="absolute top-6 right-6 flex flex-col gap-3 z-30">
-                      <div className="w-9 h-9 bg-[#25D366] text-white rounded-full flex items-center justify-center hover:scale-110">
-                        <FaWhatsapp size={18} />
-                      </div>
-                      <div className="w-9 h-9 bg-[#3b82f6] text-white rounded-full flex items-center justify-center hover:scale-110">
-                        <Phone size={16} fill="currentColor" />
-                      </div>
-                      <div className="w-9 h-9 bg-amber-500 text-black rounded-full flex items-center justify-center hover:scale-110">
-                        <Mail size={16} />
-                      </div>
-                    </div>
-                    <div className="absolute bottom-8 left-8 right-8 z-20">
-                      <p className="text-amber-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">
-                        {property.city}, UAE
-                      </p>
-                      <h3 className="text-2xl font-serif text-white leading-tight mb-6">
-                        {property.propertyname}
-                      </h3>
-                      <div className="flex items-center justify-between">
-                        <p className="text-xl font-bold text-white uppercase tracking-tighter">
-                          AED {Number(property.price).toLocaleString()}
-                        </p>
-                        <div className="w-11 h-11 bg-amber-500 rounded-2xl flex items-center justify-center text-black shadow-lg group-hover:bg-white transition-colors">
-                          <ArrowRight size={22} />
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))
-              : !loading && (
-                  <div className="col-span-full py-20 text-center border-2 border-dashed border-white/5 rounded-[3rem]">
-                    <p className="text-gray-500 font-bold uppercase tracking-widest mb-4">
-                      No properties found in "{searchQuery}"
-                    </p>
-                    <button
-                      onClick={() => {
-                        setSearchQuery("");
-                        setFilters({ city: "", state: "", propertytype: "" }); // Reset basic filters
-                      }}
-                      className="text-amber-500 text-[10px] font-black uppercase tracking-widest hover:underline"
-                    >
-                      Reset Search & View All
-                    </button>
-                  </div>
-                )}
-          </div>
+          <button 
+            onClick={() => navigate("/propertylisting")}
+            className="px-8 py-3 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center gap-3 hover:bg-black transition-all shadow-lg"
+          >
+            View All Properties <ArrowRight size={16} />
+          </button>
         </div>
 
-        {/* SECTION 2: MARKET INSIGHTS */}
+        {/* PROPERTY GRID (MATCHING SCREENSHOT) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {eliteProperties.map((property) => (
+            <motion.div
+              key={property._id}
+              whileHover={{ y: -10 }}
+              className={`rounded-[2.5rem] overflow-hidden ${colors.card} ${colors.shadow} border ${colors.border} group cursor-pointer flex flex-col`}
+              onClick={() => handlePropertyClick(property)}
+            >
+              {/* Image Container */}
+              <div className="relative h-72 w-full overflow-hidden">
+                <img
+                  src={property.image?.[0]}
+                  alt={property.propertyname}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                
+                {/* Floating Badges */}
+                <div className="absolute top-4 left-4 flex gap-2">
+                  <span className="px-3 py-1 bg-[#1a1a2e] text-white text-[9px] font-black uppercase rounded-md tracking-wider">
+                    {property.propertytype || "HOUSE"}
+                  </span>
+                </div>
+                <div className="absolute top-4 right-4">
+                  <span className="px-3 py-1 bg-amber-500 text-white text-[9px] font-black uppercase rounded-md tracking-wider">
+                    FOR {property.listingtype || "RENT"}
+                  </span>
+                </div>
+
+                {/* Location Overlay */}
+                <div className="absolute bottom-4 left-4 flex items-center gap-1.5 text-white bg-black/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                  <MapPin size={12} className="text-amber-400" />
+                  <span className="text-[10px] font-bold truncate max-w-[150px]">
+                    {property.address || property.city}, UAE
+                  </span>
+                </div>
+              </div>
+
+              {/* Content Body */}
+              <div className="p-7 flex-1">
+                <h3 className={`text-xl font-bold mb-2 truncate ${colors.text}`}>
+                  {property.propertyname}
+                </h3>
+                <p className="text-amber-500 text-lg font-black mb-6">
+                  AED {Number(property.price).toLocaleString()}
+                  {property.listingtype === "Rent" && <span className="text-xs text-gray-400 font-normal ml-1">/ Year</span>}
+                </p>
+
+                {/* Features Bar */}
+                <div className="flex items-center gap-6 py-4 border-t border-gray-100 dark:border-white/5">
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <BedDouble size={16} className="text-amber-500" />
+                    <span className="text-[11px] font-bold uppercase">{property.bedroom || 2} BHK</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Square size={14} className="text-amber-500" />
+                    <span className="text-[11px] font-bold uppercase">{property.squarefoot || 0} Sq.Ft</span>
+                  </div>
+                </div>
+
+                {/* Footer Icon Bar (Matching Screenshot) */}
+                <div className="flex items-center justify-end gap-5 pt-4 mt-auto border-t border-gray-100 dark:border-white/5">
+                   <Share2 size={18} className="text-gray-400 hover:text-amber-500 transition-colors" />
+                   <Heart size={18} className="text-gray-400 hover:text-red-500 transition-colors" />
+                   <Plus size={20} className="text-gray-400 hover:text-blue-500 transition-colors" />
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* MARKET INSIGHTS SECTION (CLEANER STYLE) */}
         {insightProperties.length > 0 && (
-          <div className="mb-20">
-            <h2 className={`text-2xl font-serif mb-8 ${colors.text}`}>
-              Market <span className="text-amber-500 italic">Insights</span>
-            </h2>
+          <div className="mt-24 mb-20">
+            <div className="flex items-center gap-3 mb-10">
+              <div className="h-0.5 w-8 bg-amber-500" />
+              <h2 className={`text-2xl font-serif ${colors.text}`}>
+                Market <span className="text-amber-500 italic">Insights</span>
+              </h2>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {insightProperties.map((property) => (
                 <motion.div
                   key={property._id}
                   onClick={() => handlePropertyClick(property)}
-                  whileHover={{ x: 8 }}
-                  className={`group p-4 rounded-[2rem] ${colors.card} border ${colors.border} flex items-center gap-5 cursor-pointer hover:border-amber-500 transition-all shadow-md`}
+                  whileHover={{ scale: 1.02 }}
+                  className={`group p-4 rounded-3xl ${colors.card} border ${colors.border} flex items-center gap-5 cursor-pointer shadow-sm hover:shadow-md transition-all`}
                 >
-                  <div className="w-24 h-24 rounded-[1.5rem] overflow-hidden shrink-0 relative bg-zinc-800">
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 bg-slate-100">
                     <img
                       src={property.image?.[0]}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       alt=""
                     />
-                    <div className="absolute bottom-1 left-1 bg-amber-500 text-[7px] font-black px-1.5 py-0.5 rounded text-black uppercase">
-                      {property.propertyListingType === "project"
-                        ? "Off-Plan"
-                        : "Ready"}
-                    </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4
-                      className={`font-bold text-sm mb-1 truncate ${colors.text}`}
-                    >
+                    <h4 className={`font-bold text-sm mb-1 truncate ${colors.text}`}>
                       {property.propertyname}
                     </h4>
                     <div className="flex items-center gap-1.5 mb-2">
                       <MapPin className="w-3 h-3 text-amber-500" />
-                      <span
-                        className={`text-[10px] font-black uppercase ${colors.textSecondary}`}
-                      >
+                      <span className={`text-[10px] font-bold uppercase ${colors.textSecondary}`}>
                         {property.city}
                       </span>
                     </div>
@@ -267,7 +238,7 @@ const handleSuggestionClick = (locationName) => {
                       <p className="text-amber-500 font-bold text-sm">
                         AED {Number(property.price).toLocaleString()}
                       </p>
-                      <ChevronRight className="w-4 h-4 text-amber-500 opacity-0 group-hover:opacity-100 transition-all" />
+                      <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-amber-500 transition-colors" />
                     </div>
                   </div>
                 </motion.div>
@@ -277,8 +248,8 @@ const handleSuggestionClick = (locationName) => {
         )}
 
         {loading && (
-          <div className="flex justify-center py-10">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-amber-500"></div>
+          <div className="flex justify-center py-20">
+            <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
       </div>

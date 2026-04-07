@@ -157,10 +157,9 @@ const AgentSlider = () => {
               </span>
             </motion.div>
             <h2
-              className={`text-5xl md:text-7xl font-black tracking-tighter leading-none ${ct.text}`}
+              className={`text-2xl md:text-4xl font-serif tracking-tighter italic leading-none ${ct.text}`}
             >
-              MEET OUR <br />
-              <span className="font-serif italic font-light text-amber-600">
+              Meet Our <span className="font-serif italic font-light text-amber-600">
                 Advisors.
               </span>
             </h2>
