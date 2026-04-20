@@ -1,44 +1,57 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
-import { ChevronDownIcon, Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronDownIcon,
+  Bars3Icon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import { useTheme } from "../../context/ThemeContext";
-import { useSidebar } from "../../context/SidebarContext"; 
-import { 
-  MoonIcon, 
-  SunIcon, 
-  LogOut, 
-  PlusCircle,
+import { useSidebar } from "../../context/SidebarContext";
+import {
+  MoonIcon,
+  SunIcon,
+  LogOut,
   ChevronRight,
   Settings,
-  Menu as MenuLucide 
+  Menu as MenuLucide,
+  Home,
+  TrendingUp,
+  Building2,
+  MapPin,
+  Briefcase,
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { navbarlogo } from "../../ExportImages";
 import { motion, AnimatePresence } from "framer-motion";
-import { sidebarLinks, commonNavigation } from "../../helpers/NavbarHelpers";
+import { sidebarLinks } from "../../helpers/NavbarHelpers";
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { logoutUser, user, isAuthenticated } = useContext(AuthContext);
-  const { toggleSidebar } = useSidebar(); 
-  
+  const { toggleSidebar } = useSidebar();
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState(null);
+  const [activeMegaMenu, setActiveMegaMenu] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  
+
   const navigate = useNavigate();
   const location = useLocation();
   const profileDropdownRef = useRef();
   const isDark = theme === "dark";
 
   const showSidebarToggle = isAuthenticated && user?.role !== "user";
-  const showFullMenus = !isAuthenticated || user?.role === "user";
 
-  useEffect(() => { setIsMobileMenuOpen(false); }, [location]);
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+    setActiveMegaMenu(null);
+  }, [location]);
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(event.target)
+      ) {
         setIsProfileOpen(false);
       }
     }
@@ -52,20 +65,90 @@ export default function Navbar() {
     navigate("/login");
   };
 
-  // REPLACED: Removed scroll-based conditional logic
   const currentTheme = {
-    bg: isDark ? "bg-black" : "bg-white",
-    text: isDark ? "text-white" : "text-slate-900",
-    border: isDark ? "border-white/10" : "border-slate-200",
-    dropdown: isDark ? "bg-neutral-900 border-white/10 shadow-2xl" : "bg-white border-slate-200 shadow-xl",
-    addBtn: isDark ? "bg-amber-500 text-black" : "bg-blue-600 text-white"
+    bg: isDark ? "bg-[#0a0a0c]/95" : "bg-white/95",
+    text: isDark ? "text-white" : "text-[#1a1a1e]",
+    border: isDark ? "border-white/5" : "border-slate-100",
+    dropdown: isDark
+      ? "bg-[#161B26] border-white/10 shadow-2xl"
+      : "bg-white border-slate-100 shadow-2xl",
+    accent: "#ff8a00",
+  };
+
+  const megaMenuData = {
+    Buy: {
+      sections: [
+        {
+          title: "Residential Sale",
+          links: ["Apartments", "Villas", "Townhouses", "Penthouses"],
+        },
+        {
+          title: "Buyer Tools",
+          links: ["Mortgage Calculator", "Investment Guide", "Area Guides"],
+        },
+      ],
+      promo: {
+        title: "Secure Your Asset",
+        subtitle: "Buying Guide",
+        color: "bg-[#2D2D6E]",
+      },
+      footer: [
+        { name: "Residential", icon: <Home size={14} /> },
+        { name: "Commercial", icon: <Building2 size={14} /> },
+      ],
+    },
+    Rent: {
+      sections: [
+        {
+          title: "Residential Rent",
+          links: ["Apartments", "Studios", "Villas", "Short Term"],
+        },
+        {
+          title: "Renter Tools",
+          links: ["Rent vs Buy", "Rental Map", "Community Guides"],
+        },
+      ],
+      promo: {
+        title: "Find Your Home",
+        subtitle: "Rental Insights",
+        color: "bg-[#5D46A0]",
+      },
+      footer: [
+        { name: "Find Agent", icon: <MapPin size={14} /> },
+        { name: "Short Term", icon: <TrendingUp size={14} /> },
+      ],
+    },
+    "Off-Plan": {
+      sections: [
+        {
+          title: "New Launches",
+          links: ["Emaar Projects", "Damac Hills", "Nakheel"],
+        },
+        {
+          title: "Investment",
+          links: ["Handover 2026", "Luxury Projects", "Waterfront"],
+        },
+      ],
+      promo: {
+        title: "Invest Early",
+        subtitle: "High ROI Projects",
+        color: "bg-[#ff8a00]",
+      },
+      footer: [{ name: "Project Map", icon: <MapPin size={14} /> }],
+    },
   };
 
   const renderBadge = (type) => {
     if (!type) return null;
-    const colors = { HOT: "bg-red-500", NEW: "bg-blue-500", TRENDING: "bg-amber-500" };
+    const colors = {
+      HOT: "bg-red-500",
+      NEW: "bg-blue-500",
+      TRENDING: "bg-[#ff8a00]",
+    };
     return (
-      <span className={`ml-1.5 px-1.5 py-0.5 rounded text-[7px] font-black text-white uppercase ${colors[type]}`}>
+      <span
+        className={`ml-1.5 px-1.5 py-0.5 rounded text-[7px] font-black text-white uppercase ${colors[type]}`}
+      >
         {type}
       </span>
     );
@@ -73,196 +156,253 @@ export default function Navbar() {
 
   return (
     <>
-      {/* FIXED: Removed transition-all duration-500 and sticky scroll logic */}
-      <nav className={`sticky top-0 z-[50] ${currentTheme.bg} border-b ${currentTheme.border}`}>
-        <div className="max-w-[1700px] mx-auto px-4 md:px-8">
-          {/* FIXED: Height is now constant at h-20 */}
-          <div className="flex items-center justify-between h-20">
-            <div className="flex items-center gap-4">
-              {showSidebarToggle && (
-                <button 
-                  onClick={toggleSidebar} 
-                  className={`p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-colors ${currentTheme.text}`}
-                >
-                  <MenuLucide size={22} />
-                </button>
-              )}
-              <Link to="/">
-                {/* FIXED: Logo size is now constant */}
-                <img src={navbarlogo} alt="Logo" className="h-16 w-16 md:h-24 md:w-24 object-contain" />
-              </Link>
-            </div>
-            
-            <div className="hidden xl:flex items-center space-x-5">
-              {showFullMenus && (
-                <>
-                  {commonNavigation.map((item) => (
-                    <Link key={item.name} to={item.href} className={`text-[11px] font-black tracking-widest uppercase ${currentTheme.text} hover:opacity-60 transition-all`}>
-                      {item.name} {renderBadge(item.badge)}
-                    </Link>
-                  ))}
-                  <div className="relative" onMouseEnter={() => setOpenDropdown("menus")} onMouseLeave={() => setOpenDropdown(null)}>
-                    <button className={`flex items-center gap-1 text-[11px] font-black uppercase tracking-widest ${currentTheme.text}`}>
-                      Resources <ChevronDownIcon className="h-3 w-3" />
-                    </button>
-                    <AnimatePresence>
-                      {openDropdown === "menus" && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: 10 }} 
-                          animate={{ opacity: 1, y: 0 }} 
-                          exit={{ opacity: 0, y: 10 }} 
-                          className={`absolute left-0 mt-4 w-64 rounded-2xl border p-2 ${currentTheme.dropdown}`}
-                        >
-                          {sidebarLinks.map((item) => (
-                            <Link key={item.name} to={item.href} className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-[10px] font-bold ${currentTheme.text} hover:bg-black/5 dark:hover:bg-white/5`}>
-                              {item.name} {renderBadge(item.badge)}
-                            </Link>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 md:gap-4">
-              {showFullMenus && isAuthenticated && (
-                <Link to="/userpropertyregister" className={`hidden md:flex items-center gap-2 px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg ${currentTheme.addBtn}`}>
-                  <PlusCircle size={14} /> Add Listing
-                </Link>
-              )}
-
-              <button onClick={toggleTheme} className={`${currentTheme.text} p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-colors`}>
-                {isDark ? <SunIcon size={20} className="text-amber-400" /> : <MoonIcon size={20} />}
+      <nav
+        className={`sticky top-0 z-[100] backdrop-blur-xl ${currentTheme.bg} border-b ${currentTheme.border}`}
+      >
+        <div className="max-w-[1700px] mx-auto px-6 lg:px-10 h-20 flex items-center justify-between">
+          {/* Logo Section */}
+          <div className="flex items-center gap-6">
+            {showSidebarToggle && (
+              <button
+                onClick={toggleSidebar}
+                className="p-2.5 rounded-xl bg-white/5 hover:bg-[#ff8a00] text-white transition-all"
+              >
+                <MenuLucide size={20} />
               </button>
+            )}
+            <Link to="/">
+              <img
+                src={navbarlogo}
+                alt="Logo"
+                className="h-25 md:h30 w-auto object-contain"
+              />
+            </Link>
+          </div>
 
-              {!isAuthenticated ? (
-                <div className="flex items-center gap-2">
-                  <Link to="/login" className={`px-4 md:px-6 py-2 text-[10px] font-black uppercase rounded-full border ${currentTheme.border} ${currentTheme.text} hover:bg-slate-50 dark:hover:bg-white/5 transition-colors`}>
-                    Login
-                  </Link>
-                  <Link to="/signup" className={`px-4 md:px-6 py-2 text-[10px] font-black uppercase rounded-full bg-amber-500 text-black shadow-lg  transition-all`}>
-                    Sign Up
-                  </Link>
-                </div>
-              ) : (
-                <div className="relative" ref={profileDropdownRef}>
-                  <button 
-                    onClick={() => setIsProfileOpen(!isProfileOpen)} 
-                    className="h-9 w-9 rounded-full bg-amber-500 flex items-center justify-center text-black font-black text-xs ring-2 ring-white/10 hover:scale-105 transition-transform"
-                  >
-                    {user?.firstname?.charAt(0).toUpperCase()}
-                  </button>
-                  <AnimatePresence>
-                    {isProfileOpen && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }} 
-                        animate={{ opacity: 1, y: 0, scale: 1 }} 
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }} 
-                        className={`absolute right-0 mt-3 w-64 rounded-2xl border p-2 z-[110] ${currentTheme.dropdown}`}
-                      >
-                        <div className="px-4 py-3 border-b border-black/5 dark:border-white/10 mb-2">
-                          <p className="text-[9px] font-black opacity-40 uppercase tracking-widest">{user?.role} Account</p>
-                          <p className={`text-sm font-bold truncate ${currentTheme.text}`}>{user?.email}</p>
-                        </div>
-                        <Link to="/user-profile" className={`flex items-center gap-3 p-3 rounded-xl text-sm font-bold ${currentTheme.text} hover:bg-black/5 dark:hover:bg-white/5 transition-colors`}>
-                          <Settings size={18}/> Settings
-                        </Link>
-                        <button 
-                          onClick={handleLogout} 
-                          className="w-full flex items-center gap-3 p-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-500/10 transition-colors"
-                        >
-                          <LogOut size={18}/> Sign Out
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
+          {/* Desktop Navigation */}
+          <div className="hidden xl:flex items-center space-x-1">
+            <Link
+              to="/"
+              className={`px-4 py-7 text-[11px] font-black uppercase tracking-widest ${currentTheme.text} hover:text-[#ff8a00]`}
+            >
+              Home
+            </Link>
 
-              {showFullMenus && (
-                <button onClick={() => setIsMobileMenuOpen(true)} className="xl:hidden p-1.5 ml-1">
-                  <Bars3Icon className={`h-8 w-8 ${currentTheme.text}`} />
+            {/* Mega Menus */}
+            {Object.keys(megaMenuData).map((key) => (
+              <div
+                key={key}
+                className="relative py-7"
+                onMouseEnter={() => setActiveMegaMenu(key)}
+                onMouseLeave={() => setActiveMegaMenu(null)}
+              >
+                <button
+                  className={`px-4 flex items-center gap-1 text-[11px] font-black uppercase tracking-widest ${currentTheme.text} ${activeMegaMenu === key ? "text-[#ff8a00]" : ""}`}
+                >
+                  {key}{" "}
+                  <ChevronDownIcon
+                    className={`h-3 w-3 transition-transform ${activeMegaMenu === key ? "rotate-180" : ""}`}
+                  />
                 </button>
-              )}
+                <AnimatePresence>
+                  {activeMegaMenu === key && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 15 }}
+                      className={`absolute left-0 top-full w-[700px] rounded-[2.5rem] border overflow-hidden ${currentTheme.dropdown}`}
+                    >
+                      <div className="p-10 flex gap-10">
+                        <div className="flex-1 grid grid-cols-2 gap-8">
+                          {megaMenuData[key].sections.map((sec) => (
+                            <div key={sec.title}>
+                              <h4 className="text-[10px] font-black text-[#ff8a00] uppercase mb-4 tracking-widest border-b border-black/5 pb-2">
+                                {sec.title}
+                              </h4>
+                              <div className="flex flex-col gap-3">
+                                {sec.links.map((l) => (
+                                  <Link
+                                    key={l}
+                                    to="/listings"
+                                    className={`text-sm font-bold ${currentTheme.text} opacity-60 hover:opacity-100`}
+                                  >
+                                    {l}
+                                  </Link>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div
+                          className={`w-48 rounded-3xl p-6 ${megaMenuData[key].promo.color} text-white flex flex-col justify-end shadow-xl`}
+                        >
+                          <p className="text-[10px] font-black uppercase opacity-60">
+                            {megaMenuData[key].promo.subtitle}
+                          </p>
+                          <p className="text-lg font-black leading-tight">
+                            {megaMenuData[key].promo.title}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="bg-black/5 p-4 flex items-center gap-3 border-t border-black/5">
+                        {megaMenuData[key].footer.map((f) => (
+                          <button
+                            key={f.name}
+                            className="px-4 py-2 bg-white dark:bg-white/10 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 border border-black/5 hover:border-[#ff8a00]"
+                          >
+                            {f.icon} {f.name}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+
+            {/* Resources Dropdown */}
+            <div
+              className="relative py-7"
+              onMouseEnter={() => setActiveMegaMenu("resources")}
+              onMouseLeave={() => setActiveMegaMenu(null)}
+            >
+              <button
+                className={`px-4 flex items-center gap-1 text-[11px] font-black uppercase tracking-widest ${currentTheme.text} ${activeMegaMenu === "resources" ? "text-[#ff8a00]" : ""}`}
+              >
+                Resources <ChevronDownIcon className="h-3 w-3" />
+              </button>
+              <AnimatePresence>
+                {activeMegaMenu === "resources" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`absolute left-0 top-full w-64 rounded-[2rem] border p-3 ${currentTheme.dropdown}`}
+                  >
+                    {sidebarLinks.map((item) => (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        className={`flex items-center justify-between px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest ${currentTheme.text} hover:bg-[#ff8a00] hover:text-white transition-all`}
+                      >
+                        {item.name} {renderBadge(item.badge)}
+                      </Link>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
+
+            <Link
+              to="/careers"
+              className={`px-4 py-7 text-[11px] font-black uppercase tracking-widest ${currentTheme.text} hover:text-[#ff8a00] flex items-center gap-2`}
+            >
+              Careers{" "}
+              <span className="bg-[#ff8a00] text-black text-[7px] px-2 py-0.5 rounded-full font-black">
+                HIRING
+              </span>
+            </Link>
+          </div>
+
+          {/* Right Section */}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggleTheme}
+              className={`p-2.5 rounded-full transition-all ${isDark ? "text-amber-400 bg-white/5" : "text-slate-600 bg-slate-100"}`}
+            >
+              {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
+            </button>
+
+            {!isAuthenticated ? (
+              <Link
+                to="/login"
+                className="px-7 py-3 text-[10px] font-black uppercase tracking-widest rounded-full bg-[#ff8a00] text-white shadow-lg shadow-orange-500/20"
+              >
+                Login
+              </Link>
+            ) : (
+              <div className="relative" ref={profileDropdownRef}>
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="h-10 w-10 rounded-full bg-[#ff8a00] border-2 border-white/20 flex items-center justify-center text-white font-black hover:scale-105 transition-all"
+                >
+                  {user?.firstname?.charAt(0).toUpperCase()}
+                </button>
+                <AnimatePresence>
+                  {isProfileOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className={`absolute right-0 mt-4 w-64 rounded-[2.5rem] border p-3 ${currentTheme.dropdown}`}
+                    >
+                      <div className="px-5 py-4 border-b border-black/5 mb-2">
+                        <p className="text-[8px] font-black text-[#ff8a00] uppercase tracking-widest">
+                          {user?.role} PRO
+                        </p>
+                        <p
+                          className={`text-sm font-bold truncate ${currentTheme.text}`}
+                        >
+                          {user?.email}
+                        </p>
+                      </div>
+                      <Link
+                        to="/user-profile"
+                        className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl text-[11px] font-black tracking-widest ${currentTheme.text} hover:bg-black/5 transition-all`}
+                      >
+                        <Settings size={16} /> Settings
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl text-[11px] font-black text-red-500 hover:bg-red-500/10 transition-all"
+                      >
+                        <LogOut size={16} /> Sign Out
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="xl:hidden p-2 text-current"
+            >
+              <Bars3Icon className="h-8 w-8" />
+            </button>
           </div>
         </div>
       </nav>
 
-      {/* MOBILE MENU OVERLAY REMAINS THE SAME */}
+      {/* Mobile Menu */}
       <AnimatePresence>
-        {isMobileMenuOpen && showFullMenus && (
-          <motion.div 
-            initial={{ x: "100%" }} 
-            animate={{ x: 0 }} 
-            exit={{ x: "100%" }} 
-            transition={{ type: "tween", duration: 0.3 }}
-            className={`fixed inset-0 z-[200] flex flex-col ${isDark ? 'bg-black text-white' : 'bg-white text-slate-900'}`}
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            className={`fixed inset-0 z-[200] flex flex-col ${isDark ? "bg-[#0a0a0c] text-white" : "bg-white text-[#1a1a1e]"}`}
           >
-            <div className={`flex items-center justify-between p-6 border-b ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
-              <div className="flex items-center gap-4">
-                <img src={navbarlogo} alt="Logo" className="h-8" />
-                <button onClick={toggleTheme} className="p-2 border rounded-full border-current opacity-30">
-                   {isDark ? <SunIcon size={16} /> : <MoonIcon size={16} />}
-                </button>
-              </div>
-              <button onClick={() => setIsMobileMenuOpen(false)} className="p-2">
-                <XMarkIcon className="h-9 w-9" />
+            <div
+              className={`p-8 flex items-center justify-between border-b ${currentTheme.border}`}
+            >
+              <img src={navbarlogo} alt="Logo" className="h-8" />
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-3 bg-red-500/10 text-red-500 rounded-full"
+              >
+                <XMarkIcon className="h-7 w-7" />
               </button>
             </div>
-
-            <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8">
-              <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-3 ml-2">Main Menu</p>
-                <div className="flex flex-col gap-2">
-                  {commonNavigation.map((link) => (
-                    <Link 
-                      key={link.name} 
-                      to={link.href} 
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`text-xs font-bold flex items-center justify-between p-4 rounded-2xl transition-all active:scale-95 ${
-                        isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-slate-50 hover:bg-slate-100'
-                      }`}
-                    >
-                      <span className="flex items-center">{link.name} {renderBadge(link.badge)}</span>
-                      <ChevronRight size={18} className="opacity-20" />
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-white/10">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-4 mt-6 ml-2">Discover More</p>
-                <div className="grid grid-cols-1 gap-2">
-                  {sidebarLinks.map((link) => (
-                    <Link 
-                      key={link.name} 
-                      to={link.href} 
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`text-xs font-bold flex items-center justify-between p-4 rounded-2xl transition-all active:scale-95 ${
-                        isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-slate-50 hover:bg-slate-100'
-                      }`}
-                    >
-                      <span className="flex items-center">{link.name} {renderBadge(link.badge)}</span>
-                      <ChevronRight size={14} className="opacity-20"/>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className={`p-6 border-t ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
-              {!isAuthenticated ? (
-                <div className="grid grid-cols-2 gap-4">
-                  <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className={`py-4 text-center rounded-2xl font-black uppercase text-[10px] border ${currentTheme.border}`}>Login</Link>
-                  <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)} className="py-4 bg-amber-400 text-white text-center rounded-2xl font-black uppercase text-[10px]">Sign Up</Link>
-                </div>
-              ) : (
-                <Link to="/userpropertyregister" onClick={() => setIsMobileMenuOpen(false)} className="w-full py-4 bg-amber-500 text-black text-center rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-2">
-                   <PlusCircle size={18} /> Add Property
-                </Link>
+            <div className="flex-1 overflow-y-auto p-8 space-y-6">
+              {["Home", "Buy", "Rent", "Off-Plan", "Resources", "Careers"].map(
+                (link) => (
+                  <Link
+                    key={link}
+                    to="#"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block text-xl font-black uppercase tracking-widest ${currentTheme.text} border-b ${currentTheme.border} pb-4`}
+                  >
+                    {link}
+                  </Link>
+                ),
               )}
             </div>
           </motion.div>

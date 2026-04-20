@@ -77,8 +77,8 @@ const Buy = () => {
               <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">Premium Acquisition</span>
             </div>
             <h1 className="flex flex-col leading-[0.85] mb-8">
-              <span className={`text-7xl md:text-[120px] font-black tracking-tighter ${isDark ? 'text-white' : 'text-[#0f172a]'}`}>Property</span>
-              <span className="text-7xl md:text-[120px] font-serif italic font-light text-amber-500 tracking-tighter">Assets</span>
+              <span className={`text-4xl md:text-6xl font-serif tracking-tighter ${isDark ? 'text-white' : 'text-[#0f172a]'}`}>Property</span>
+              <span className="text-4xl md:text-6xl font-serif italic font-light text-amber-500 tracking-tighter">Assets</span>
             </h1>
             <p className={`text-lg md:text-xl font-bold leading-relaxed mb-6 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
               Secure your future with Dubai's most lucrative real estate opportunities. We curate high-yield residential and commercial investments.

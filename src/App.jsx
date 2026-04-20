@@ -16,6 +16,7 @@ import PrivateRoutes from "./routes/PrivateRoutes";
 
 import MainLayout from "./routes/MainLayout";
 import UserProfile from "./pages/UserProfile";
+import GlobalWhatsAppChat from "./components/common/homecommon/GlobalWhatsaapChat";
 function App() {
   return (
     <Router>
@@ -27,7 +28,7 @@ function App() {
         <Route path="/verifyemail" element={<VerifyEmail />} />
         <Route path="/forget-password" element={<ResetPassword />} />
         <Route path="/forget-password-request" element={<ResetPasswordRequest />} />
-        <Route path="/verify-otp  " element={<VerifyOtp />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
         
         {/* PROTECTED ROUTES */}
         <Route element={<PrivateRoutes />}>
@@ -40,6 +41,7 @@ function App() {
         {/* Catch-all for other routes defined in AllRoutes */}
         <Route path="*" element={<AllRoutes />} />
       </Routes>
+      <GlobalWhatsAppChat />
     </Router>
   );
 }

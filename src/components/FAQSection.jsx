@@ -80,7 +80,7 @@ const FAQSection = () => {
               <HelpCircle size={14} className="text-amber-500" />
               <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">Knowledge Base</span>
             </div>
-            <h2 className={`text-4xl md:text-6xl font-black uppercase tracking-tighter ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            <h2 className={`text-2xl md:text-4xl font-serif  tracking-tighter ${isDark ? 'text-white' : 'text-slate-900'}`}>
               Frequently Asked <span className="text-amber-500 italic font-serif font-light">Questions</span>
             </h2>
           </div>

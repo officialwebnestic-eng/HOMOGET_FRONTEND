@@ -6,13 +6,12 @@ import {
   Phone,
   Mail,
   MapPin,
-  ChevronRight,
   Share2,
   Heart,
   Plus,
   Square,
   BedDouble,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { useTheme } from "../../../context/ThemeContext";
@@ -61,12 +60,12 @@ const Agentfilter = () => {
   const { theme } = useTheme();
   const colors = themeColors[theme];
   const navigate = useNavigate();
-  const isDark = theme === "dark";
 
+  // Fetching property data with active filters
   const { propertyList = [], loading } = useGetAllProperty(
     currentPage,
     20,
-    useMemo(() => filters, [filters])
+    useMemo(() => filters, [filters]),
   );
 
   const handlePropertyClick = useCallback(
@@ -75,7 +74,7 @@ const Agentfilter = () => {
         state: { propertyData: property },
       });
     },
-    [navigate]
+    [navigate],
   );
 
   const handleSuggestionClick = (locationName) => {
@@ -89,11 +88,71 @@ const Agentfilter = () => {
     navigate("/propertylisting", { state: { initialSearch: searchQuery } });
   };
 
+  // 1. Updated handleWhatsApp to send two sequential messages
+  const handleWhatsApp = (e, property) => {
+    e.stopPropagation();
+
+    // Details for messages
+    const propertyName = property.propertyname;
+    const price = `AED ${Number(property.price).toLocaleString()}`;
+    const location = property.city;
+    const propertyId = property._id;
+
+    // --- FIRST MESSAGE: MANAGEMENT (+971 58 585 2283) ---
+    const managementNumber = "971585852283";
+    const managementMsg = encodeURIComponent(
+      `*New Client Interest Alert!*\n\n` +
+        `Property: ${propertyName}\n` +
+        `Price: ${price}\n` +
+        `Location: ${location}\n` +
+        `ID: ${propertyId}`,
+    );
+
+    // --- SECOND MESSAGE: AGENT ---
+    // If your property object has the agent's phone, use it.
+    // Otherwise, use your fallback +971 50 000 0000.
+    const agentNumber = property.agentPhone || "971500000000";
+    const agentMsg = encodeURIComponent(
+      `Hello! I am interested in viewing your listing: *${propertyName}*.\n` +
+        `Please provide more details regarding the viewing schedule.`,
+    );
+
+    // STEP 1: Open Management Chat
+    window.open(
+      `https://wa.me/${managementNumber}?text=${managementMsg}`,
+      "_blank",
+    );
+
+    // STEP 2: Open Agent Chat after a slight delay
+    // (This helps prevent browser pop-up blockers)
+    setTimeout(() => {
+      const confirmSecond = window.confirm(
+        "Message sent to Management. Click OK to notify the Agent directly.",
+      );
+      if (confirmSecond) {
+        window.open(`https://wa.me/${agentNumber}?text=${agentMsg}`, "_blank");
+      }
+    }, 1000);
+  };
+
+  const handleCall = (e, phone) => {
+    e.stopPropagation();
+    window.location.href = `tel:${phone || "+971500000000"}`;
+  };
+
+  const handleEmail = (e, property) => {
+    e.stopPropagation();
+    const subject = `Inquiry: ${property.propertyname}`;
+    window.location.href = `mailto:info@homoget.ae?subject=${encodeURIComponent(subject)}`;
+  };
+
   const eliteProperties = propertyList.slice(0, 9);
   const insightProperties = propertyList.slice(9, 20);
 
   return (
-    <div className={`${colors.background} min-h-screen pb-20 transition-colors duration-300`}>
+    <div
+      className={`${colors.background} min-h-screen pb-20 transition-colors duration-300`}
+    >
       <AgentHero
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -103,24 +162,28 @@ const Agentfilter = () => {
         onSearchButtonClick={handleSearchButtonClick}
         propertyList={propertyList}
         filters={filters}
-        handleFilterChange={(e) => setFilters({ ...filters, [e.target.name]: e.target.value })}
+        handleFilterChange={(e) =>
+          setFilters({ ...filters, [e.target.name]: e.target.value })
+        }
         filterFields={filterFields}
-        getUniqueValues={(data, key) => [...new Set(data.flatMap((item) => item[key]))].filter(Boolean).sort()}
+        getUniqueValues={(data, key) =>
+          [...new Set(data.flatMap((item) => item[key]))].filter(Boolean).sort()
+        }
         setShowFilters={setShowFilters}
         showFilters={showFilters}
       />
 
-      <div className="max-w-7xl mx-auto px-4   sm:px-6 lg:px-8  py-24  relative z-20">
-        
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-20">
         {/* HEADER SECTION */}
-        <div className="flex flex-col md:flex-row justify-between  items-center mb-10 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
           <div className="flex items-center gap-4">
-             <div className="h-1 w-12  bg-amber-500 rounded-full" />
-             <h2 className={`text-2xl    md:text-4xl font-serif ${colors.text}`}>
-                Exclusive <span className="text-amber-500 italic">Properties</span>
-             </h2>
+            <div className="h-1 w-12 bg-amber-500 rounded-full" />
+            <h2 className={`text-2xl md:text-4xl font-serif ${colors.text}`}>
+              Exclusive{" "}
+              <span className="text-amber-500 italic">Properties</span>
+            </h2>
           </div>
-          <button 
+          <button
             onClick={() => navigate("/propertylisting")}
             className="px-8 py-3 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center gap-3 hover:bg-black transition-all shadow-lg"
           >
@@ -128,7 +191,7 @@ const Agentfilter = () => {
           </button>
         </div>
 
-        {/* PROPERTY GRID (MATCHING SCREENSHOT) */}
+        {/* PROPERTY GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {eliteProperties.map((property) => (
             <motion.div
@@ -144,10 +207,10 @@ const Agentfilter = () => {
                   alt={property.propertyname}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
-                
+
                 {/* Floating Badges */}
                 <div className="absolute top-4 left-4 flex gap-2">
-                  <span className="px-3 py-1 bg-[#1a1a2e] text-white text-[9px] font-black uppercase rounded-md tracking-wider">
+                  <span className="px-3 py-1 bg-[#1a1a2e]/80 backdrop-blur-md text-white text-[9px] font-black uppercase rounded-md tracking-wider">
                     {property.propertytype || "HOUSE"}
                   </span>
                 </div>
@@ -157,8 +220,9 @@ const Agentfilter = () => {
                   </span>
                 </div>
 
-                {/* Location Overlay */}
-                <div className="absolute bottom-4 left-4 flex items-center gap-1.5 text-white bg-black/20 backdrop-blur-sm px-3 py-1 rounded-full">
+         
+
+                <div className="absolute bottom-4 left-4 flex items-center gap-1.5 text-white bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full">
                   <MapPin size={12} className="text-amber-400" />
                   <span className="text-[10px] font-bold truncate max-w-[150px]">
                     {property.address || property.city}, UAE
@@ -168,38 +232,74 @@ const Agentfilter = () => {
 
               {/* Content Body */}
               <div className="p-7 flex-1">
-                <h3 className={`text-xl font-bold mb-2 truncate ${colors.text}`}>
+                <h3
+                  className={`text-xl font-bold mb-2 truncate ${colors.text}`}
+                >
                   {property.propertyname}
                 </h3>
                 <p className="text-amber-500 text-lg font-black mb-6">
                   AED {Number(property.price).toLocaleString()}
-                  {property.listingtype === "Rent" && <span className="text-xs text-gray-400 font-normal ml-1">/ Year</span>}
+                  {property.listingtype === "Rent" && (
+                    <span className="text-xs text-gray-400 font-normal ml-1">
+                      / Year
+                    </span>
+                  )}
                 </p>
 
-                {/* Features Bar */}
                 <div className="flex items-center gap-6 py-4 border-t border-gray-100 dark:border-white/5">
                   <div className="flex items-center gap-2 text-gray-500">
                     <BedDouble size={16} className="text-amber-500" />
-                    <span className="text-[11px] font-bold uppercase">{property.bedroom || 2} BHK</span>
+                    <span className="text-[11px] font-bold uppercase">
+                      {property.bedroom || 2} BHK
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-gray-500">
                     <Square size={14} className="text-amber-500" />
-                    <span className="text-[11px] font-bold uppercase">{property.squarefoot || 0} Sq.Ft</span>
+                    <span className="text-[11px] font-bold uppercase">
+                      {property.squarefoot || 0} Sq.Ft
+                    </span>
                   </div>
                 </div>
 
-                {/* Footer Icon Bar (Matching Screenshot) */}
-                <div className="flex items-center justify-end gap-5 pt-4 mt-auto border-t border-gray-100 dark:border-white/5">
-                   <Share2 size={18} className="text-gray-400 hover:text-amber-500 transition-colors" />
-                   <Heart size={18} className="text-gray-400 hover:text-red-500 transition-colors" />
-                   <Plus size={20} className="text-gray-400 hover:text-blue-500 transition-colors" />
+                {/* Footer Action Bar */}
+                <div className="flex items-center justify-between pt-4 mt-auto border-t border-gray-100 dark:border-white/5">
+                  <div className="flex gap-4">
+                    <button
+                      onClick={(e) => handleWhatsApp(e, property)}
+                      className="text-green-500 hover:scale-110 transition-transform"
+                    >
+                      <FaWhatsapp size={20} />
+                    </button>
+                    <button
+                      onClick={(e) => handleCall(e)}
+                      className="text-blue-500 hover:scale-110 transition-transform"
+                    >
+                      <Phone size={18} />
+                    </button>
+                    <button
+                      onClick={(e) => handleEmail(e, property)}
+                      className="text-amber-500 hover:scale-110 transition-transform"
+                    >
+                      <Mail size={18} />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Share2
+                      size={18}
+                      className="text-gray-400 hover:text-amber-500 transition-colors"
+                    />
+                    <Heart
+                      size={18}
+                      className="text-gray-400 hover:text-red-500 transition-colors"
+                    />
+                  </div>
                 </div>
               </div>
             </motion.div>
           ))}
         </div>
 
-        {/* MARKET INSIGHTS SECTION (CLEANER STYLE) */}
+        {/* MARKET INSIGHTS */}
         {insightProperties.length > 0 && (
           <div className="mt-24 mb-20">
             <div className="flex items-center gap-3 mb-10">
@@ -208,7 +308,7 @@ const Agentfilter = () => {
                 Market <span className="text-amber-500 italic">Insights</span>
               </h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {insightProperties.map((property) => (
                 <motion.div
@@ -225,12 +325,16 @@ const Agentfilter = () => {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className={`font-bold text-sm mb-1 truncate ${colors.text}`}>
+                    <h4
+                      className={`font-bold text-sm mb-1 truncate ${colors.text}`}
+                    >
                       {property.propertyname}
                     </h4>
                     <div className="flex items-center gap-1.5 mb-2">
                       <MapPin className="w-3 h-3 text-amber-500" />
-                      <span className={`text-[10px] font-bold uppercase ${colors.textSecondary}`}>
+                      <span
+                        className={`text-[10px] font-bold uppercase ${colors.textSecondary}`}
+                      >
                         {property.city}
                       </span>
                     </div>

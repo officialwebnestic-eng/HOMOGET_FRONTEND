@@ -85,7 +85,7 @@ export default function Sidebar() {
           <DropdownMenu 
             icon={<Building size={20} />} label="Property " menuKey="Prop" 
             openDropdown={openDropdown} toggleDropdown={toggleDropdown} ct={ct} isOpen={isOpen}
-            items={[{ to: "/addproperty", label: "List Asset" }, { to: "/viewpropertylist", label: "All Properties" }]} 
+            items={[{ to: "/addproperty", label: "List Property" }, { to: "/viewpropertylist", label: "All Properties" }]} 
           />
 
           <DropdownMenu 
