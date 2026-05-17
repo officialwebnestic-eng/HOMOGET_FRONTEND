@@ -33,7 +33,7 @@ import {
 import { FaWhatsapp } from "react-icons/fa";
 import { useTheme } from "../../../context/ThemeContext";
 import AmenitiesSection from "../../common/homecommon/AmenitiesSection.jsx";
-import NearbyLocations from "../../../helpers/NearByLocations.jsx";
+import NearbyLocations from "../../../helpers/NearbyLocations.jsx";
 import { http } from "../../../axios/axios";
 import { toast } from "react-toastify";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -325,7 +325,7 @@ const PropertyDetailsPage = () => {
       <main className="max-w-[1440px] mx-auto px-6 md:px-10 py-10 md:py-16 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
 
         {/* LEFT COLUMN */}
-        <div className="lg:col-span-8 space-y-10 md:space-y-16">
+        <div className="lg:col-span-8 space-y-10   md:space-y-16">
 
           {/* Description Section */}
           <section>
