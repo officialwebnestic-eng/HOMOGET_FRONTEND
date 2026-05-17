@@ -1,0 +1,572 @@
+import React, { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import {
+  MapPin,
+  ArrowLeft,
+  Navigation,
+  CalendarCheck,
+  FileText,
+  MoveUpRight,
+  ShieldCheck,
+  Loader2,
+  Phone,
+  Mail,
+  Globe,
+  ArrowRight,
+  Bed,
+  Bath,
+  Ruler,
+  Building,
+  Crown,
+  Sparkles,
+  Briefcase,
+  Home,
+  Clock,
+  Calendar,
+  User,
+  Star,
+  Heart,
+  Share2,
+  PlayCircle,
+  Video
+} from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
+import { useTheme } from "../../../context/ThemeContext";
+import AmenitiesSection from "../../common/homecommon/AmenitiesSection.jsx";
+import NearbyLocations from "../../../helpers/NearByLocations.jsx";
+import { http } from "../../../axios/axios";
+import { toast } from "react-toastify";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination, Navigation as SwiperNav } from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/pagination";
+import "swiper/css/navigation";
+import GeospatialMap from "../../../helpers/GeospatialMap.jsx";
+import RelatedAssets from "../RelatedAssets .jsx";
+
+// Helper functions for property type detection
+const isOffPlan = (property) => {
+  return property?.category === "Off-Plan" || property?.propertyListingType === "project";
+};
+
+const isCommercial = (property) => {
+  return property?.category === "Commercial";
+};
+
+const isRent = (property) => {
+  return property?.offeringType === "Rent";
+};
+
+const PropertyDetailsPage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { theme } = useTheme();
+  const lastIdRef = useRef(null);
+
+  const [property, setProperty] = useState(
+    location.state?.propertyData || null,
+  );
+  const [loading, setLoading] = useState(!location.state?.propertyData);
+  const [showFullDesc, setShowFullDesc] = useState(false);
+
+  useEffect(() => {
+    const fetchProperty = async () => {
+      if (
+        property &&
+        property._id === id &&
+        typeof property.agentId === "object"
+      ) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      try {
+        const response = await http.get(`/getpropertybyid/${id}`);
+        if (response.data.success) {
+          setProperty(response.data.data);
+        }
+      } catch (error) {
+        toast.error("Error synchronizing asset data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      if (lastIdRef.current !== id) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        lastIdRef.current = id;
+      }
+      fetchProperty();
+    }
+  }, [id]);
+
+  // Format price function
+  const formatPrice = (price, unit) => {
+    const num = Number(price);
+    if (isNaN(num)) return "On Request";
+    return `AED ${num.toLocaleString()} ${unit && unit !== "Total Amount" ? `/ ${unit}` : ""}`;
+  };
+
+  // Handle WhatsApp
+  const handleWhatsApp = () => {
+    const managementNo = "971585852283";
+    const agentNo = property?.agentId?.phone?.replace(/\s+/g, "") || "971500000000";
+    const propertyTitle = property?.propertyTitleEn || property?.propertyname;
+    const msg = encodeURIComponent(
+      `🏢 *Property Inquiry - Homoget*\n\n` +
+      `🏠 *Property:* ${propertyTitle}\n` +
+      `💰 *Price:* AED ${Number(property?.price).toLocaleString()}${isRent(property) ? `/${property?.rentedPeriod?.toLowerCase().replace("per ", "") || "year"}` : ""}\n` +
+      `📍 *Location:* ${property?.community || property?.city}\n` +
+      `📐 *Area:* ${property?.squarefoot?.toLocaleString()} sqft\n\n` +
+      `I'm interested in this property. Please share more details.`
+    );
+    window.open(`https://wa.me/${managementNo}?text=${msg}`, "_blank");
+
+    setTimeout(() => {
+      if (window.confirm("✅ Message sent to Management.\n\nNotify agent directly?")) {
+        window.open(`https://wa.me/${agentNo}?text=${msg}`, "_blank");
+      }
+    }, 1000);
+  };
+
+  // Handle Call
+  const handleCall = () => {
+    if (property?.agentId?.phone) {
+      window.location.href = `tel:${property.agentId.phone}`;
+    }
+  };
+
+  // Handle Email
+  const handleEmail = () => {
+    const subject = encodeURIComponent(`Inquiry: ${property?.propertyTitleEn || property?.propertyname}`);
+    window.location.href = `mailto:info@homoget.ae?subject=${subject}`;
+  };
+
+  if (loading) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${theme === "dark" ? "bg-[#050505]" : "bg-white"}`}>
+        <Loader2 className="animate-spin text-amber-500" size={30} />
+      </div>
+    );
+  }
+
+  if (!property) return null;
+
+  const propertyTitle = property.propertyTitleEn || property.propertyname;
+  const locationName = property.community || property.city || "Dubai";
+  const agentName = property.agentId?.name || "Property Consultant";
+  const agentImage = property.agentId?.profileImage || property.agentId?.profilePhoto;
+  const images = property.image || [];
+  const videos = property.videos || property.videoTourLink;
+  const virtualTour = property.virtualTour360;
+  const isOffPlanProperty = isOffPlan(property);
+  const isCommercialProperty = isCommercial(property);
+  const isRentalProperty = isRent(property);
+  const isDark = theme === "dark";
+
+  // Get status badge
+  const getStatusBadge = () => {
+    if (isOffPlanProperty) {
+      return { text: "OFF-PLAN", icon: <Calendar size={12} />, color: "bg-purple-500" };
+    }
+    if (isRentalProperty) {
+      return { text: "FOR RENT", icon: <Clock size={12} />, color: "bg-blue-500" };
+    }
+    return { text: "FOR SALE", icon: <Sparkles size={12} />, color: "bg-amber-500" };
+  };
+
+
+  // Combine all media items
+  const mediaItems = [
+    ...images.map(img => ({ type: 'image', url: img })),
+    ...(videos ? [{ type: 'video', url: videos }] : []),
+    ...(virtualTour ? [{ type: '360', url: virtualTour }] : [])
+  ];
+
+  const statusBadge = getStatusBadge();
+
+  return (
+    <div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-[#050505] text-white" : "bg-white text-black"}`}>
+
+      {/* 1. ARCHITECTURAL HERO (with Swiper Gallery) */}
+      <section className="relative w-full h-[75vh] bg-black overflow-hidden">
+        {images.length > 0 ? (
+          <Swiper
+            modules={[Autoplay, Pagination, SwiperNav]}
+            spaceBetween={0}
+            slidesPerView={1}
+            pagination={{ clickable: true }}
+            navigation
+            autoplay={{ delay: 4000 }}
+            className="h-full w-full"
+          >
+            {images.map((img, idx) => (
+              <SwiperSlide key={idx}>
+                <img src={img} className="w-full h-full object-cover opacity-70" alt={`${propertyTitle} - ${idx + 1}`} />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+            <Building size={64} className="text-white/20" />
+          </div>
+        )}
+
+        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent" />
+
+        <button
+          onClick={() => navigate(-1)}
+          className="absolute top-10 left-10 z-20 flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.4em] text-white/40 hover:text-amber-500 transition-all"
+        >
+          <ArrowLeft size={14} /> Back to Collection
+        </button>
+
+        {/* Status Badge on Hero */}
+        <div className="absolute top-10 right-10 z-20">
+          <span className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-2 ${statusBadge.color} text-white shadow-lg`}>
+            {statusBadge.icon} {statusBadge.text}
+          </span>
+        </div>
+
+        <div className="absolute bottom-12 left-10 md:left-20">
+          <span className="text-[9px] font-black text-amber-500 uppercase tracking-[0.5em] mb-3 block">
+            Ref. {property._id?.slice(-8).toUpperCase()}
+          </span>
+          <h1 className="text-4xl md:text-6xl font-light uppercase tracking-tighter italic leading-none">
+            {propertyTitle}
+          </h1>
+          <div className="flex items-center gap-2 mt-4">
+            <MapPin size={16} className="text-amber-500" />
+            <span className="text-sm text-white/60">{locationName}, UAE</span>
+          </div>
+        </div>
+      </section>
+
+
+
+      {/* 2. PERSISTENT TRANSACTION BAR */}
+      <div className={`sticky top-0 z-40 border-y ${isDark ? "border-zinc-500/10 bg-black/80" : "border-gray-200 bg-white/80"} backdrop-blur-xl`}>
+        <div className="max-w-[1440px] mx-auto px-6 md:px-10 py-4 md:py-6 flex flex-wrap justify-between items-center gap-4">
+          <div className="flex gap-8 md:gap-12">
+            <div>
+              <p className="text-[8px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Valuation</p>
+              <p className="text-xl md:text-2xl font-serif text-amber-500">
+                {formatPrice(property.price, property.rentedPeriod)}
+              </p>
+            </div>
+            <div className="hidden md:block">
+              <p className="text-[8px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Property Type</p>
+              <p className="text-[11px] font-black uppercase tracking-widest">{property.propertytype || "Property"}</p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={handleWhatsApp}
+              className="bg-green-600 text-white px-6 py-3 l text-[10px] font-black uppercase tracking-[0.2em] hover:bg-green-700 transition-all flex items-center gap-2"
+            >
+              <FaWhatsapp size={14} /> WhatsApp
+            </button>
+            <button
+              onClick={() => navigate(`/bookings/${id}`, { state: { propertyData: property } })}
+              className="bg-amber-500 text-black px-8 py-3 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white transition-all shadow-2xl flex items-center gap-2"
+            >
+              <CalendarCheck size={14} /> Initiate Booking
+            </button>
+          </div>
+        </div>
+      </div>
+
+
+      {/* ===== SECTION 2: GALLERY SECTION (THUMBNAILS BELOW) ===== */}
+      {mediaItems.length > 1 && (
+        <section className="py-16 px-6 md:px-12 border-b border-gray-200 dark:border-gray-800">
+          <div className="max-w-7xl mx-auto">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-600 mb-6 md:mb-10 flex items-center gap-2">
+              <div className="w-1 h-8 bg-amber-500"></div>
+              Gallery
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-5">
+              {mediaItems.slice(1, 9).map((item, idx) => (
+                <div
+                  key={idx}
+                  className="relative aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer group"
+                  onClick={() => setActiveImageIndex(idx + 1)}
+                >
+                  {item.type === 'image' ? (
+                    <img
+                      src={item.url}
+                      alt={`Gallery ${idx + 2}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : item.type === 'video' ? (
+                    <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center">
+                      <PlayCircle size={48} className="text-amber-500 mb-2" />
+                      <span className="text-xs text-white">Video Tour</span>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center">
+                      <Video size={48} className="text-amber-500 mb-2" />
+                      <span className="text-xs text-white">360 Tour</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+
+      {/* 3. CORE CONTENT GRID */}
+      <main className="max-w-[1440px] mx-auto px-6 md:px-10 py-10 md:py-16 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
+
+        {/* LEFT COLUMN */}
+        <div className="lg:col-span-8 space-y-10 md:space-y-16">
+
+          {/* Description Section */}
+          <section>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-600 mb-6 md:mb-10 flex items-center gap-2">
+              <FileText size={12} /> Property Description
+            </h3>
+            <p className="text-sm md:text-xl font-serif     max-w-3xl">
+              {property.descriptionEn || property.description}
+            </p>
+            {(property.descriptionEn?.length > 300 || property.description?.length > 300) && (
+              <button
+                onClick={() => setShowFullDesc(true)}
+                className="mt-4 text-amber-500 text-sm font-bold hover:underline flex items-center gap-1"
+              >
+                Read Full Description <ArrowRight size={12} />
+              </button>
+            )}
+          </section>
+
+          {/* Technical Specs - CONDITIONAL based on property type */}
+          <section>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-600 mb-8 md:mb-12 flex items-center gap-2">
+              <ShieldCheck size={12} /> Technical Specifications
+            </h3>
+
+            {isOffPlanProperty ? (
+              // Off-Plan Specific Details
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-6">
+                <SpecItem label="Handover Date" value={property.deliveryDate || "Q4 2026"} />
+                <SpecItem label="Developer" value={property.developerId?.companyName || "Premium Developer"} />
+                <SpecItem label="Owner Name" value={`${property.ownerName || "N/A"}`} />
+                <SpecItem label="Completion" value={`${property.completionPercentage || 65}%`} />
+                <SpecItem label="Total Area" value={`${property.squarefoot?.toLocaleString()} Sq.Ft`} />
+                <SpecItem label="Property Type" value={property.propertytype} />
+                <SpecItem label="category" value={property.category} />
+                <SpecItem label="offeringType" value={property.offeringType} />
+                <SpecItem label="rentedPeriod" value={property.rentedPeriod} />
+                <SpecItem label="permitType" value={property.permitType} />
+                <SpecItem label="trakheesiNumber" value={property.trakheesiNumber} />
+                <SpecItem label="reraORN" value={property.reraORN} />
+                <SpecItem label="brnNumber" value={property.brnNumber} />
+
+                <SpecItem label="District" value={property.city} />
+              </div>
+            ) : isCommercialProperty ? (
+              // Commercial Property Specs
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-6">
+                <SpecItem label="Property Type" value={property.propertytype || "Commercial Space"} />
+                <SpecItem label="Total Area" value={`${property.squarefoot?.toLocaleString()} Sq.Ft`} />
+                <SpecItem label="Owner Name" value={`${property.ownerName || "N/A"}`} />
+
+
+                <SpecItem label="Parking Slots" value={property.parkingSlots || 0} />
+                <SpecItem label="Furnishing" value={property.furnishingType || "Unfurnished"} />
+                <SpecItem label="District" value={property.city} />
+                <SpecItem label="Property Type" value={property.propertytype} />
+                <SpecItem label="category" value={property.category} />
+                <SpecItem label="offeringType" value={property.offeringType} />
+                <SpecItem label="rentedPeriod" value={property.rentedPeriod} />
+                <SpecItem label="permitType" value={property.permitType} />
+                <SpecItem label="Availability" value={property.availability || "Immediately"} />
+
+              </div>
+            ) : (
+              // Residential Property Specs
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-6">
+                <SpecItem label="Bedrooms" value={property.bedroom || 0} />
+                <SpecItem label="Bathrooms" value={property.bathroom || 0} />
+                <SpecItem label="Total Area" value={`${property.squarefoot?.toLocaleString()} Sq.Ft`} />
+                <SpecItem label="Parking Slots" value={property.parkingSlots || 0} />
+                <SpecItem label="Furnishing" value={property.furnishingType || "Unfurnished"} />
+                <SpecItem label="Owner Name" value={`${property.ownerName || "N/A"}`} />
+
+                <SpecItem label="Property Type" value={property.propertytype} />
+                <SpecItem label="category" value={property.category} />
+                <SpecItem label="offeringType" value={property.offeringType} />
+                <SpecItem label="rentedPeriod" value={property.rentedPeriod} />
+                <SpecItem label="permitType" value={property.permitType} />
+                <SpecItem label="District" value={property.city} />
+                <SpecItem label="Availability" value={property.availability || "Immediately"} />
+              </div>
+            )}
+          </section>
+
+          {/* Off-Plan Progress Bar */}
+          {isOffPlanProperty && property.completionPercentage && (
+            <section className="p-6 md:p-8 border border-purple-500/20 bg-purple-500/5 rounded-2xl">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-purple-500 mb-6">Construction Progress</h3>
+              <div className="mb-2 flex justify-between text-sm">
+                <span>Overall Completion</span>
+                <span className="text-purple-500 font-bold">{property.completionPercentage}%</span>
+              </div>
+              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" style={{ width: `${property.completionPercentage}%` }} />
+              </div>
+              {property.paymentPlan && (
+                <p className="mt-4 text-sm text-purple-400">{property.paymentPlan}</p>
+              )}
+            </section>
+          )}
+
+          {/* Rental Payment Terms */}
+          {isRentalProperty && property.cheques && (
+            <section className="p-2 md:p-4 border border-blue-500/20 bg-blue-500/5 rounded-2xl">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-blue-500 mb-6">Payment Terms</h3>
+              <div className="grid grid-cols-2 gap-6">
+                <SpecItem label="Number of Cheques" value={`${property.cheques} Cheques`} />
+                <SpecItem label="Rented Period" value={property.rentedPeriod || "Per Year"} />
+                <SpecItem label="Property Type" value={property.propertytype} />
+                <SpecItem label="category" value={property.category} />
+                <SpecItem label="offeringType" value={property.offeringType} />
+                <SpecItem label="rentedPeriod" value={property.rentedPeriod} />
+                <SpecItem label="permitType" value={property.permitType} />
+
+              </div>
+            </section>
+          )}
+
+          {/* Amenities */}
+          {property.amenities?.length > 0 && (
+            <section>
+              <AmenitiesSection amenities={property.amenities} />
+            </section>
+          )}
+
+          <NearbyLocations property={property} isDark={isDark} />
+        </div>
+
+        {/* RIGHT COLUMN (Agent Sidebar) */}
+        <aside className="lg:col-span-4">
+          <div className="sticky top-32 space-y-8">
+            {/* Agent Card */}
+            <div className={`p-6 rounded-2xl ${isDark ? "bg-zinc-900/50 border border-white/10" : "bg-gray-50 border border-gray-200"}`}>
+              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-500 mb-6">
+                Representative
+              </h4>
+              <div className="flex items-center gap-5 mb-6">
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-xl">
+                  {agentImage ? (
+                    <img src={agentImage} className="w-full h-full object-cover" alt={agentName} />
+                  ) : (
+                    agentName.charAt(0).toUpperCase()
+                  )}
+                </div>
+                <div>
+                  <p className="text-lg font-bold uppercase tracking-tight">{agentName}</p>
+                  <p className="text-[9px] text-amber-500 font-black uppercase tracking-widest">
+                    Luxury Property Specialist
+                  </p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <Star size={12} className="text-amber-500 fill-amber-500" />
+                    <span className="text-xs">4.9 (128 reviews)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-4 border-t border-zinc-500/10">
+                <button
+                  onClick={handleCall}
+                  className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-white/5 transition-colors"
+                >
+                  <Phone size={14} className="text-amber-500" />
+                  <span className="text-sm">{property.agentId?.phone || "Contact Available"}</span>
+                </button>
+                <button
+                  onClick={handleEmail}
+                  className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-white/5 transition-colors"
+                >
+                  <Mail size={14} className="text-amber-500" />
+                  <span className="text-sm">{property.agentId?.email || "Email Available"}</span>
+                </button>
+                <div className="flex items-center gap-3 p-3">
+                  <Globe size={14} className="text-amber-500" />
+                  <span className="text-sm">{property.agentId?.city || "Dubai"}, UAE</span>
+                </div>
+              </div>
+
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={handleWhatsApp}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition-all"
+                >
+                  <FaWhatsapp size={16} /> WhatsApp
+                </button>
+                <button
+                  onClick={handleCall}
+                  className="flex-1 py-3 rounded-xl bg-amber-500 text-black text-sm font-bold hover:bg-amber-600 transition-all"
+                >
+                  Call Now
+                </button>
+              </div>
+            </div>
+
+            {/* Verification Badge */}
+            <div className={`p-6 rounded-2xl ${isDark ? "bg-zinc-900/50 border border-white/10" : "bg-gray-50 border border-gray-200"}`}>
+              <p className="text-[8px] font-black uppercase tracking-widest text-amber-500 mb-2">
+                Verified Asset
+              </p>
+              <p className="text-xs leading-relaxed opacity-60 italic">
+                All legal documentation for this property has been pre-screened by our compliance team.
+              </p>
+              <div className="mt-4 pt-3 border-t border-zinc-500/10">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-400">Trakheesi Number</span>
+                  <span className="font-mono">{property.trakheesiNumber || "N/A"}</span>
+                </div>
+                <div className="flex justify-between text-xs mt-2">
+                  <span className="text-slate-400">Permit Type</span>
+                  <span>{property.permitType || "RERA"}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </main>
+
+      <GeospatialMap property={property} isDark={true} />
+      <RelatedAssets 
+  currentProperty={property} 
+  isDark={isDark} 
+  limit={3} 
+/>
+    </div>
+
+    
+  );
+};
+
+const SpecItem = ({ label, value }) => {
+  if (!value && value !== 0) return null;
+
+  return (
+    <div className="space-y-1">
+      <p className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
+        {label}
+      </p>
+      <p className="text-base md:text-xl font-serif tracking-tighter ">
+        {value}
+      </p>
+    </div>
+  );
+};
+
+export default PropertyDetailsPage;
