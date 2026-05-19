@@ -211,9 +211,8 @@ const AddProperty = () => {
     }
   };
 
-  const inputClass = `w-full px-4 py-3 rounded-xl border outline-none focus:ring-1 focus:ring-amber-500 transition-all text-sm font-semibold ${
-    isDark ? "bg-[#1A1F2B] border-white/10 text-white" : "bg-white border-slate-200 text-slate-900 shadow-sm"
-  }`;
+  const inputClass = `w-full px-4 py-3 rounded-xl border outline-none focus:ring-1 focus:ring-amber-500 transition-all text-sm font-semibold ${isDark ? "bg-[#1A1F2B] border-white/10 text-white" : "bg-white border-slate-200 text-slate-900 shadow-sm"
+    }`;
   const labelClass = "text-[9px] font-bold uppercase text-slate-500 mb-1 block tracking-wider";
   const requiredStar = <span className="text-red-500 ml-0.5">*</span>;
 
@@ -257,13 +256,12 @@ const AddProperty = () => {
                 if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
                 setActiveSection(section.id);
               }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all ${
-                activeSection === section.id
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all ${activeSection === section.id
                   ? "bg-amber-500 text-black"
                   : isDark
-                  ? "bg-white/5 text-slate-400 hover:bg-white/10"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
+                    ? "bg-white/5 text-slate-400 hover:bg-white/10"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
             >
               {section.icon} {section.label}
             </button>
@@ -563,7 +561,7 @@ const AddProperty = () => {
                 <label className={labelClass}>Number of Cheques</label>
                 <select {...register("cheques")} className={inputClass}>
                   <option value="">Select</option>
-                  {[1,2,3,4,5,6,7,8,9,10,12].map((c) => (<option key={c} value={c}>{c} Cheques</option>))}
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12].map((c) => (<option key={c} value={c}>{c} Cheques</option>))}
                 </select>
               </div>
             )}

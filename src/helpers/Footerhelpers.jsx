@@ -18,8 +18,36 @@
   ];
 
    export  const discoverLinks = [
-    { name: "Buy Properties", href: "/buy" },
-    { name: "Sell Property", href: "/sell" },
+    { name: "Buy ", href: "/buy" },
+    { name: "Rent", href: "/rent" },
+    { name: "Off-Plan", href: "/off-plan" },
+    { name: "Mortgage", href: "/mortgage" },
+    { name: "Property Listing", href: "/propertylisting" },
+    { name: "Find Agent", href: "/agents" },
+    { name: "Find Developer", href: "/developers" },
+    { name: "Contact", href: "/contact" },
+  ];
+
+  export const companyLinks = [
+    { name: "About Us", href: "/about-us" },
+    { name: "Blog", href: "/blog" },
+    { name: "Market News", href: "/news" },
+    { name: "Help Center", href: "/faq" },
+    { name: "Privacy Policy", href: "/privacy-policy" },
+    { name: "Terms of Service", href: "/terms-of-service" },
+    { name: "RERA Compliance", href: "/rera-compliance" },
+  ];
+
+  export const resourcesLinks = [
+    { name: "Market News", href: "/news" },
+    { name: "Help Center", href: "/faq" },
+    { name: "Privacy Policy", href: "/privacy-policy" },
+    { name: "Terms of Service", href: "/terms-of-service" },
+    { name: "RERA Compliance", href: "/rera-compliance" },
+  ];
+
+  export const discoverLinksNew = [
+    { name: "Residential", href: "/propertylisting?category=Residential" },
     { name: "Rent Homes", href: "/rent" },
     { name: "Off-Plan Projects", href: "/off-plan" }
   ];    

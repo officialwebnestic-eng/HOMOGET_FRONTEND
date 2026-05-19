@@ -86,6 +86,7 @@ import ViewAllDeveloperList from "../components/admin/Developer/ViewAllDeveloper
 import CreateAdminAppointment from "../components/admin/Appoinment/CreateAdminAppointment.jsx";
 import SelectAdminAppointmentProperty from "../components/admin/Appoinment/SelectAdminAppointmentProperty.jsx";
 import AddPropertyByAgent from "../components/admin/Property/AddPropertyByAgent.jsx";
+import ReraCompliance from "../ReraCompliance.jsx";
 
 
 export const AdminRoutes = () => {
@@ -430,6 +431,7 @@ export const PublicRoutes = () => {
              <Route path="rent" element={<Rent />} />
              <Route path="buy" element={<Buy />} />
              <Route path="offplan" element={<OffPlan />} />
+             <Route path="rera-compliance" element={<ReraCompliance />} />
 
             <Route path="/property/:id" element={<PropertyDetailsPage />} />
              </Route>

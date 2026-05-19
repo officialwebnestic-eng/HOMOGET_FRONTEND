@@ -1,4 +1,4 @@
-import React from 'react';
+      import React from 'react';
 import { Navigation, Car, Footprints, TrainFront, HelpCircle, ShieldCheck } from 'lucide-react';
 
 // --- SUB-COMPONENT: INDIVIDUAL CARD ---
