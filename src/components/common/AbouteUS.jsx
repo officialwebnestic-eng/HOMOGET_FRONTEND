@@ -154,34 +154,70 @@ const AboutUs = () => {
       </section>
 
       {/* ========== 2. FOUNDERS SECTION (ide by Side) ========== */}
-      <div className="max-w-5xl mx-auto px-6 py-10">
-        <motion.div variants={sectionVariant} initial="hidden" whileInView="visible" className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 rounded-full mb-4">
-            <Users2 size={14} className="text-amber-500" />
-            <span className="text-[10px] font-black  tracking-widest text-amber-500">Leadership</span>
-          </div>
-          <h2 className="text-2xl md:text-3xl font-serif  tracking-tighter">{t.foundersTitle}</h2>
-          <p className="text-slate-500 mt-2 max-w-2xl mx-auto">{t.foundersSub}</p>
-        </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <FounderCard
-            name={t.founderName}
-            role={t.founderRole}
-            image={t.founderimage}
-            description={t.founderDesc}
-            achievements={t.founderAchievements}
-            isDark={isDark}
-          />
-          <FounderCard
-            name={t.coFounderName}
-            role={t.coFounderRole}
-            image={t.coFounderimage}
-            description={t.coFounderDesc}
-            achievements={t.coFounderAchievements}
-            isDark={isDark}
-          />
+     <div className="max-w-6xl mx-auto px-6 py-16">
+  <motion.div variants={sectionVariant} initial="hidden" whileInView="visible" className="text-center mb-12">
+    <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 rounded-full mb-4">
+      <Users2 size={14} className="text-amber-500" />
+      <span className="text-[10px] font-black tracking-widest text-amber-500">Leadership</span>
+    </div>
+    <h2 className="text-3xl md:text-4xl font-serif font-bold tracking-tighter">{t.foundersTitle}</h2>
+    <p className="text-slate-500 mt-2 max-w-2xl mx-auto">{t.foundersSub}</p>
+  </motion.div>
+
+  {/* Founder Profile (Image + Text Side by Side) */}
+  <motion.div
+    variants={sectionVariant}
+    initial="hidden"
+    whileInView="visible"
+    className="flex flex-col md:flex-row items-center gap-10 md:gap-16 bg-white dark:bg-slate-900/50 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 md:p-10 shadow-lg"
+  >
+    {/* Image Section */}
+    <div className="md:w-2/5 flex-shrink-0">
+      <div className="relative rounded-2xl overflow-hidden shadow-xl">
+        <img
+          src={t.founderimage}
+          alt={t.founderName}
+          className="w-full h-auto object-cover aspect-[4/5]"
+        />
+        <div className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center shadow-lg">
+          <Award size={18} className="text-white" />
         </div>
       </div>
+    </div>
+
+    {/* Text Section */}
+    <div className="md:w-3/5 space-y-5 text-center md:text-left">
+      <div>
+        <h3 className="text-2xl md:text-3xl font-bold tracking-tight">{t.founderName}</h3>
+        <p className="text-amber-500 font-black uppercase text-[10px] tracking-widest mt-1">{t.founderRole}</p>
+      </div>
+      <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+        {t.founderDesc}
+      </p>
+      <div className="flex flex-wrap justify-center md:justify-start gap-3 pt-2">
+        {t.founderAchievements.map((ach, idx) => (
+          <div key={idx} className="flex items-center gap-1.5 bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-full">
+            <Star size={12} className="text-amber-500 fill-amber-500" />
+            <span className="text-[9px] font-medium">{ach}</span>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center justify-center md:justify-start gap-2 pt-3">
+        <Globe size={14} className="text-amber-500" />
+        <span className="text-[10px] opacity-70">Dubai, UAE</span>
+      </div>
+      {/* More Details Button */}
+      <div className="pt-4">
+        <button
+          onClick={() => window.location.href = '/about-founder'}
+          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-amber-500 text-black font-black uppercase text-[9px] tracking-wider hover:bg-amber-600 transition-all shadow-md"
+        >
+          More Details <ArrowUpRight size={14} />
+        </button>
+      </div>
+    </div>
+  </motion.div>
+</div>
 
       {/* ========== 3. BENTO CONTENT GRID ========== */}
       <section className="py-10 px-6 max-w-7xl mx-auto space-y-8 text-start">

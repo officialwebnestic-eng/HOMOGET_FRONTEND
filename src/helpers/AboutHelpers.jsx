@@ -1,3 +1,5 @@
+import { homogetFounderImage } from "../ExportImages";
+
 export const content = {
   en: {
     heroTag: "The Gold Standard of Brokerage",
@@ -37,15 +39,11 @@ export const content = {
     foundersSub: "Meet the leaders shaping Dubai's real estate future",
     founderName: "Prashant Singh",
     founderRole: "Founder & CEO",
-    founderimage: "https://media.istockphoto.com/id/1406880505/photo/portrait-of-businessman-sitting-in-office-successful-man-worker-employee-by-work-desk-looking.jpg?s=612x612&w=0&k=20&c=iwRLj4ZpAth5vIar-BcY5kEG-i9sO8kGOgFwm3kIp4g=",
+    founderimage: homogetFounderImage,
     founderDesc: "A visionary entrepreneur with over 12+ years of experience in Dubai's luxury real estate market. Prashant Singh founded HomoGet with a mission to democratize property acquisition and bring transparency to the UAE real estate sector. Under his leadership, HomoGet has grown into a trusted brokerage firm managing over AED 5B+ in assets. His deep understanding of market dynamics and commitment to client success has made HomoGet a benchmark for excellence in Dubai's competitive property landscape.",
     founderAchievements: ["12+ Years Experience", "AED 5B+ Assets Managed", "RERA Certified", "Industry Pioneer"],
     
-    coFounderName: "Anjali Singh",
-    coFounderRole: "Co-Founder & Managing Director",
-    coFounderimage: "https://media.istockphoto.com/id/470745398/photo/young-emirati-businesswoman-looking-away-at-conference-table.jpg?s=612x612&w=0&k=20&c=tlP-4VDc-rOC1q5QEcGLOsUA4Apgg_U0DmKoLqwpvZw=",
-    coFounderDesc: "Anjali Singh brings a unique blend of operational excellence and customer-centric innovation to HomoGet. With a background in international business and client relations, she has been instrumental in building HomoGet's reputation for white-glove service. Anjali oversees the company's strategic partnerships, compliance framework, and client experience initiatives. Her dedication to ethical brokerage practices has earned HomoGet the trust of investors from over 30 countries worldwide.",
-    coFounderAchievements: ["Operations Expert", "Client Relations Specialist", "Global Partnership Leader", "Compliance Champion"],
+  
     
     faqTitle: "Knowledge Base",
     faqSub: "Frequently Asked Questions",
@@ -92,14 +90,10 @@ export const content = {
     foundersSub: "दुबई के रियल एस्टेट भविष्य को आकार देने वाले नेताओं से मिलें",
     founderName: "प्रशांत सिंह",
     founderRole: "संस्थापक और सीईओ",
-    founderimage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=870&q=80",
+    founderimage: homogetFounderImage,
     founderDesc: "दुबई के लग्जरी रियल एस्टेट बाजार में 12+ वर्षों के अनुभव वाले एक दूरदर्शी उद्यमी।",
     founderAchievements: ["12+ वर्ष अनुभव", "AED 5B+ संपत्ति", "RERA प्रमाणित", "उद्योग अग्रणी"],
-    coFounderName: "अंजलि सिंह",
-    coFounderRole: "सह-संस्थापक और प्रबंध निदेशक",
-    coFounderimage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=870&q=80",
-    coFounderDesc: "अंजलि सिंह होमोगेट में परिचालन उत्कृष्टता और ग्राहक-केंद्रित नवाचार लाती हैं।",
-    coFounderAchievements: ["संचालन विशेषज्ञ", "ग्राहक संबंध विशेषज्ञ", "वैश्विक साझेदारी नेता", "अनुपालन चैंपियन"],
+   
     faqTitle: "सामान्य प्रश्न",
     faqSub: "अक्सर पूछे जाने वाले सवाल",
     faqs: [
@@ -137,19 +131,79 @@ export const content = {
     foundersSub: "تعرف على القادة الذين يشكلون مستقبل العقارات في دبي",
     founderName: "براشانت سينغ",
     founderRole: "المؤسس والرئيس التنفيذي",
-    founderimage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=870&q=80",
+    founderimage: homogetFounderImage,
     founderDesc: "رائد أعمال ذو رؤية يتمتع بخبرة تزيد عن 12 عامًا في سوق العقارات الفاخرة في دبي.",
     founderAchievements: ["خبرة 12+ سنة", "إدارة أصول بقيمة 5+ مليار درهم", "معتمد من ريرا", "رائد في المجال"],
-    coFounderName: "انجالي سينغ",
-    coFounderRole: "المؤسس المشارك والمدير العام",
-    coFounderimage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=870&q=80",
-    coFounderDesc: "تجلب انجالي سينغ مزيجًا فريدًا من التميز التشغيلي والابتكار المرتكز على العملاء إلى هوموجيت.",
-    coFounderAchievements: ["خبيرة عمليات", "أخصائية علاقات عملاء", "قائدة شراكات عالمية", "بطلة الامتثال"],
+   
     faqTitle: "الأسئلة الشائعة",
     faqSub: "قاعدة المعرفة",
     faqs: [
       { q: "ما هي أنواع العقارات التي تتعامل معها هوموجيت؟", a: "تتعامل هوموجيت مع العقارات السكنية والتجارية والمشاريع قيد الإنشاء في جميع أنحاء دبي." },
       { q: "هل هوموجيت مرخصة ومنظمة في دبي؟", a: "نعم — هوموجيت مرخصة بالكامل من قبل دائرة الأراضي والأملاك في دبي (DLD) ولدى وكلائها شهادات ريرا." }
     ]
+  }
+};
+
+
+
+
+
+// founderData.js
+export const founderData = {
+  name: "Prashant Singh",
+  role: "Founder & CEO",
+  image: homogetFounderImage, // replace with actual import
+  shortBio: "A visionary entrepreneur bridging premium Dubai real estate with global IT solutions through a deeply rooted, human-centric digital ecosystem.",
+  achievements: ["12+ Years Experience", "AED 5B+ Assets Managed", "RERA Certified", "Industry Pioneer"],
+  
+  // Homoget Properties (Dubai)
+  homoget: {
+    name: "Homoget Properties (Dubai)",
+    emails: ["contact@homoget.ae", "founder@homoget.ae"],
+    phones: ["+971 58 591 9585", "+971 58 585 2283"],
+    address: "R-118, 2nd Floor, Wasl Building, Makani No. 2809195296, Bur Dubai, Dubai, United Arab Emirates"
+  },
+  
+  // Webnestic Technology (India)
+  webnestic: {
+    name: "Webnestic Technology Pvt. Ltd.",
+    emails: ["info@webnestic.com", "hr@webnestic.com"],
+    phones: ["+91 6393413281","+971 58 591 9585"],
+    website: "www.webnestic.com",
+        address: "Corporate Hub, Gomti Nagar, Lucknow, Uttar Pradesh"
+
+  },
+  
+  contact: {
+    email: "founder@homoget.ae",      // primary (legacy)
+    website: "www.webnestic.com",
+    address: "R-118, 2nd Floor, Wasl Building, Bur Dubai, Dubai, UAE"
+  },
+  
+  milestones: [
+    { year: "2011", event: "Began independent entrepreneurial journey at age 16" },
+    { year: "2014", event: "Completed Bachelor of Arts while self-financing education" },
+    { year: "2022", event: "Married Mrs. Sapna Singh at ISKCON Temple, Vrindavan" },
+    { year: "2023", event: "Entered the Dubai real estate market" },
+    { year: "2025", event: "Founded Homoget Properties L.L.C. S.O.C. (RERA ORN: 52933)" },
+    { year: "2025", event: "Established Webnestic Technology" }
+  ],
+  
+  socials: [
+    { name: "LinkedIn", icon: "Linkedin", url: "https://linkedin.com/in/truemrsingh" },
+    { name: "Instagram", icon: "Instagram", url: "https://instagram.com/truemrsingh" },
+    { name: "Twitter", icon: "Twitter", url: "https://twitter.com/truemrsingh" },
+    { name: "Facebook", icon: "Facebook", url: "https://facebook.com/truemrsingh" },
+    { name: "YouTube", icon: "Youtube", url: "https://youtube.com/@truemrsingh" },
+    { name: "TikTok", icon: "Music", url: "https://tiktok.com/@truemrsingh" }
+  ],
+  
+  shayari: {
+    title: "A Poet's Soul",
+    verse: `हर सपना एक नई सुबह की तरह होता है,
+बस उसे जीने का हौसला चाहिए।
+जिंदगी एक सफर है, मंजिल नहीं,
+हर मोड़ पर कुछ नया सीखने का मौका देती है।`,
+    translation: "Every dream is like a new dawn, it just needs the courage to live it. Life is a journey, not a destination; every turn gives an opportunity to learn something new."
   }
 };
