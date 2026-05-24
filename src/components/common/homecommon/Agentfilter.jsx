@@ -138,7 +138,7 @@ const Agentfilter = () => {
   };
 
   const handleSearchButtonClick = () => {
-    navigate("/propertylisting", { state: { initialSearch: searchQuery } });
+    navigate("/properties", { state: { initialSearch: searchQuery } });
   };
 
   // Updated handleWhatsApp to send two sequential messages

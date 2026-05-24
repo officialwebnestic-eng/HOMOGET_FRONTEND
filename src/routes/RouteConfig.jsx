@@ -404,9 +404,9 @@ export const PublicRoutes = () => {
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/about-us" element={<AboutUs />} />
             <Route path="/projects" element={<Projects />} />
-            <Route path="/contactus" element={<ContactUs />} />
-            <Route path="/propertylisting" element={<PropertyListing />} />
-            <Route path="/agentsupport" element={<AgentSupport />} />
+            <Route path="/contact-us" element={<ContactUs />} />
+            <Route path="/properties" element={<PropertyListing />} />
+            <Route path="/real-estate-agents" element={<AgentSupport />} />
             <Route path="/documentationsupport" element={<LegalDocumentationSupport />} />
             <Route path="/walkthrough" element={<VirtualTourAndWalkthrough />} />
             <Route path="/virtualtoure" element={<VirtualToureBookingForm />} />
@@ -418,22 +418,22 @@ export const PublicRoutes = () => {
             <Route path="/showuserappoinment" element={<ShowUserAppoinment />} />
             <Route path="/testimonials" element={<UserTestimonial />} />
             <Route path="/helpcenter" element={<HelpCenter />} />
-            <Route path="/find-developer" element={<Developer />} />
+            <Route path="/developer" element={<Developer />} />
             <Route path="/commercial" element={<Commercial />} />
             <Route path="/luxury" element={<Luxury />} />
-            <Route path="/mortgage" element={<Mortgage />} />
+            <Route path="/mortgage-assistance" element={<Mortgage />} />
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/measurement" element={<Measurement />} />
             <Route path="/calculator" element={<RentVsBuy />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
              <Route path="/terms-of-service" element={<TermsOfService />} /> 
-             <Route path="trends" element={<Trends />} />
-             <Route path="explore" element={<Explore />} />
-             <Route path="rent" element={<Rent />} />
-             <Route path="buy" element={<Buy />} />
-             <Route path="offplan" element={<OffPlan />} />
-             <Route path="rera-compliance" element={<ReraCompliance />} />
-             <Route path="about-founder" element={<AboutFounder />} />
+             <Route path="/trends" element={<Trends />} />
+             <Route path="/explore" element={<Explore />} />
+             <Route path="/rent" element={<Rent />} />
+             <Route path="/buy" element={<Buy />} />
+             <Route path="/offplan" element={<OffPlan />} />
+             <Route path="/rera-compliance" element={<ReraCompliance />} />
+             <Route path="/about-founder" element={<AboutFounder />} />
 
             <Route path="/property/:id" element={<PropertyDetailsPage />} />
              </Route>

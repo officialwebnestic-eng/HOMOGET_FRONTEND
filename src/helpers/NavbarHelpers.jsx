@@ -1,8 +1,8 @@
   export const sidebarLinks = [
-  { name: "MORTGAGE", href: "/mortgage", badge: "NEW" },
-  { name: "PROPERTY LISTING", href: "/propertylisting" },
-  { name: "FIND AGENT", href: "/agentsupport" },
-  { name: "FIND DEVELOPER", href: "/find-developer" },
+  { name: "MORTGAGE", href: "/mortgage-assistance", badge: "NEW" },
+  { name: "PROPERTY LISTING", href: "/properties" },
+  { name: "FIND AGENT", href: "/real-estate-agents" },
+  { name: "FIND DEVELOPER", href: "/developer" },
   { name: "DUBAI TRANSACTION", href: "/transactions", badge: "HOT" },
   { name: "MEASUREMENT SYSTEM", href: "/measurement" },
   { name: "RENT V/S BUY CALCULATOR", href: "/calculator" },
@@ -12,13 +12,3 @@
   { name: "TESTIMONIALS", href: "/testimonials" },
 ];
 
- export const commonNavigation = [
-  { name: "Home", href: "/" },
-  { name: "Buy", href: "/buy" },
-  { name: "Rent", href: "/rent" },
-  { name: "Offplan", href: "/offplan", badge: "HOT" },
-  { name: "Commercial", href: "/commercial" },
-  { name: "Luxury", href: "/luxury" },
-  { name: "About", href: "/about" },
-  { name: "Contact", href: "/contactus" },
-];

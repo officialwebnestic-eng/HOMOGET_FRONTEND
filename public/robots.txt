@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hompoget.ae/sitemap.xml

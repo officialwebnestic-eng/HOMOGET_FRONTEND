@@ -94,9 +94,9 @@ const ContactUs = () => {
 
             <div className="space-y-8">
               {[
-                { icon: MapPin, title: "Location", detail: "HOMOGET PROPERTIES, Business Bay, Dubai, UAE", color: "text-amber-500" },
-                { icon: Phone, title: "Private Line", detail: "+971 4 XXX XXXX", color: "text-emerald-500" },
-                { icon: Mail, title: "Inquiries", detail: "concierge@homoget.ae", color: "text-blue-500" },
+                { icon: MapPin, title: "Location", detail: "R-118, 2nd Floor, Wasl Building, Makani No. 2809195296, Bur Dubai, Dubai, United Arab Emirates", color: "text-amber-500" },
+                { icon: Phone, title: "Private Line", detail: "+971 58 585 2283", color: "text-emerald-500" },
+                { icon: Mail, title: "Inquiries", detail: "contact@homoget.ae", color: "text-blue-500" },
                 { icon: Clock, title: "Availability", detail: "Mon-Sat: 09:00 - 18:00", color: "text-purple-500" }
               ].map((item, idx) => (
                 <div key={idx} className="flex gap-5">
@@ -158,18 +158,18 @@ const ContactUs = () => {
                 </div>
               ))}
 
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Inquiry Category</label>
-                <select
-                  {...register("inquarytype", { required: "Select a type" })}
-                  className={`p-4 rounded-xl border outline-none transition-all ${colors.input} focus:border-amber-500`}
-                >
-                  <option value="Buying/Selling">Luxury Acquisition</option>
-                  <option value="Home Loan">Mortgage Advisory</option>
-                  <option value="Property Visit">VIP Viewing Request</option>
-                  <option value="Rental">High-end Leasing</option>
-                </select>
-              </div>
+               <div className="flex flex-col gap-2">
+  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Inquiry Category</label>
+  <select
+    {...register("inquarytype", { required: "Select a type" })}
+    className={`p-4 rounded-xl border outline-none transition-all ${colors.input} focus:border-amber-500`}
+  >
+    <option value="Rent">Rent / Leasing Inquiry</option>
+    <option value="Off-Plan">Off-Plan Investment</option>
+    <option value="Projects">Master Project Inquiry</option>
+    <option value="General">General / Common Question</option>
+  </select>
+</div>
 
               <div className="md:col-span-2 flex flex-col gap-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Your Requirements</label>

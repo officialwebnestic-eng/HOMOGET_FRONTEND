@@ -46,7 +46,7 @@ export default function Navbar() {
 
   // Helper function to navigate with filters
   const navigateWithFilters = (filters) => {
-    navigate("/propertylisting", { state: { filters } });
+    navigate("/properties", { state: { filters } });
   };
 
   // Navigation handlers
@@ -481,15 +481,13 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
 
-              {/* <Link
-                to="/careers"
+              <Link
+                to="/contact-us"
                 className={`px-3 lg:px-4 py-7 text-[10px] lg:text-[11px] font-black uppercase tracking-widest ${currentTheme.text} hover:text-[#ff8a00] transition-colors flex items-center gap-2`}
               >
-                Careers
-                <span className="bg-[#ff8a00] text-black text-[6px] lg:text-[7px] px-1.5 lg:px-2 py-0.5 rounded-full font-black">
-                  HIRING
-                </span>
-              </Link> */}
+                Contact Us
+               
+              </Link>
             </div>
           )}
 
@@ -683,17 +681,13 @@ export default function Navbar() {
               >
                 Off-Plan
               </button>
-
-              {/* <Link
-                to="/careers"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`block text-lg sm:text-xl font-black uppercase tracking-widest ${currentTheme.text} border-b ${currentTheme.border} pb-4`}
+ <Link
+                to="/contact-us"
+                className={`px-3 lg:px-4 py-7 text-[10px] lg:text-[11px] font-black uppercase tracking-widest ${currentTheme.text} hover:text-[#ff8a00] transition-colors flex items-center gap-2`}
               >
-                Careers
-                <span className="ml-2 bg-[#ff8a00] text-black text-[8px] px-2 py-0.5 rounded-full font-black">
-                  HIRING
-                </span>
-              </Link> */}
+                Contact Us
+               
+              </Link>
             </div>
           </motion.div>
         )}

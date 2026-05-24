@@ -1,34 +1,317 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="./src/assets/companylogo.png" />
 
-    <!-- External CSS for icons and leaflet maps -->
-    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet" />
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+<head>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Basic -->
+  <meta charset="UTF-8" />
 
-    <title>https://homoget.ae</title>
-    
-    <meta name="description" content="Find the best real estate deals at https://homoget.ae. Search properties, view images, and connect with agents easily." />
-    <meta name="author" content="Your Company Name" />
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Real Estate - TVS VPS" />
-    <meta property="og:description" content="Find the best real estate deals at https://homoget.ae Search properties, view images, and connect with agents easily." />
-    <meta property="og:url" content="https://homoget.ae" />
-    <meta property="og:image" content="https://homoget.ae" />
-    <!-- Twitter Card Meta -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Real Estate - TVS VPS" />
-    <meta name="twitter:description" content="Find the best real estate deals at realestate.tvsvpsserver.in." />
-    <meta name="twitter:image" content="https://homoget.ae" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1Ybb7xTb4rwOtTbHUSg8J7chgoaSvWdM&libraries=places"></script>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <meta
+    http-equiv="X-UA-Compatible"
+    content="IE=edge"
+  />
+
+  <!-- Primary SEO -->
+  <title>
+    Dubai Real Estate Brokerage & Property Portal | HOMOGET
+  </title>
+
+  <meta
+    name="title"
+    content="Dubai Real Estate Brokerage & Property Portal | HOMOGET"
+  />
+
+  <meta
+    name="description"
+    content="HOMOGET is a Dubai real estate brokerage and property portal where verified agents list luxury villas, apartments, off-plan projects, and commercial properties across Dubai."
+  />
+
+  <meta
+    name="keywords"
+    content="
+    Dubai real estate,
+    Dubai property portal,
+    Dubai real estate brokerage,
+    property listings Dubai,
+    real estate agents Dubai,
+    luxury villas Dubai,
+    apartments for sale Dubai,
+    off-plan properties Dubai,
+    Dubai investment properties,
+    commercial properties Dubai,
+    UAE real estate,
+    Dubai property consultants,
+    buy property in Dubai,
+    Dubai homes,
+    Dubai property marketplace
+    "
+  />
+
+  <meta
+    name="author"
+    content="HOMOGET"
+  />
+
+  <meta
+    name="robots"
+    content="index, follow, max-image-preview:large"
+  />
+
+  <meta
+    name="googlebot"
+    content="index, follow"
+  />
+
+  <!-- Canonical -->
+  <link
+    rel="canonical"
+    href="https://homoget.ae/"
+  />
+
+  <!-- Language -->
+  <meta
+    http-equiv="content-language"
+    content="en"
+  />
+
+  <!-- Theme -->
+  <meta
+    name="theme-color"
+    content="#ffffff"
+  />
+
+  <!-- Favicon -->
+  <link
+    rel="icon"
+    type="image/png"
+    href="/companylogo.png"
+  />
+
+  <link
+    rel="apple-touch-icon"
+    href="/companylogo.png"
+  />
+
+  <!-- Open Graph SEO -->
+  <meta
+    property="og:type"
+    content="website"
+  />
+
+  <meta
+    property="og:site_name"
+    content="HOMOGET"
+  />
+
+  <meta
+    property="og:title"
+    content="Dubai Real Estate Brokerage & Property Portal | HOMOGET"
+  />
+
+  <meta
+    property="og:description"
+    content="Browse Dubai property listings from verified real estate agents. Find villas, apartments, off-plan projects, and commercial properties across Dubai."
+  />
+
+  <meta
+    property="og:url"
+    content="https://homoget.ae/"
+  />
+
+  <meta
+    property="og:image"
+    content="https://homoget.ae/og-banner.jpg"
+  />
+
+  <meta
+    property="og:image:width"
+    content="1200"
+  />
+
+  <meta
+    property="og:image:height"
+    content="630"
+  />
+
+  <meta
+    property="og:locale"
+    content="en_US"
+  />
+
+  <!-- Twitter SEO -->
+  <meta
+    name="twitter:card"
+    content="summary_large_image"
+  />
+
+  <meta
+    name="twitter:title"
+    content="Dubai Real Estate Brokerage & Property Portal | HOMOGET"
+  />
+
+  <meta
+    name="twitter:description"
+    content="Find luxury villas, apartments, off-plan projects, and commercial properties in Dubai with HOMOGET."
+  />
+
+  <meta
+    name="twitter:image"
+    content="https://homoget.ae/og-banner.jpg"
+  />
+
+  <!-- Preconnect -->
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  />
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  />
+
+  <!-- Google Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Remix Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css"
+    rel="stylesheet"
+  />
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+  />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+
+    "name": "HOMOGET",
+
+    "url": "https://homoget.ae",
+
+    "logo": "https://homoget.ae/companylogo.png",
+
+    "image": "https://homoget.ae/og-banner.jpg",
+
+    "description": "Dubai real estate brokerage and property portal with verified real estate agents, luxury villas, apartments, off-plan projects, and commercial properties.",
+
+    "telephone": "+971-585919585",
+
+    "priceRange": "$$$",
+
+    "areaServed": {
+      "@type": "City",
+      "name": "Dubai"
+    },
+
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Dubai",
+      "addressCountry": "AE"
+    },
+
+    "sameAs": [
+      "https://www.facebook.com/",
+      "https://www.instagram.com/",
+      "https://www.linkedin.com/"
+    ]
+  }
+  </script>
+
+  <!-- Website Schema -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"WebSite",
+
+    "name":"HOMOGET",
+
+    "url":"https://homoget.ae",
+
+    "potentialAction":{
+      "@type":"SearchAction",
+      "target":"https://homoget.ae/search?q={search_term_string}",
+      "query-input":"required name=search_term_string"
+    }
+  }
+  </script>
+
+  <!-- Organization Schema -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+
+    "@type":"Organization",
+
+    "name":"HOMOGET",
+
+    "url":"https://homoget.ae",
+
+    "logo":"https://homoget.ae/companylogo.png",
+
+    "sameAs":[
+      "https://www.facebook.com/",
+      "https://www.instagram.com/",
+      "https://www.linkedin.com/"
+    ]
+  }
+  </script>
+
+  <!-- Google Analytics -->
+  <!-- Replace G-XXXXXXXXXX with your actual GA4 ID -->
+
+  <script
+    async
+    src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"
+  ></script>
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+
+</head>
+
+<body>
+
+  <!-- React Root -->
+  <div id="root"></div>
+
+  <!-- Google Maps API -->
+  <!-- Restrict API key to homoget.ae domain -->
+
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"
+  ></script>
+
+  <!-- React Entry -->
+  <script
+    type="module"
+    src="/src/main.jsx"
+  ></script>
+
+</body>
+
 </html>
