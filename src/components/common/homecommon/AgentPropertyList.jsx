@@ -223,11 +223,9 @@ const AgentPropertyList = () => {
         <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
           <div className="flex items-center gap-4">
             <div className="h-1 w-12 bg-amber-500 rounded-full" />
-            <h2
-              className={`text-2xl md:text-4xl font-serif ${isDark ? "text-white" : "text-slate-900"}`}
-            >
-              Latest <span className="text-amber-500 italic">Properties</span>
-            </h2>
+              <h1 className={`text-3xl md:text-4xl lg:text-5xl font-serif font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-800'}`}>
+              Latest <span className="text-amber-500">Properties</span> 
+            </h1>
           </div>
           <button
             onClick={() => navigate("/propertylisting")}
@@ -282,7 +280,7 @@ const AgentPropertyList = () => {
               const propertyType = property.propertytype || (isCommercialProperty ? "Commercial" : "Residential");
               const location = property.community || property.city || "Dubai";
               const agentName = property.agentId?.name || "Property Consultant";
-              const agentImage = property.agentId?.profileImage;
+              const agentImage = property.agentId?.profilePhoto;
               const agentRating = property.agentId?.rating || 4.8;
               const hasValidAgent = property.agentId && Object.keys(property.agentId).length > 0;
 

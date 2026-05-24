@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
 import { http } from "../../../axios/axios";
@@ -44,8 +44,9 @@ import { DUBAI_AREAS, AMENITIES } from "../../../helpers/AddPropertyHelpers";
 const AddPropertyByAgent = () => {
   const { theme } = useTheme();
   const { addToast } = useToast();
-  const { user } = useContext(AuthContext); // ← get logged‑in user
+  const { user } = useContext(AuthContext);
   const isDark = theme === "dark";
+  const containerRef = useRef(null);
 
   // --- States ---
   const [files, setFiles] = useState([]);
@@ -56,8 +57,12 @@ const AddPropertyByAgent = () => {
   const [locationQuery, setLocationQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [searchAmenity, setSearchAmenity] = useState("");
   const [activeSection, setActiveSection] = useState("basic");
+
+  const searchTimeoutRef = useRef(null);
+  const TOMTOM_API_KEY = "YDlNOyLlX4RImV4fciotLz74L5JXykXG";
 
   const filteredAmenities = AMENITIES.filter((item) =>
     item.toLowerCase().includes(searchAmenity.toLowerCase())
@@ -132,38 +137,69 @@ const AddPropertyByAgent = () => {
     fetchDevelopers();
   }, []);
 
+  // TomTom Location Search (Same as PropertyListing)
   useEffect(() => {
-    const fetchLocations = async () => {
-      const TOMTOM_KEY = "k4W9ISMQC3Ro9ivC9ZWSyHUVuaghvrAq";
-      if (locationQuery.length < 3) {
-        setSuggestions([]);
-        return;
-      }
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (!locationQuery || locationQuery.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+
+    setIsSearching(true);
+
+    searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const url = `https://api.tomtom.com/search/2/search/${encodeURIComponent(locationQuery)}.json?key=${TOMTOM_KEY}&countrySet=AE&lat=25.2048&lon=55.2708&radius=50000&limit=10`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (!data.results) return;
-        const filtered = data.results.map((item) => ({
-          id: item.id,
-          name: item.poi?.name || item.address.freeformAddress,
-          address: item.address.freeformAddress,
-          community: item.address.municipalitySubdivision || item.address.municipality || "Dubai",
-        }));
-        setSuggestions(filtered);
+        const url = `https://api.tomtom.com/search/2/search/${encodeURIComponent(
+          locationQuery
+        )}.json?key=${TOMTOM_API_KEY}&countrySet=AE&limit=8&typeahead=true&lat=25.2048&lon=55.2708&radius=50000`;
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.results) {
+          const formatted = data.results.map((item) => ({
+            id: item.id,
+            name: item.poi?.name || item.address?.municipalitySubdivision || item.address?.municipality || item.address?.freeformAddress,
+            address: item.address?.freeformAddress,
+            community: item.address?.municipalitySubdivision || item.address?.municipality || "Dubai",
+            type: item.type || (item.poi ? "POI" : "Geography")
+          }));
+          setSuggestions(formatted);
+        }
       } catch (err) {
-        console.error(err);
+        console.error("TomTom API error:", err);
+        setSuggestions([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
       }
     };
-    const debounce = setTimeout(fetchLocations, 400);
-    return () => clearTimeout(debounce);
   }, [locationQuery]);
+
+  // Handle click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleSelectLocation = (item) => {
     const fullAddress = `${item.name}, ${item.community}, Dubai`;
     setValue("address", fullAddress);
     setValue("community", item.community);
-    setLocationQuery(fullAddress);
+    setLocationQuery(item.name);
     setShowSuggestions(false);
   };
 
@@ -173,6 +209,11 @@ const AddPropertyByAgent = () => {
       "amenities",
       current.includes(amenity) ? current.filter((a) => a !== amenity) : [...current, amenity]
     );
+  };
+
+  const clearLocationSearch = () => {
+    setLocationQuery("");
+    setSuggestions([]);
   };
 
   const sections = [
@@ -192,7 +233,6 @@ const AddPropertyByAgent = () => {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      // Add all form fields
       Object.keys(data).forEach((key) => {
         if (key === "nearByLocations" || key === "amenities") {
           formData.append(key, JSON.stringify(data[key]));
@@ -202,9 +242,7 @@ const AddPropertyByAgent = () => {
           formData.append(key, data[key]);
         }
       });
-      // Add agent ID from logged‑in user
       formData.append("agentId", user.id);
-      // Add images
       files.forEach((file) => formData.append("image", file));
       formData.append("userType", "agent");
 
@@ -214,6 +252,7 @@ const AddPropertyByAgent = () => {
         reset();
         setFiles([]);
         setLocationQuery("");
+        setSuggestions([]);
       }
     } catch (e) {
       addToast(e.response?.data?.message || "Sync Failed", "error");
@@ -226,6 +265,12 @@ const AddPropertyByAgent = () => {
     }`;
   const labelClass = "text-[9px] font-bold uppercase text-slate-500 mb-1 block tracking-wider";
   const requiredStar = <span className="text-red-500 ml-0.5">*</span>;
+
+  // Get badge color for suggestion type
+  const getBadgeColor = (type) => {
+    if (type === "POI") return "bg-amber-500/20 text-amber-500";
+    return "bg-blue-500/20 text-blue-500";
+  };
 
   return (
     <div className={`min-h-screen pb-20 ${isDark ? "bg-[#0F1219]" : "bg-[#F8FAFC]"}`}>
@@ -357,17 +402,9 @@ const AddPropertyByAgent = () => {
                   <label className={labelClass}>Trakheesi Number</label>
                   <input {...register("trakheesiNumber")} className={inputClass} placeholder="Permit ID" />
                 </div>
-                <div>
-                  <label className={labelClass}>RERA ORN</label>
-                  <input {...register("reraORN")} className={inputClass} placeholder="ORN Number" />
-                </div>
-                <div>
-                  <label className={labelClass}>BRN Number</label>
-                  <input {...register("brnNumber")} className={inputClass} placeholder="BRN Number" />
-                </div>
+                
               </>
             )}
-            {/* AGENT DROPDOWN REMOVED – agentId taken from logged‑in user automatically */}
             <div>
               <label className={labelClass}>Owner Name</label>
               <input {...register("ownerName")} className={inputClass} placeholder="Full Name" />
@@ -452,32 +489,89 @@ const AddPropertyByAgent = () => {
           </div>
         </div>
 
-        {/* ===== SECTION 4: LOCATION ===== */}
+        {/* ===== SECTION 4: LOCATION (WITH TOMTOM SEARCH) ===== */}
         <div id="section-location" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
           <SectionHeader icon={<MapPin />} title="Location & Geography" />
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="relative">
+              <div className="relative" ref={containerRef}>
                 <label className={labelClass}>Address Search {requiredStar}</label>
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
                   <input
                     value={locationQuery}
                     onChange={(e) => { setLocationQuery(e.target.value); setShowSuggestions(true); }}
+                    onFocus={() => setShowSuggestions(true)}
                     className={`${inputClass} pl-12`}
-                    placeholder="Search Building or Area..."
+                    placeholder="Search by community, tower or area..."
                   />
+                  {locationQuery && (
+                    <button
+                      onClick={clearLocationSearch}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      <X size={16} className="text-slate-400 hover:text-amber-500" />
+                    </button>
+                  )}
                 </div>
-                {showSuggestions && suggestions.length > 0 && (
-                  <div className={`absolute z-[110] w-full mt-1 border rounded-xl shadow-2xl overflow-hidden ${isDark ? "bg-[#1A1F2B] border-white/10" : "bg-white border-slate-200"}`}>
-                    {suggestions.map((s, i) => (
-                      <div key={i} onClick={() => handleSelectLocation(s)} className={`px-4 py-3 cursor-pointer hover:bg-amber-500/10 border-b last:border-0 ${isDark ? "border-white/5" : "border-slate-100"}`}>
-                        <p className="text-xs font-bold uppercase">{s.name}</p>
-                        <p className="text-[10px] text-slate-500">{s.community}</p>
+
+                {/* TomTom Suggestions Dropdown */}
+                <AnimatePresence>
+                  {showSuggestions && (locationQuery.length >= 2 || isSearching) && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute z-[110] w-full mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden"
+                    >
+                      <div className="px-4 py-2 border-b border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-slate-800/50">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-amber-500">Popular Locations in Dubai</p>
                       </div>
-                    ))}
-                  </div>
-                )}
+                      
+                      {isSearching ? (
+                        <div className="py-8 text-center">
+                          <Loader2 className="w-5 h-5 animate-spin mx-auto text-amber-500" />
+                          <p className="text-xs text-slate-500 mt-2">Searching...</p>
+                        </div>
+                      ) : suggestions.length > 0 ? (
+                        <div className="max-h-80 overflow-y-auto">
+                          {suggestions.map((item, index) => (
+                            <button
+                              key={index}
+                              onClick={() => handleSelectLocation(item)}
+                              className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors border-b border-slate-100 dark:border-white/5 last:border-0 group"
+                            >
+                              <div className="flex items-start gap-3">
+                                <MapPin className="w-4 h-4 text-slate-400 group-hover:text-amber-500 mt-0.5 flex-shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="text-sm font-semibold text-slate-800 dark:text-white">
+                                      {item.name}
+                                    </p>
+                                    {item.type && (
+                                      <span className={`text-[8px] px-2 py-0.5 rounded-full ${getBadgeColor(item.type)}`}>
+                                        {item.type === "POI" ? "Landmark" : "Area"}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {item.address && (
+                                    <p className="text-[10px] text-slate-500 mt-0.5 truncate">
+                                      {item.address}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      ) : locationQuery.length >= 2 ? (
+                        <div className="py-8 text-center">
+                          <p className="text-sm text-slate-500">No locations found</p>
+                        </div>
+                      ) : null}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
               <div>
                 <label className={labelClass}>Community {requiredStar}</label>

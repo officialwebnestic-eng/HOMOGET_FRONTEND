@@ -58,6 +58,7 @@ const AddProperty = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchAmenity, setSearchAmenity] = useState("");
   const [activeSection, setActiveSection] = useState("basic");
+  const [selectedAgent, setSelectedAgent] = useState(null);
 
   const filteredAmenities = AMENITIES.filter((item) =>
     item.toLowerCase().includes(searchAmenity.toLowerCase())
@@ -83,6 +84,7 @@ const AddProperty = () => {
       amenities: [],
       propertyAge: "Brand New",
       status: "Active",
+      trakheesiNumber: "",
       nearByLocations: [{ locationName: "", distance: "", transportType: "Drive" }],
     },
   });
@@ -97,6 +99,26 @@ const AddProperty = () => {
   const watchOffering = watch("offeringType");
   const watchPermit = watch("permitType");
   const watchAmenities = watch("amenities") || [];
+  const watchAgentId = watch("agentId");
+
+  // Auto-populate agent ORN and BRN when agent is selected
+  useEffect(() => {
+    if (watchAgentId && agentList.length > 0) {
+      const agent = agentList.find(a => a._id === watchAgentId);
+      if (agent) {
+        setSelectedAgent(agent);
+        // Auto-populate reraORN and brnNumber from agent's reraLicenseNumber
+        if (agent.reraLicenseNumber) {
+          setValue("reraORN", agent.reraLicenseNumber);
+          setValue("brnNumber", agent.reraLicenseNumber);
+        }
+      }
+    } else {
+      setSelectedAgent(null);
+      setValue("reraORN", "");
+      setValue("brnNumber", "");
+    }
+  }, [watchAgentId, agentList, setValue]);
 
   // --- Dynamic Enums ---
   const resTypes = [
@@ -132,23 +154,24 @@ const AddProperty = () => {
     fetchDevelopers();
   }, []);
 
+  // TomTom Location Search
   useEffect(() => {
     const fetchLocations = async () => {
-      const TOMTOM_KEY = "k4W9ISMQC3Ro9ivC9ZWSyHUVuaghvrAq";
-      if (locationQuery.length < 3) {
+      const TOMTOM_KEY = "YDlNOyLlX4RImV4fciotLz74L5JXykXG";
+      if (locationQuery.length < 2) {
         setSuggestions([]);
         return;
       }
       try {
-        const url = `https://api.tomtom.com/search/2/search/${encodeURIComponent(locationQuery)}.json?key=${TOMTOM_KEY}&countrySet=AE&lat=25.2048&lon=55.2708&radius=50000&limit=10`;
+        const url = `https://api.tomtom.com/search/2/search/${encodeURIComponent(locationQuery)}.json?key=${TOMTOM_KEY}&countrySet=AE&lat=25.2048&lon=55.2708&radius=50000&limit=10&typeahead=true`;
         const res = await fetch(url);
         const data = await res.json();
         if (!data.results) return;
         const filtered = data.results.map((item) => ({
           id: item.id,
-          name: item.poi?.name || item.address.freeformAddress,
-          address: item.address.freeformAddress,
-          community: item.address.municipalitySubdivision || item.address.municipality || "Dubai",
+          name: item.poi?.name || item.address?.freeformAddress,
+          address: item.address?.freeformAddress,
+          community: item.address?.municipalitySubdivision || item.address?.municipality || "Dubai",
         }));
         setSuggestions(filtered);
       } catch (err) {
@@ -191,8 +214,13 @@ const AddProperty = () => {
     try {
       const formData = new FormData();
       Object.keys(data).forEach((key) => {
-        if (typeof data[key] === "object") formData.append(key, JSON.stringify(data[key]));
-        else formData.append(key, data[key]);
+        if (key === "nearByLocations" || key === "amenities") {
+          formData.append(key, JSON.stringify(data[key]));
+        } else if (typeof data[key] === "object") {
+          formData.append(key, JSON.stringify(data[key]));
+        } else {
+          formData.append(key, data[key]);
+        }
       });
       files.forEach((file) => formData.append("image", file));
       formData.append("userType", "admin");
@@ -203,6 +231,7 @@ const AddProperty = () => {
         reset();
         setFiles([]);
         setLocationQuery("");
+        setSelectedAgent(null);
       }
     } catch (e) {
       addToast(e.response?.data?.message || "Sync Failed", "error");
@@ -340,35 +369,55 @@ const AddProperty = () => {
                 <option value="None">None</option>
               </select>
             </div>
+            
+            {/* Trakheesi Number - Only for RERA permit */}
             {watchPermit === "RERA" && (
-              <>
-                <div>
-                  <label className={labelClass}>Trakheesi Number</label>
-                  <input {...register("trakheesiNumber")} className={inputClass} placeholder="Permit ID" />
-                </div>
-                <div>
-                  <label className={labelClass}>RERA ORN</label>
-                  <input {...register("reraORN")} className={inputClass} placeholder="ORN Number" />
-                </div>
-                <div>
-                  <label className={labelClass}>BRN Number</label>
-                  <input {...register("brnNumber")} className={inputClass} placeholder="BRN Number" />
-                </div>
-              </>
+              <div>
+                <label className={labelClass}>Trakheesi Number</label>
+                <input {...register("trakheesiNumber")} className={inputClass} placeholder="Permit ID" />
+              </div>
             )}
+
+            {/* Assigned Agent - Now auto-populates ORN/BRN */}
             <div>
               <label className={labelClass}>Assigned Agent {requiredStar}</label>
               <select {...register("agentId", { required: true })} className={inputClass}>
                 <option value="">Choose Broker...</option>
                 {agentList?.map((a) => (
-                  <option key={a._id} value={a._id}>{a.name}</option>
+                  <option key={a._id} value={a._id}>{a.name} {a.reraLicenseNumber ? `(RERA: ${a.reraLicenseNumber})` : ''}</option>
                 ))}
               </select>
             </div>
+
+            {/* Auto-populated RERA ORN (Read-only) */}
+            <div>
+              <label className={labelClass}>RERA ORN</label>
+              <input 
+                {...register("reraORN")} 
+                className={`${inputClass} bg-slate-100 dark:bg-white/5 cursor-not-allowed`} 
+                placeholder="Auto-filled from agent"
+                readOnly
+              />
+              <p className="text-[8px] text-slate-400 mt-1">Auto-populated from selected agent</p>
+            </div>
+
+            {/* Auto-populated BRN Number (Read-only) */}
+            <div>
+              <label className={labelClass}>BRN Number</label>
+              <input 
+                {...register("brnNumber")} 
+                className={`${inputClass} bg-slate-100 dark:bg-white/5 cursor-not-allowed`} 
+                placeholder="Auto-filled from agent"
+                readOnly
+              />
+              <p className="text-[8px] text-slate-400 mt-1">Auto-populated from selected agent</p>
+            </div>
+
             <div>
               <label className={labelClass}>Owner Name</label>
               <input {...register("ownerName")} className={inputClass} placeholder="Full Name" />
             </div>
+
             {watchCategory === "Off-Plan" && (
               <div className="border border-dashed border-amber-500/20 p-3 rounded-xl bg-amber-500/5">
                 <label className={`${labelClass} text-amber-500`}>Developer Partner</label>
@@ -462,7 +511,7 @@ const AddProperty = () => {
                     value={locationQuery}
                     onChange={(e) => { setLocationQuery(e.target.value); setShowSuggestions(true); }}
                     className={`${inputClass} pl-12`}
-                    placeholder="Search Building or Area..."
+                    placeholder="Search by community, tower or area..."
                   />
                 </div>
                 {showSuggestions && suggestions.length > 0 && (

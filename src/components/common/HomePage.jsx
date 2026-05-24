@@ -6,6 +6,7 @@ import AgentSlider from "./homecommon/AgentSlider";
 import HomeLoans from "./homecommon/HomeLoans";
 import FAQSection from "../FAQSection";
 import PartnersSlider from "./homecommon/PartnersSlider";
+import OffPlan from "../OffPlan";
 
 const HomePage = () => {
   return (
@@ -13,8 +14,10 @@ const HomePage = () => {
 
       <Agentfilter></Agentfilter>
       <AgentPropertyList></AgentPropertyList>
+       <OffPlan/>
 
       <PartnersSlider></PartnersSlider>
+
       <AgentSlider></AgentSlider>
       <FAQSection></FAQSection>
       {/* <HomeLoans></HomeLoans> */}

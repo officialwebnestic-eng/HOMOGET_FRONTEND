@@ -141,6 +141,18 @@ const Agentfilter = () => {
     navigate("/properties", { state: { initialSearch: searchQuery } });
   };
 
+  // Handle filter change
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
+    setCurrentPage(1);
+  };
+
+  // Get unique values for filter dropdowns
+  const getUniqueValues = (data, key) => {
+    return [...new Set(data.flatMap((item) => item[key]).filter(Boolean))].sort();
+  };
+
   // Updated handleWhatsApp to send two sequential messages
   const handleWhatsApp = (e, property) => {
     e.stopPropagation();
@@ -199,9 +211,7 @@ const Agentfilter = () => {
   const insightProperties = propertyList.slice(9, 20);
 
   return (
-    <div
-      className={`${colors.background} min-h-screen pb-20 transition-colors duration-300`}
-    >
+    <div className={`${colors.background} min-h-screen pb-20 transition-colors duration-300`}>
       <AgentHero
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -211,13 +221,9 @@ const Agentfilter = () => {
         onSearchButtonClick={handleSearchButtonClick}
         propertyList={propertyList}
         filters={filters}
-        handleFilterChange={(e) =>
-          setFilters({ ...filters, [e.target.name]: e.target.value })
-        }
+        handleFilterChange={handleFilterChange}
         filterFields={filterFields}
-        getUniqueValues={(data, key) =>
-          [...new Set(data.flatMap((item) => item[key]))].filter(Boolean).sort()
-        }
+        getUniqueValues={getUniqueValues}
         setShowFilters={setShowFilters}
         showFilters={showFilters}
       />
@@ -227,10 +233,9 @@ const Agentfilter = () => {
         <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
           <div className="flex items-center gap-4">
             <div className="h-1 w-12 bg-amber-500 rounded-full" />
-            <h2 className={`text-2xl md:text-4xl font-serif ${colors.text}`}>
-              Exclusive{" "}
-              <span className="text-amber-500 italic">Properties</span>
-            </h2>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-slate-800 dark:text-white">
+              Exclusive <span className="text-amber-500">Properties</span>
+            </h1>
           </div>
           <button
             onClick={() => navigate("/propertylisting")}
@@ -250,7 +255,7 @@ const Agentfilter = () => {
             const propertyType = property.propertytype || (isCommercialProperty ? "Commercial Space" : "Residential");
             const location = property.community || property.city || "Dubai";
             const agentName = property.agentId?.name || "Property Consultant";
-            const agentImage = property.agentId?.profileImage || property.agentImage;
+            const agentImage = property.agentId?.profilePhoto || property.name;
             const agentRating = property.agentId?.rating || 4.8;
 
             return (
@@ -313,104 +318,69 @@ const Agentfilter = () => {
 
                 {/* Content Body */}
                 <div className="p-7 flex-1">
-                  {/* Title */}
                   <h3 className={`text-xl font-bold mb-2 truncate ${colors.text}`}>
                     {propertyTitle}
                   </h3>
 
                   {/* PRICE + PROPERTY TYPE */}
-<div className="flex items-center justify-between gap-3 mb-3  mt-3 md:mt-5 flex-wrap">
-  
-  {/* PRICE SECTION */}
-  <div>
-    <p className="text-amber-500 text-lg font-black leading-tight">
-      AED {Number(property.price).toLocaleString()}
+                  <div className="flex items-center justify-between gap-3 mb-3 mt-3 md:mt-5 flex-wrap">
+                    {/* PRICE SECTION */}
+                    <div>
+                      <p className="text-amber-500 text-lg font-black leading-tight">
+                        AED {Number(property.price).toLocaleString()}
+                        {isRent(property) && property.rentedPeriod && (
+                          <span className="text-xs text-gray-400 font-normal ml-1">
+                            / {property.rentedPeriod?.toLowerCase().replace("per ", "") || "year"}
+                          </span>
+                        )}
+                      </p>
+                      {isOffPlanProperty && property.paymentPlan && (
+                        <p className="text-xs text-gray-400 font-normal mt-1">
+                          {property.paymentPlan || "Flexible Payment Plan"}
+                        </p>
+                      )}
+                    </div>
 
-      {isRent(property) && property.rentedPeriod && (
-        <span className="text-xs text-gray-400 font-normal ml-1">
-          /{" "}
-          {property.rentedPeriod
-            ?.toLowerCase()
-            .replace("per ", "") || "year"}
-        </span>
-      )}
-    </p>
-
-    {isOffPlanProperty && property.paymentPlan && (
-      <p className="text-xs text-gray-400 font-normal mt-1">
-        {property.paymentPlan || "Flexible Payment Plan"}
-      </p>
-    )}
-  </div>
-
-  {/* PROPERTY TYPE */}
-  <div className="px-3 py-1 rounded-full bg-black/5 dark:bg-white/10">
-    <p className="text-black dark:text-white text-xs font-bold uppercase tracking-wide">
-      {property.category}
-    </p>
-  </div>
-</div>
-
-
-                   
-                   
-
-
-                 
-
-
-
-                
-
-
+                    {/* PROPERTY TYPE */}
+                    <div className="px-3 py-1 rounded-full bg-black/5 dark:bg-white/10">
+                      <p className="text-black dark:text-white text-xs font-bold uppercase tracking-wide">
+                        {property.category}
+                      </p>
+                    </div>
+                  </div>
 
                   {/* Specifications - Conditional based on property type */}
                   {isCommercialProperty ? (
-                    // Commercial Property Specs
                     <div className="flex items-center gap-6 py-4 border-t border-gray-100 dark:border-white/5">
                       <div className="flex items-center gap-2 text-gray-500">
                         <Building size={16} className="text-blue-500" />
-                        <span className="text-[11px] font-bold uppercase">
-                          {propertyType}
-                        </span>
+                        <span className="text-[11px] font-bold uppercase">{propertyType}</span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-500">
                         <Square size={14} className="text-blue-500" />
-                        <span className="text-[11px] font-bold uppercase">
-                          {property.squarefoot?.toLocaleString() || 0} Sq.Ft
-                        </span>
+                        <span className="text-[11px] font-bold uppercase">{property.squarefoot?.toLocaleString() || 0} Sq.Ft</span>
                       </div>
                     </div>
                   ) : isOffPlanProperty ? (
-                    // Off-Plan Property Specs
                     <div className="flex items-center gap-6 py-4 border-t border-gray-100 dark:border-white/5">
                       <div className="flex items-center gap-2 text-gray-500">
                         <Calendar size={16} className="text-purple-500" />
-                        <span className="text-[11px] font-bold uppercase">
-                          Handover: {property.deliveryDate || "Q4 2026"}
-                        </span>
+                        <span className="text-[11px] font-bold uppercase">Handover: {property.deliveryDate || "Q4 2026"}</span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-500">
                         <Building size={14} className="text-purple-500" />
-                        <span className="text-[11px] font-bold uppercase">
-                          {property.developerId?.companyName || "Premium Developer"}
-                        </span>
+                        <span className="text-[11px] font-bold uppercase">{property.developerId?.companyName || "Premium Developer"}</span>
                       </div>
                     </div>
                   ) : (
-                    // Residential Property Specs
                     <div className="flex items-center gap-6 py-4 border-t border-gray-100 dark:border-white/5">
                       <div className="flex items-center gap-2 text-gray-500">
                         <BedDouble size={16} className="text-amber-500" />
-                        <span className="text-[11px] font-bold uppercase">
-                          {property.bedroom || 2} Beds
-                        </span>
+                        <span className="text-[11px] font-bold uppercase">{property.bedroom || 2} Beds</span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-500">
                         <Square size={14} className="text-amber-500" />
-                        <span className="text-[11px] font-bold uppercase">
-                          {property.squarefoot?.toLocaleString() || 0} Sq.Ft
-                        </span>
+                        <span className="text-[11px] font-bold uppercase">{property.squarefoot?.toLocaleString() || 0} Sq.Ft</span>
                       </div>
                     </div>
                   )}
@@ -427,12 +397,8 @@ const Agentfilter = () => {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">
-                        Listed by
-                      </p>
-                      <p className={`text-xs font-bold truncate ${colors.text}`}>
-                        {agentName}
-                      </p>
+                      <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">Listed by</p>
+                      <p className={`text-xs font-bold truncate ${colors.text}`}>{agentName}</p>
                     </div>
                     <div className="flex items-center gap-1">
                       <Star size={12} className="text-amber-500 fill-amber-500" />
@@ -448,21 +414,21 @@ const Agentfilter = () => {
                         className="text-green-500 hover:scale-110 transition-transform"
                         title="WhatsApp Agent"
                       >
-                        <FaWhatsapp size={20} />
+                        <FaWhatsapp size={25} />
                       </button>
                       <button
                         onClick={(e) => handleCall(e, property.agentId?.phone || property.agentPhone)}
                         className="text-blue-500 hover:scale-110 transition-transform"
                         title="Call Agent"
                       >
-                        <Phone size={18} />
+                        <Phone size={25} />
                       </button>
                       <button
                         onClick={(e) => handleEmail(e, property)}
                         className="text-amber-500 hover:scale-110 transition-transform"
                         title="Email Agent"
                       >
-                        <Mail size={18} />
+                        <Mail size={25} />
                       </button>
                     </div>
                     <div className="flex items-center gap-4">
@@ -483,7 +449,6 @@ const Agentfilter = () => {
                         className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
                         onClick={(e) => {
                           e.stopPropagation();
-                          // Add to wishlist logic here
                         }}
                       />
                     </div>

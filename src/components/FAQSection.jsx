@@ -60,10 +60,10 @@ const FAQSection = () => {
                 Knowledge Base
               </span>
             </div>
-            <h2 className={`text-2xl md:text-4xl font-serif tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              Frequently Asked <br />
-              <span className="text-amber-500 italic font-serif font-light">Questions</span>
-            </h2>
+           
+              <h1 className={`text-3xl md:text-4xl lg:text-5xl font-serif font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-800'}`}>
+               Frequently  <span className="text-amber-500">Asked</span> Questions
+            </h1>
           </div>
           <p className="text-slate-500 font-medium max-w-md text-sm">
             Providing transparency and expert guidance for the Dubai Real Estate market.

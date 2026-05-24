@@ -156,13 +156,9 @@ const AgentSlider = () => {
                 The Elite Network
               </span>
             </motion.div>
-            <h2
-              className={`text-2xl md:text-4xl font-serif tracking-tighter italic leading-none ${ct.text}`}
-            >
-              Meet Our <span className="font-serif italic font-light text-amber-600">
-                Advisors.
-              </span>
-            </h2>
+             <h1 className={`text-3xl md:text-4xl lg:text-5xl font-serif font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-800'}`}>
+              Meet <span className="text-amber-500">Our</span> Adveisor
+            </h1>
           </div>
           <p
             className={`max-w-xs text-sm font-medium leading-relaxed opacity-70 ${ct.subText}`}

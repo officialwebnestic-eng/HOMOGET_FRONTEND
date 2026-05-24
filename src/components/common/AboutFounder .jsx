@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { 
   ArrowLeft, Award, Globe, Linkedin, Instagram, Twitter, 
   Facebook, Youtube, Music, Heart, Quote, Briefcase, Target, 
-  Mail, MapPin, Phone, BookOpen, Sparkles, Building2
+  Mail, MapPin, Phone, BookOpen, Sparkles, Building2,
+  Calendar, Users, Shield, Compass, Coffee, PenTool, Zap
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
@@ -67,10 +68,12 @@ const AboutFounder = () => {
               <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-tight leading-tight">
                 {founder.name}
               </h1>
-              <p className="text-amber-500 font-black uppercase text-sm tracking-wider">{founder.role}</p>
-              <p className={`text-lg leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                {founder.shortBio}
-              </p>
+              <p className="text-amber-500 font-black uppercase text-sm tracking-wider">Founder & Chief Executive Officer</p>
+              <p className="text-amber-500/80 text-sm tracking-wider">Founder, Webnestic Technology</p>
+              <div className="flex items-center gap-2 text-sm italic text-slate-500">
+                <Quote size={16} className="text-amber-500" />
+                <span>"A visionary entrepreneur bridging premium Dubai real estate with global IT solutions through a deeply rooted, human-centric digital ecosystem."</span>
+              </div>
               <div className="flex flex-wrap gap-3">
                 {founder.achievements.map((ach, idx) => (
                   <div key={idx} className="flex items-center gap-1.5 bg-amber-500/10 px-3 py-1.5 rounded-full">
@@ -101,47 +104,104 @@ const AboutFounder = () => {
             <BookOpen size={24} className="text-amber-500" />
             <h2 className="text-3xl md:text-4xl font-serif font-bold tracking-tight">Full Story & Journey</h2>
           </div>
-          <div className="prose prose-lg dark:prose-invert max-w-none space-y-4">
-            <p className="text-lg font-semibold text-amber-600">From Humble Roots to High Aspirations</p>
-            <p>Mr. Singh was born on April 19, 1994, in the village of Harail, Mohiuddin Nagar, Samastipur District, Bihar, India. Raised in a middle-class family, he imbibed the values of discipline, integrity, and hard work from his father, Shri Shyam Nandan Singh (a respected village mathematics teacher), and his mother, Mrs. Asha Devi (a dedicated homemaker), along with his younger brother, Mr. Nishant Singh.</p>
-            
-            <p className="text-lg font-semibold text-amber-600">The Spiritual Foundation</p>
-            <p>A defining influence in Mr. Singh's life was his late grandmother, Smt. Baliraj Devi, a deeply spiritual woman. From an early age, she introduced him to meditation and spiritual practices, nurturing a strong spiritual foundation that continues to shape his personal philosophy: <em>"Life is not a destination, but a continuous journey of discovery."</em></p>
-            
-            <p className="text-lg font-semibold text-amber-600">The Hustle and Resilience</p>
-            <p>Driven by a strong independent spirit, Mr. Singh left home at the age of 16 in 2011 to pursue his future in Delhi. While working to support himself, he successfully completed his Bachelor of Arts (BA) from Darbhanga University in 2014. When financial circumstances redirected him from his original goal of preparing for the UPSC Civil Services, Delhi became his real-world business school. He gained hands-on experience across multiple sectors, including Media & Corporate Management, Hospitality & Event Management, and Security Operations & Administration.</p>
-            <p>This diverse exposure sharpened his creativity and entrepreneurial instincts. After successfully running an event management company in Delhi, the COVID-19 pandemic prompted a strategic shift. On April 19, 2022, Mr. Singh married Mrs. Sapna Singh in a spiritual ceremony at the ISKCON Temple in Vrindavan.</p>
-            
-            <p className="text-lg font-semibold text-amber-600">Hobbies & Personal Interests</p>
-            <p>Mr. Singh is a passionate poet, author, and songwriter. He finds deep joy in writing poems and songs, studying inspirational books, and practicing high-level spiritual meditation with yoga. He maintains a disciplined lifestyle through fitness and holistic health practices. Additionally, he has a strong affinity for adventure, discovery, and renovation projects, which reflect his creative and exploratory nature.</p>
+          <div className="prose prose-lg dark:prose-invert max-w-none space-y-6">
+            <div>
+              <p className="text-lg font-semibold text-amber-600">🌳 From Humble Roots to High Aspirations</p>
+              <p>Mr. Singh was born on <strong>April 19, 1994</strong>, in the village of Harail, Mohiuddin Nagar, Samastipur District, Bihar, India. Raised in a values-driven, middle-class family, he imbibed the core principles of discipline, integrity, and relentless hard work from his parents.</p>
+              <ul className="list-disc pl-6 mt-2 space-y-1">
+                <li><strong>Father:</strong> Shri Shyam Nandan Singh (a highly respected village mathematics teacher)</li>
+                <li><strong>Mother:</strong> Mrs. Asha Devi (a dedicated homemaker)</li>
+                <li><strong>Family Structure:</strong> Raised in a nurturing household alongside his sibling (two brothers in total).</li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-lg font-semibold text-amber-600">🧘 The Spiritual Foundation</p>
+              <p>A defining, foundational influence in Mr. Singh's life was his late grandmother, <strong>Smt. Baliraj Devi</strong>, a deeply spiritual woman. From an early age, she introduced him to ancient meditation and mindfulness practices, nurturing a resilient inner core that continues to shape his entire personal and business philosophy:</p>
+              <p className="italic text-amber-500 mt-2">"Life is not a destination, but a continuous journey of discovery."</p>
+            </div>
+
+            <div>
+              <p className="text-lg font-semibold text-amber-600">⚡ The Hustle and Resilience</p>
+              <p>Driven by an independent, pioneering spirit, Mr. Singh left his hometown at the young age of 16 in 2011 to forge his future in Delhi. Balancing full-time work to support his living and education, he successfully graduated with a <strong>Bachelor of Arts (BA)</strong> from Darbhanga University in 2014.</p>
+              <p>When financial constraints redirected him from his original ambition of preparing for the prestigious UPSC Civil Services, Delhi effectively became his real-world business school. Over the next decade, he gained deep, hands-on operational leadership experience across multiple fast-paced sectors:</p>
+              <ul className="list-disc pl-6 mt-2 space-y-1">
+                <li>🎙️ Media & Corporate Management</li>
+                <li>🏨 Hospitality & Event Management</li>
+                <li>🛡️ Security Operations & Corporate Administration</li>
+              </ul>
+              <p className="mt-2">This diverse exposure sharpened his commercial instincts, creativity, and strategic problem-solving. After successfully launching and running an event management company in Delhi, the global pandemic prompted a strategic pivot toward international markets.</p>
+              <p className="mt-2">On <strong>April 19, 2022</strong>, Mr. Singh married <strong>Mrs. Sapna Singh</strong> in a deeply spiritual ceremony at the sacred <strong>ISKCON Temple in Vrindavan</strong>, marking the beginning of a shared journey rooted in mutual values, spiritual alignment, and purpose.</p>
+            </div>
+
+            <div>
+              <p className="text-lg font-semibold text-amber-600">🎯 Hobbies & Personal Interests</p>
+              <p>Mr. Singh believes in a holistic, balanced lifestyle that feeds both the intellect and the soul:</p>
+              <ul className="list-disc pl-6 mt-2 space-y-1">
+                <li><strong>✍️ Creative Arts:</strong> A passionate poet, author, and songwriter who finds profound joy in expressing complex human emotions through verses and melodies.</li>
+                <li><strong>🧘 Spiritual Practice:</strong> Dedicated to high-level spiritual meditation combined with advanced yoga practices to maintain mental clarity and peak performance.</li>
+                <li><strong>📚 Continuous Learning:</strong> Avid reader of inspirational literature, business biographies, and philosophical texts.</li>
+                <li><strong>🧗 Adventure & Discovery:</strong> A strong affinity for exploration, travel, and structural/digital renovation projects, showcasing his innate desire to rebuild and optimize.</li>
+              </ul>
+            </div>
           </div>
         </motion.section>
 
-      {/* Professional Background */}
-<motion.section variants={sectionVariant} initial="hidden" whileInView="visible" className="space-y-6">
-  <div className="flex items-center gap-3">
-    <Briefcase size={24} className="text-amber-500" />
-    <h2 className="text-3xl md:text-4xl font-serif font-bold tracking-tight">Professional Background & Expertise</h2>
-  </div>
-  <div className={`p-8 rounded-3xl border ${isDark ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-    <p className="mb-4">In February 2023, Mr. Singh relocated to Dubai and immersed himself in the dynamic real estate sector. After gaining extensive experience with leading brokerage firms, he founded his own ventures:</p>
-    <ul className="list-disc pl-6 space-y-2">
-      <li><strong>Homoget Properties L.L.C. S.O.C.</strong> (Founded July 2025): A fully licensed, DLD-registered, and RERA-regulated real estate firm (ORN: 52933) specializing in off-plan and secondary market properties across Dubai.</li>
-      <li><strong>Webnestic Technology</strong> (Founder): An innovative IT company with headquarters in India and a strategic operational presence in Dubai (<a href="https://www.webnestic.com" target="_blank" rel="noopener noreferrer" className="text-amber-500 hover:underline">www.webnestic.com</a>), focused on high-end software development, digital solutions, and robust technological infrastructure.</li>
-    </ul>
-  </div>
-</motion.section>
-
-        {/* Vision & Philosophy */}
+        {/* Professional Background */}
         <motion.section variants={sectionVariant} initial="hidden" whileInView="visible" className="space-y-6">
           <div className="flex items-center gap-3">
-            <Target size={24} className="text-amber-500" />
+            <Briefcase size={24} className="text-amber-500" />
+            <h2 className="text-3xl md:text-4xl font-serif font-bold tracking-tight">Professional Background & Expertise</h2>
+          </div>
+          <div className={`p-8 rounded-3xl border ${isDark ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+            <p className="mb-4">In <strong>February 2023</strong>, Mr. Singh relocated to the ultra-competitive business hub of <strong>Dubai, UAE</strong>, immersing himself entirely in the dynamic real estate sector. After establishing a stellar track record with leading brokerage firms, he transitioned into an independent corporate leader by founding his twin powerhouse ventures:</p>
+            <ul className="list-disc pl-6 space-y-4">
+              <li>
+                <strong>🏢 Homoget Properties L.L.C. S.O.C.</strong> (Founded July 2025)<br />
+                A premium, fully licensed, and corporate-structured real estate firm headquartered in Dubai.
+                <ul className="list-circle pl-6 mt-1 space-y-1">
+                  <li><strong>Regulatory Compliance:</strong> Fully registered with the Dubai Land Department (DLD) and regulated by the Real Estate Regulatory Agency (RERA ORN: 52933).</li>
+                  <li><strong>Core Specialization:</strong> High-end off-plan developments, luxury secondary market portfolios, and bespoke property investment advisory services for global HNIs.</li>
+                </ul>
+              </li>
+              <li>
+                <strong>💻 Webnestic Technology</strong> (Founder)<br />
+                An innovative, cutting-edge Information Technology firm based in India (<a href="https://www.webnestic.com" target="_blank" rel="noopener noreferrer" className="text-amber-500 hover:underline">www.webnestic.com</a>).
+                <ul className="list-circle pl-6 mt-1 space-y-1">
+                  <li><strong>Core Operations:</strong> Custom high-end software engineering, secure digital solutions, web architecture, and robust technological infrastructure designed to power enterprise-level applications.</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </motion.section>
+
+        {/* Vision & Philosophy: The "HomoGet" Concept */}
+        <motion.section variants={sectionVariant} initial="hidden" whileInView="visible" className="space-y-6">
+          <div className="flex items-center gap-3">
+            <Compass size={24} className="text-amber-500" />
             <h2 className="text-3xl md:text-4xl font-serif font-bold tracking-tight">Vision & Philosophy: The "HomoGet" Concept</h2>
           </div>
           <div className={`p-8 rounded-3xl border border-amber-500/20 bg-amber-500/5`}>
-            <p className="italic text-lg">"HomoGet (Homo = Human + Get = Acquire) — the belief that every product, service, or technological solution should simplify human life while remaining grounded in authentic human effort and connection."</p>
-            <p className="mt-4">He and his global team are currently developing the HomoGet Search Engine — a unified digital platform designed to integrate property search, secure payments, e-commerce, ride booking, and essential services into one seamless, accessible ecosystem with minimal operational fees.</p>
-            <p className="mt-4">Looking ahead, Mr. Singh is deeply committed to contributing meaningfully to society. In the coming years, he aims to work dedicatedly in the fields of Spiritual Science, Social Reform, Education, and Health. Through these domains, he aspires to play an active role in Nav Nirman — the construction of a better and more enlightened world.</p>
+            <p className="italic text-lg mb-4">"HomoGet (Homo = Human + Get = Acquire) — the belief that every product, service, or technological solution should simplify human life while remaining grounded in authentic human effort and connection."</p>
+            <p className="mt-4"><strong>🌐 The HomoGet Search Engine Project</strong></p>
+            <p>Currently, Mr. Singh and his global engineering team are developing a revolutionary digital search engine. This unified ecosystem aims to seamlessly integrate:</p>
+            <ul className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-3 list-disc pl-6">
+              <li>🔍 Advanced Property & Asset Search</li>
+              <li>💳 Secure Multi-Currency Payment Gateways</li>
+              <li>🛒 Next-Generation E-Commerce Marketplaces</li>
+              <li>🚗 Smart Mobility & Ride-Booking Solutions</li>
+              <li>🛠️ On-Demand Essential Daily Services</li>
+            </ul>
+            <p className="mt-4">By eliminating middle-tier corporate inflation, this mega-platform is engineered to run on <strong>minimal operational fees</strong>, returning maximum value back to regular users.</p>
+            <p className="mt-4"><strong>🏛️ Social Impact & Nav Nirman</strong></p>
+            <p>Looking toward the future, Mr. Singh is fiercely committed to philanthropic nation-building. In the coming years, he intends to channel significant capital and personal dedication into:</p>
+            <ul className="list-disc pl-6 mt-2">
+              <li>🔬 <strong>Spiritual Science</strong> — Bridging ancient consciousness practices with modern psychological well-being.</li>
+              <li>⚖️ <strong>Social Reform</strong> — Empowering marginalized communities through entrepreneurial training.</li>
+              <li>🎓 <strong>Education</strong> — Modernizing access to knowledge and skill-building frameworks.</li>
+              <li>🏥 <strong>Health</strong> — Promoting preventative, holistic, and accessible healthcare solutions.</li>
+            </ul>
+            <p className="mt-4">Through these combined pillars, he envisions playing an active catalyst role in <strong>Nav Nirman</strong> — the systematic construction of a better, more enlightened, and technologically empowered world.</p>
           </div>
         </motion.section>
 
@@ -159,14 +219,21 @@ const AboutFounder = () => {
           </div>
         </motion.section>
 
-        {/* Milestones */}
+        {/* Milestones & Achievements */}
         <motion.section variants={sectionVariant} initial="hidden" whileInView="visible" className="space-y-6">
           <div className="flex items-center gap-3">
             <Award size={24} className="text-amber-500" />
             <h2 className="text-3xl md:text-4xl font-serif font-bold tracking-tight">Milestones & Achievements</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {founder.milestones.map((m, idx) => (
+            {[
+              { year: "2011", event: "🚀 Initiated independent entrepreneurial journey at the age of 16 in Delhi." },
+              { year: "2014", event: "🎓 Successfully attained a Bachelor of Arts (BA) degree while self-financing all expenses." },
+              { year: "2022", event: "💍 United in holy matrimony with Mrs. Sapna Singh at ISKCON Temple, Vrindavan." },
+              { year: "2023", event: "🇦🇪 Successfully entered and scaled operations within the competitive Dubai Real Estate market." },
+              { year: "2025", event: "🏢 Incorporated Homoget Properties L.L.C. S.O.C. (RERA ORN: 52933)." },
+              { year: "2025", event: "🌐 Founded Webnestic Technology to drive enterprise-grade IT solutions." }
+            ].map((m, idx) => (
               <div key={idx} className={`flex items-center gap-4 p-4 rounded-xl border ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-white'}`}>
                 <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 font-black text-xl">{m.year}</div>
                 <div className="flex-1">
@@ -181,7 +248,7 @@ const AboutFounder = () => {
         <motion.section variants={sectionVariant} initial="hidden" whileInView="visible" className="space-y-6">
           <div className="flex items-center gap-3">
             <Mail size={24} className="text-amber-500" />
-            <h2 className="text-3xl md:text-4xl font-serif font-bold tracking-tight">Connect & Schedule an Appointment</h2>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold tracking-tight">Connect & Schedule a Strategic Consultation</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             
@@ -195,22 +262,18 @@ const AboutFounder = () => {
                 <div className="flex items-center gap-3">
                   <Mail size={16} className="text-amber-500 shrink-0" />
                   <div className="flex flex-col">
-                    {homoget.emails.map((email, i) => (
-                      <a key={i} href={`mailto:${email}`} className="hover:text-amber-500 transition">{email}</a>
-                    ))}
+                    <a href="mailto:founder@homoget.ae" className="hover:text-amber-500 transition">founder@homoget.ae</a>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Phone size={16} className="text-amber-500" />
                   <div className="flex flex-col">
-                    {homoget.phones.map((phone, i) => (
-                      <a key={i} href={`tel:${phone.replace(/\s/g, '')}`} className="hover:text-amber-500 transition">{phone}</a>
-                    ))}
+                    <a href="tel:+971585919585" className="hover:text-amber-500 transition">+971 58 591 9585</a>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <MapPin size={16} className="text-amber-500" />
-                  <span className="text-xs">{homoget.address}</span>
+                  <span className="text-xs">R-118, 2nd Floor, Wasl Building, Bur Dubai, Dubai, UAE</span>
                 </div>
               </div>
             </div>
@@ -225,26 +288,18 @@ const AboutFounder = () => {
                 <div className="flex items-center gap-3">
                   <Mail size={16} className="text-amber-500 shrink-0" />
                   <div className="flex flex-col">
-                    {webnestic.emails.map((email, i) => (
-                      <a key={i} href={`mailto:${email}`} className="hover:text-amber-500 transition">{email}</a>
-                    ))}
+                    <a href="mailto:info@webnestic.com" className="hover:text-amber-500 transition">info@webnestic.com</a>
+                    <a href="mailto:hr@webnestic.com" className="hover:text-amber-500 transition text-xs">hr@webnestic.com</a>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Phone size={16} className="text-amber-500" />
-                  {webnestic.phones.map((phone, i) => (
-                    <a key={i} href={`tel:${phone.replace(/\s/g, '')}`} className="hover:text-amber-500 transition">{phone}</a>
-                  ))}
-                </div>  
-                  <div className="flex items-center gap-3">
-                  <MapPin size={16} className="text-amber-500" />
-                  <span className="text-xs">{webnestic.address}</span>
+                  <a href="tel:+91639343281" className="hover:text-amber-500 transition">+91 63934 3281</a>
                 </div>
                 <div className="flex items-center gap-3">
                   <Globe size={16} className="text-amber-500" />
-                  <a href={`https://${webnestic.website}`} target="_blank" rel="noopener noreferrer" className="hover:text-amber-500 transition">{webnestic.website}</a>
+                  <a href="https://www.webnestic.com" target="_blank" rel="noopener noreferrer" className="hover:text-amber-500 transition">www.webnestic.com</a>
                 </div>
-                
               </div>
             </div>
           </div>

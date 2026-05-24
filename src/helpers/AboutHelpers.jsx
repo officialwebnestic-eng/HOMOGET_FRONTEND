@@ -1,5 +1,7 @@
 import { homogetFounderImage } from "../ExportImages";
 
+// AboutHelpers.js
+
 export const content = {
   en: {
     heroTag: "The Gold Standard of Brokerage",
@@ -35,15 +37,24 @@ export const content = {
     incorporationDate: "July 17, 2025",
     permittedActivities: "Leasing Property Brokerage Agents | Real Estate Buying & Selling Brokerage",
     
-    foundersTitle: "The Visionaries Behind HomoGet",
-    foundersSub: "Meet the leaders shaping Dubai's real estate future",
+    // ========== UPDATED ABOUT FOUNDER SECTION ==========
+    foundersTitle: "About The Founder",
+    foundersSub: "Prashant Singh",
     founderName: "Prashant Singh",
     founderRole: "Founder & CEO",
     founderimage: homogetFounderImage,
-    founderDesc: "A visionary entrepreneur with over 12+ years of experience in Dubai's luxury real estate market. Prashant Singh founded HomoGet with a mission to democratize property acquisition and bring transparency to the UAE real estate sector. Under his leadership, HomoGet has grown into a trusted brokerage firm managing over AED 5B+ in assets. His deep understanding of market dynamics and commitment to client success has made HomoGet a benchmark for excellence in Dubai's competitive property landscape.",
-    founderAchievements: ["12+ Years Experience", "AED 5B+ Assets Managed", "RERA Certified", "Industry Pioneer"],
     
-  
+    // NEW FOUNDER DESCRIPTION
+    founderDesc: `✦ Prashant Singh is a visionary entrepreneur, business strategist, and technology-driven leader with over 10 years of professional experience in real estate, technology, and digital innovation. He is the Founder & CEO of Homoget Properties, a Dubai-based DLD-registered and RERA-regulated real estate company specializing in premium off-plan and secondary market properties across the UAE.
+    
+💻 He is also the Founder of Webnestic Technology, a forward-thinking IT and digital solutions company focused on advanced software development, digital infrastructure, and modern technology services.
+
+🚀 With a decade of hands-on entrepreneurial experience, he has successfully built and led businesses that bridge real estate excellence with innovative technology solutions. His leadership is defined by professionalism, innovation, trust, and a strong commitment to long-term value creation.
+
+🌐 His vision is to build a globally connected, technology-powered, human-centric ecosystem that delivers premium value to clients, investors, and businesses worldwide.`,
+    
+    founderAchievements: ["10+ Years Experience", "DLD Registered | RERA Certified", "Real Estate + Tech Leader", "Global Visionary"],
+    // ========== END OF UPDATED FOUNDER SECTION ==========
     
     faqTitle: "Knowledge Base",
     faqSub: "Frequently Asked Questions",
@@ -86,14 +97,23 @@ export const content = {
     office: "आर-118, दूसरी मंजिल, वास्ल बिल्डिंग, मकानी नं. 2809195296, बुर दुबई, दुबई, यूएई",
     ownerLabel: "स्वामित्व",
     ownerName: "प्रशांत सिंह द्वारा स्थापित और एकमात्र स्वामित्व",
-    foundersTitle: "होमोगेट के पीछे दूरदर्शी",
-    foundersSub: "दुबई के रियल एस्टेट भविष्य को आकार देने वाले नेताओं से मिलें",
+    
+    // ========== UPDATED ABOUT FOUNDER SECTION - HINDI ==========
+    foundersTitle: "संस्थापक के बारे में",
+    foundersSub: "प्रशांत सिंह",
     founderName: "प्रशांत सिंह",
     founderRole: "संस्थापक और सीईओ",
     founderimage: homogetFounderImage,
-    founderDesc: "दुबई के लग्जरी रियल एस्टेट बाजार में 12+ वर्षों के अनुभव वाले एक दूरदर्शी उद्यमी।",
-    founderAchievements: ["12+ वर्ष अनुभव", "AED 5B+ संपत्ति", "RERA प्रमाणित", "उद्योग अग्रणी"],
-   
+    founderDesc: `✦ प्रशांत सिंह एक दूरदर्शी उद्यमी, व्यवसाय रणनीतिकार और प्रौद्योगिकी-संचालित नेता हैं, जिनके पास रियल एस्टेट, प्रौद्योगिकी और डिजिटल नवाचार में 10 से अधिक वर्षों का पेशेवर अनुभव है। वह होमोगेट प्रॉपर्टीज के संस्थापक और सीईओ हैं, जो दुबई स्थित डीएलडी-पंजीकृत और आरईआरए-विनियमित रियल एस्टेट कंपनी है।
+    
+💻 वह वेब्नेस्टिक टेक्नोलॉजी के भी संस्थापक हैं, जो एक अग्रणी आईटी और डिजिटल समाधान कंपनी है।
+
+🚀 एक दशक के व्यावहारिक उद्यमशीलता अनुभव के साथ, उन्होंने सफलतापूर्वक ऐसे व्यवसायों का निर्माण और नेतृत्व किया है जो रियल एस्टेट उत्कृष्टता को नवीन प्रौद्योगिकी समाधानों के साथ जोड़ते हैं।
+
+🌐 उनका दृष्टिकोण एक वैश्विक रूप से जुड़ा, प्रौद्योगिकी-संचालित, मानव-केंद्रित पारिस्थितिकी तंत्र बनाना है।`,
+    founderAchievements: ["10+ वर्ष अनुभव", "DLD पंजीकृत | RERA प्रमाणित", "रियल एस्टेट + टेक लीडर", "वैश्विक दूरदर्शी"],
+    // ========== END OF UPDATED FOUNDER SECTION ==========
+    
     faqTitle: "सामान्य प्रश्न",
     faqSub: "अक्सर पूछे जाने वाले सवाल",
     faqs: [
@@ -127,14 +147,23 @@ export const content = {
     office: "R-118، الطابق الثاني، مبنى وصل، رقم مكاني 2809195296، بر دبي، دبي",
     ownerLabel: "الملكية",
     ownerName: "تأسست ومملوكة بالكامل من قبل براشانت سينغ",
-    foundersTitle: "الرؤى وراء هوموجيت",
-    foundersSub: "تعرف على القادة الذين يشكلون مستقبل العقارات في دبي",
+    
+    // ========== UPDATED ABOUT FOUNDER SECTION - ARABIC ==========
+    foundersTitle: "حول المؤسس",
+    foundersSub: "براشانت سينغ",
     founderName: "براشانت سينغ",
     founderRole: "المؤسس والرئيس التنفيذي",
     founderimage: homogetFounderImage,
-    founderDesc: "رائد أعمال ذو رؤية يتمتع بخبرة تزيد عن 12 عامًا في سوق العقارات الفاخرة في دبي.",
-    founderAchievements: ["خبرة 12+ سنة", "إدارة أصول بقيمة 5+ مليار درهم", "معتمد من ريرا", "رائد في المجال"],
-   
+    founderDesc: `✦ براشانت سينغ هو رائد أعمال صاحب رؤية، واستراتيجي أعمال، وقائد تقني مع أكثر من 10 سنوات من الخبرة المهنية في العقارات والتكنولوجيا والابتكار الرقمي. وهو المؤسس والرئيس التنفيذي لشركة هوموجيت بروبرتيز، وهي شركة عقارية مسجلة لدى دائرة الأراضي والأملاك في دبي ومنظمة من قبل هيئة التنظيم العقاري (ريرا).
+    
+💻 وهو أيضًا مؤسس شركة ويبنستيك تكنولوجي، وهي شركة متخصصة في تطوير البرمجيات والبنية التحتية الرقمية.
+
+🚀 مع عقد من الخبرة العملية في ريادة الأعمال، قام ببناء وقيادة أعمال تجمع بين التميز العقاري وحلول التكنولوجيا المبتكرة.
+
+🌐 رؤيته هي بناء نظام بيئي عالمي متصل، مدعوم بالتكنولوجيا، يركز على الإنسان.`,
+    founderAchievements: ["10+ سنوات خبرة", "مسجل DLD | معتمد RERA", "قائد عقارات وتكنولوجيا", "رؤية عالمية"],
+    // ========== END OF UPDATED FOUNDER SECTION ==========
+    
     faqTitle: "الأسئلة الشائعة",
     faqSub: "قاعدة المعرفة",
     faqs: [
@@ -149,10 +178,11 @@ export const content = {
 
 
 // founderData.js
+
 export const founderData = {
   name: "Prashant Singh",
   role: "Founder & CEO",
-  image: homogetFounderImage, // replace with actual import
+  image: homogetFounderImage,
   shortBio: "A visionary entrepreneur bridging premium Dubai real estate with global IT solutions through a deeply rooted, human-centric digital ecosystem.",
   achievements: ["12+ Years Experience", "AED 5B+ Assets Managed", "RERA Certified", "Industry Pioneer"],
   
@@ -168,14 +198,13 @@ export const founderData = {
   webnestic: {
     name: "Webnestic Technology Pvt. Ltd.",
     emails: ["info@webnestic.com", "hr@webnestic.com"],
-    phones: ["+91 6393413281","+971 58 591 9585"],
+    phones: ["+91 6393413281", "+971 58 591 9585"],
     website: "www.webnestic.com",
-        address: "Corporate Hub, Gomti Nagar, Lucknow, Uttar Pradesh"
-
+    address: "Corporate Hub, Gomti Nagar, Lucknow, Uttar Pradesh, India"
   },
   
   contact: {
-    email: "founder@homoget.ae",      // primary (legacy)
+    email: "founder@homoget.ae",
     website: "www.webnestic.com",
     address: "R-118, 2nd Floor, Wasl Building, Bur Dubai, Dubai, UAE"
   },
