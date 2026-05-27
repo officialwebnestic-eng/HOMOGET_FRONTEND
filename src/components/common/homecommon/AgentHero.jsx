@@ -9,10 +9,23 @@ import {
   Loader2,
   Building2,
   Landmark,
-  Home as HomeIcon
+  Home as HomeIcon,
+  Sparkles,
+  Zap,
+  SlidersHorizontal,
+  TrendingUp,
+  Heart,
+  Star,
+  Shield,
+  Clock,
+  Brain,
+  ThumbsUp,
+  Grid3x3,
+  List
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import FilterSidebar from "../FilterSidebar";
+ import SortBar from "./SortBar ";
 const AgentHero = ({
   propertyList = [],
   filters,
@@ -25,16 +38,193 @@ const AgentHero = ({
   setSearchQuery: externalSetSearchQuery,
   onSuggestionClick: externalOnSuggestionClick,
   onSearchButtonClick: externalOnSearchButtonClick,
+  onApplyFilters,
+  onClearFilters,
+  currentSort,
+  onSortChange,
+  viewMode,
+  onViewModeChange,
+  totalResults
 }) => {
   const navigate = useNavigate();
   const [internalSearchQuery, setInternalSearchQuery] = useState(externalSearchQuery || "");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [apiSuggestions, setApiSuggestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [aiMode, setAiMode] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState([]);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [userImpact, setUserImpact] = useState(null);
   const inputRef = useRef(null);
   const suggestionRef = useRef(null);
+  const sidebarRef = useRef(null); // Ref for sidebar to detect outside clicks
 
   const TOMTOM_API_KEY = "YDlNOyLlX4RImV4fciotLz74L5JXykXG";
+  
+  // ========== GOOGLE GEMINI API ==========
+  const GEMINI_API_KEY = "AIzaSyCZ7WFdsYoZrT79QaJsXT5wu5yA5yT8IDQ";
+  const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
+
+  // Handle click outside to close sidebar
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Check if sidebar is open and click is outside sidebar
+      if (showFilters && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        setShowFilters(false);
+      }
+    };
+    
+    // Add event listener when sidebar is open
+    if (showFilters) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    
+    // Cleanup
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showFilters, setShowFilters]);
+
+  // Handle escape key to close sidebar
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === "Escape" && showFilters) {
+        setShowFilters(false);
+      }
+    };
+    
+    document.addEventListener("keydown", handleEscapeKey);
+    return () => {
+      document.removeEventListener("keydown", handleEscapeKey);
+    };
+  }, [showFilters, setShowFilters]);
+
+  // Get AI recommendations
+  const getGeminiRecommendations = async (query) => {
+    if (!query || query.length < 2) return [];
+    
+    try {
+      const prompt = `You are a Dubai real estate expert. Based on the user search: "${query}", provide 3 property recommendations in JSON format only, no extra text. Use this exact structure:
+      {
+        "recommendations": [
+          {
+            "type": "property type name",
+            "locations": ["location1", "location2"],
+            "priceRange": "price range in AED",
+            "roi": "expected ROI percentage",
+            "matchScore": 85,
+            "description": "short description"
+          }
+        ]
+      }`;
+      
+      const response = await fetch(GEMINI_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 800,
+          }
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+        const text = data.candidates[0].content.parts[0].text;
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          return parsed.recommendations || [];
+        }
+      }
+      return fallbackRecommendations(query);
+    } catch (error) {
+      console.error("Gemini API error:", error);
+      return fallbackRecommendations(query);
+    }
+  };
+
+  // Fallback recommendations
+  const fallbackRecommendations = (query) => {
+    const recommendations = [];
+    const queryLower = query.toLowerCase();
+    
+    if (queryLower.includes("luxury") || queryLower.includes("premium") || queryLower.includes("villa")) {
+      recommendations.push({
+        type: "Luxury Villas",
+        locations: ["Palm Jumeirah", "Emirates Hills", "Al Barari"],
+        priceRange: "AED 5M - 50M+",
+        roi: "5-7%",
+        matchScore: 95,
+        description: "Premium luxury villas with private beaches"
+      });
+    }
+    
+    if (queryLower.includes("beach") || queryLower.includes("sea view")) {
+      recommendations.push({
+        type: "Beachfront Apartments",
+        locations: ["Dubai Marina", "JBR", "La Mer"],
+        priceRange: "AED 1.5M - 10M",
+        roi: "6-8%",
+        matchScore: 92,
+        description: "Stunning sea view apartments"
+      });
+    }
+    
+    if (recommendations.length === 0) {
+      recommendations.push({
+        type: "Popular Properties",
+        locations: ["Downtown Dubai", "Dubai Marina", "Business Bay"],
+        priceRange: "AED 500K - 5M",
+        roi: "6-9%",
+        matchScore: 80,
+        description: "Most sought-after properties in Dubai"
+      });
+    }
+    
+    return recommendations;
+  };
+
+  // Get user impact insights
+  const getUserImpactInsights = () => {
+    return {
+      totalViews: propertyList.reduce((sum, p) => sum + (p.views || 0), 0),
+      avgPrice: propertyList.reduce((sum, p) => sum + (p.price || 0), 0) / (propertyList.length || 1),
+      marketSentiment: "Bullish",
+      topAreas: ["Dubai Marina", "Downtown", "Palm Jumeirah", "Business Bay"]
+    };
+  };
+
+  // Fetch AI suggestions
+  useEffect(() => {
+    const fetchAiSuggestions = async () => {
+      if (!internalSearchQuery || internalSearchQuery.length < 2 || !aiMode) {
+        setAiSuggestions([]);
+        return;
+      }
+      
+      setIsAiLoading(true);
+      try {
+        const suggestions = await getGeminiRecommendations(internalSearchQuery);
+        setAiSuggestions(suggestions.length > 0 ? suggestions : fallbackRecommendations(internalSearchQuery));
+      } catch (error) {
+        console.error("AI suggestions error:", error);
+        setAiSuggestions(fallbackRecommendations(internalSearchQuery));
+      } finally {
+        setIsAiLoading(false);
+      }
+    };
+    
+    const debounce = setTimeout(fetchAiSuggestions, 800);
+    return () => clearTimeout(debounce);
+  }, [internalSearchQuery, aiMode]);
 
   // Sync internal state with external prop
   useEffect(() => {
@@ -57,7 +247,7 @@ const AgentHero = ({
         const response = await fetch(
           `https://api.tomtom.com/search/2/search/${encodeURIComponent(
             internalSearchQuery
-          )}.json?key=${TOMTOM_API_KEY}&countrySet=AE&limit=8&typeahead=true&lat=25.2048&lon=55.2708&radius=50000`
+          )}.json?key=${TOMTOM_API_KEY}&countrySet=AE&limit=6&typeahead=true&lat=25.2048&lon=55.2708&radius=50000`
         );
 
         const data = await response.json();
@@ -65,8 +255,7 @@ const AgentHero = ({
         if (data.results) {
           const formatted = data.results.map((item) => ({
             id: item.id,
-            name:
-              item.poi?.name ||
+            name: item.poi?.name ||
               item.address?.municipalitySubdivision ||
               item.address?.municipality ||
               item.address?.freeformAddress,
@@ -101,7 +290,13 @@ const AgentHero = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Get icon based on location type
+  // Get user impact data
+  useEffect(() => {
+    if (propertyList.length > 0) {
+      setUserImpact(getUserImpactInsights());
+    }
+  }, [propertyList]);
+
   const getLocationIcon = (type, category) => {
     if (type === "POI" || category === "building") {
       return <Building2 className="w-4 h-4" />;
@@ -111,44 +306,55 @@ const AgentHero = ({
     return <HomeIcon className="w-4 h-4" />;
   };
 
-  // Handle location selection - FIXED
   const handleLocationSelect = (location) => {
-    // Update internal state
     setInternalSearchQuery(location.name);
-    
-    // Update parent state
     if (externalSetSearchQuery) {
       externalSetSearchQuery(location.name);
     }
-    
-    // Call parent's suggestion handler (this will update filters)
     if (externalOnSuggestionClick) {
       externalOnSuggestionClick(location.name);
     }
-    
-    // Close suggestions popup
     setShowSuggestions(false);
   };
 
-  // Handle search button click - stay on same page and filter
+  // MAIN SEARCH HANDLER - Redirects to properties page with filters
   const handleSearch = () => {
-    if (!internalSearchQuery || internalSearchQuery.trim() === "") return;
-
-    if (externalSetSearchQuery) {
-      externalSetSearchQuery(internalSearchQuery);
+    const searchTerm = internalSearchQuery.trim();
+    
+    // Build query params with search term and filters
+    const queryParams = new URLSearchParams();
+    
+    if (searchTerm) {
+      queryParams.append('search', searchTerm);
     }
-
+    
+    // Add all active filters to query params
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value && value !== "" && value !== "all") {
+          if (Array.isArray(value) && value.length > 0) {
+            queryParams.append(key, value.join(','));
+          } else if (typeof value === 'string' && value !== "") {
+            queryParams.append(key, value);
+          }
+        }
+      });
+    }
+    
+    // Call external callback
     if (externalOnSearchButtonClick) {
       externalOnSearchButtonClick();
     } else if (externalOnSuggestionClick) {
-      // If no separate search handler, use suggestion handler
-      externalOnSuggestionClick(internalSearchQuery);
+      externalOnSuggestionClick(searchTerm);
     }
-
+    
+    // Navigate to properties page with filters
+    const queryString = queryParams.toString();
+    navigate(`/properties${queryString ? `?${queryString}` : ''}`);
+    
     setShowSuggestions(false);
   };
 
-  // Handle Enter key
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -156,17 +362,16 @@ const AgentHero = ({
     }
   };
 
-  // Clear search
   const handleClearSearch = () => {
     setInternalSearchQuery("");
     if (externalSetSearchQuery) {
       externalSetSearchQuery("");
     }
     setApiSuggestions([]);
+    setAiSuggestions([]);
     inputRef.current?.focus();
   };
 
-  // Get badge info
   const getBadgeInfo = (type, category) => {
     if (type === "POI" || category === "building") {
       return { color: "bg-amber-500/20 text-amber-500", text: "Landmark" };
@@ -176,8 +381,53 @@ const AgentHero = ({
     return { color: "bg-slate-500/20 text-slate-400", text: "Area" };
   };
 
+  const activeFiltersCount = () => {
+    if (!filters) return 0;
+    let count = 0;
+    if (filters.propertytype?.length) count += filters.propertytype.length;
+    if (filters.bedroom) count++;
+    if (filters.bathroom) count++;
+    if (filters.minPrice) count++;
+    if (filters.maxPrice) count++;
+    if (filters.city) count++;
+    return count;
+  };
+
+  const hasActiveFilters = activeFiltersCount() > 0;
+
+  const handleFilterApply = () => {
+    if (onApplyFilters) {
+      onApplyFilters();
+    }
+    setShowFilters(false);
+    // Navigate with filters
+    const queryParams = new URLSearchParams();
+    if (internalSearchQuery) {
+      queryParams.append('search', internalSearchQuery);
+    }
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value && value !== "" && value !== "all") {
+          if (Array.isArray(value) && value.length > 0) {
+            queryParams.append(key, value.join(','));
+          } else if (typeof value === 'string' && value !== "") {
+            queryParams.append(key, value);
+          }
+        }
+      });
+    }
+    const queryString = queryParams.toString();
+    navigate(`/properties${queryString ? `?${queryString}` : ''}`);
+  };
+
+  const handleFilterClear = () => {
+    if (onClearFilters) {
+      onClearFilters();
+    }
+  };
+
   return (
-    <div className="relative min-h-[70vh] flex items-center justify-center overflow-visible z-[40]">
+    <div className="relative min-h-[75vh] md:min-h-[80vh] flex items-center justify-center overflow-visible z-[40]">
       {/* BACKGROUND */}
       <div className="absolute inset-0 z-0">
         <img
@@ -185,28 +435,33 @@ const AgentHero = ({
           alt="Dubai"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/60"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80"></div>
       </div>
 
       {/* CONTENT */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4">
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-4">
         {/* TITLE */}
-        <div className="text-center mb-10">
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-white mb-2 tracking-tight">
+        <div className="text-center mb-8 md:mb-10">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-white mb-2 tracking-tight">
             Homoget<span className="text-amber-500">.</span>
           </h1>
-          <p className="text-white/70 uppercase tracking-[0.3em] text-[10px] md:text-xs mt-3 font-medium">
-            Luxury Real Estate Dubai
+          <p className="text-white/70 uppercase tracking-[0.3em] text-[8px] md:text-[9px] lg:text-[10px] mt-2 font-medium">
+            AI-Powered Real Estate Discovery
           </p>
         </div>
 
-        {/* SEARCH BAR */}
-        <div className="max-w-4xl mx-auto relative" ref={suggestionRef}>
-          <div className="bg-white dark:bg-slate-900 rounded-full p-2 shadow-2xl flex items-center border border-white/10">
-            {/* INPUT SECTION */}
-            <div className="flex-1 relative">
-              <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+        {/* SEARCH BAR CONTAINER */}
+        <div className="w-full max-w-3xl mx-auto relative" ref={suggestionRef}>
+          {/* Main Search Bar */}
+          <div className="relative">
+            <div className="relative flex flex-wrap items-center w-full bg-white/95 dark:bg-slate-900/95 rounded-2xl shadow-xl border border-white/20 focus-within:ring-2 focus-within:ring-amber-500/30 transition-all">
               
+              {/* Search Icon */}
+              <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                <Search className="w-4 h-4 text-slate-400" />
+              </div>
+              
+              {/* Search Input */}
               <input
                 ref={inputRef}
                 type="text"
@@ -215,152 +470,180 @@ const AgentHero = ({
                 onChange={(e) => setInternalSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Search by community, tower or area..."
-                className="w-full bg-transparent pl-14 pr-10 py-5 text-slate-900 dark:text-white outline-none text-base md:text-lg font-medium placeholder:text-slate-400"
+                className="flex-1 min-w-[150px] bg-transparent pl-11 pr-2 py-3.5 text-slate-800 dark:text-white outline-none text-sm md:text-base placeholder:text-slate-600 placeholder:text-xs md:placeholder:text-sm"
               />
 
-              {internalSearchQuery && (
+              {/* Action Buttons */}
+              <div className="flex items-center gap-1 px-2">
+                {/* AI Mode Toggle */}
                 <button
-                  onClick={handleClearSearch}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                  onClick={() => setAiMode(!aiMode)}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all ${
+                    aiMode 
+                      ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md" 
+                      : "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                  }`}
                 >
-                  <X className="w-4 h-4 text-slate-400 hover:text-amber-500 transition-colors" />
+                  <Brain className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-medium hidden sm:inline">AI</span>
                 </button>
-              )}
 
-              {/* SUGGESTIONS DROPDOWN */}
-              <AnimatePresence>
-                {showSuggestions && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute top-full left-0 right-0 mt-3 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden z-[999] border border-slate-200 dark:border-white/10"
+                {/* Filter Button - Opens FilterSidebar */}
+                <button
+                  onClick={() => setShowFilters(true)}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all ${
+                    hasActiveFilters
+                      ? "bg-amber-500 text-white" 
+                      : "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                  }`}
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-medium hidden sm:inline">Filter</span>
+                  {hasActiveFilters && (
+                    <span className="w-4 h-4 rounded-full bg-amber-600 text-white text-[8px] flex items-center justify-center">
+                      {activeFiltersCount()}
+                    </span>
+                  )}
+                </button>
+
+                {/* Clear Button */}
+                {internalSearchQuery && (
+                  <button
+                    onClick={handleClearSearch}
+                    className="p-1.5 rounded-full hover:bg-slate-100 transition-colors"
                   >
-                    {/* HEADER */}
-                    <div className="px-5 py-3 border-b border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-slate-800/50">
-                      <div className="flex items-center justify-between">
-                        <p className="text-[9px] font-bold tracking-[0.2em] uppercase text-amber-500">
-                          Popular Locations in Dubai
-                        </p>
-                        <p className="text-[8px] text-slate-400 uppercase font-medium">Real Estate</p>
-                      </div>
-                    </div>
+                    <X className="w-3.5 h-3.5 text-slate-400 hover:text-amber-500 transition-colors" />
+                  </button>
+                )}
 
-                    {/* LOADER */}
-                    {isLoading ? (
-                      <div className="py-12 text-center">
-                        <Loader2 className="w-6 h-6 animate-spin mx-auto text-amber-500" />
-                        <p className="text-xs text-slate-500 mt-3 font-medium">Searching locations...</p>
-                      </div>
-                    ) : apiSuggestions.length > 0 ? (
-                      <div className="max-h-[400px] overflow-y-auto">
-                        {apiSuggestions.map((location, index) => {
-                          const badge = getBadgeInfo(location.type, location.category);
-                          return (
-                            <button
-                              key={index}
-                              onClick={() => handleLocationSelect(location)}
-                              className="w-full text-left px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-white/5 transition-all border-b border-slate-100 dark:border-white/5 last:border-0 group"
-                            >
-                              <div className="flex items-start gap-3">
-                                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 group-hover:text-amber-500 transition-colors flex-shrink-0">
-                                  {getLocationIcon(location.type, location.category)}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <h3 className="font-semibold text-slate-800 dark:text-white text-sm group-hover:text-amber-500 transition-colors">
-                                      {location.name}
-                                    </h3>
-                                    <span className={`text-[8px] px-2 py-0.5 rounded-full font-bold ${badge.color}`}>
-                                      {badge.text}
-                                    </span>
-                                  </div>
-                                  {location.address && (
-                                    <p className="text-[10px] text-slate-500 mt-1 truncate">
-                                      {location.address}
-                                    </p>
-                                  )}
-                                </div>
-                                <Search className="w-3 h-3 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      internalSearchQuery.length >= 2 && (
-                        <div className="py-12 text-center">
-                          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mx-auto mb-3">
-                            <MapPin className="w-5 h-5 text-slate-400" />
+                {/* Search Button - Redirects to Properties Page */}
+                <button
+                  onClick={handleSearch}
+                  className="ml-1 px-4 md:px-5 py-1.5 rounded-full bg-amber-500 text-black font-semibold text-[10px] md:text-[11px] tracking-wide hover:bg-black hover:text-white transition-all shadow-sm whitespace-nowrap"
+                >
+                  <span className="hidden xs:inline">Search</span>
+                  <Search className="inline xs:hidden w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* AI SUGGESTIONS */}
+            {aiMode && internalSearchQuery.length >= 2 && (
+              <div className="mt-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Brain className="w-3.5 h-3.5 text-purple-400" />
+                  <span className="text-[9px] text-purple-300 font-medium">AI Smart Recommendations</span>
+                </div>
+                
+                {isAiLoading ? (
+                  <div className="flex items-center justify-center py-4 bg-white/5 rounded-xl">
+                    <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+                    <span className="text-[9px] text-purple-300 ml-2">Analyzing...</span>
+                  </div>
+                ) : aiSuggestions.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {aiSuggestions.map((rec, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl p-3 border border-purple-500/30 hover:border-purple-500/50 transition-all cursor-pointer"
+                        onClick={() => {
+                          setInternalSearchQuery(rec.type);
+                          handleSearch();
+                        }}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h4 className="text-xs font-bold text-white">{rec.type}</h4>
+                            {rec.locations && (
+                              <p className="text-[8px] text-purple-300 mt-1">
+                                📍 {Array.isArray(rec.locations) ? rec.locations.slice(0, 2).join(", ") : rec.locations}
+                              </p>
+                            )}
+                            {rec.priceRange && (
+                              <p className="text-[7px] text-purple-400/70">💰 {rec.priceRange}</p>
+                            )}
                           </div>
-                          <p className="text-sm text-slate-500 font-medium">
-                            No locations found for "{internalSearchQuery}"
-                          </p>
-                          <p className="text-[10px] text-slate-400 mt-1">Try a different search term</p>
+                          {rec.matchScore && (
+                            <div className="flex items-center gap-1">
+                              <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                              <span className="text-[8px] font-bold text-amber-400">{rec.matchScore}%</span>
+                            </div>
+                          )}
                         </div>
-                      )
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* FILTER BUTTON */}
-            <div
-              className="relative hidden md:flex items-center"
-              onMouseEnter={() => setShowFilters(true)}
-              onMouseLeave={() => setShowFilters(false)}
-            >
-              <button className="flex items-center gap-2 px-4 py-4 text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-amber-500 transition-colors">
-                <Filter className="w-3.5 h-3.5" />
-                <span>Refine</span>
-                <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${showFilters ? "rotate-180" : ""}`} />
-              </button>
-
-              <AnimatePresence>
-                {showFilters && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute top-full right-0 pt-4 z-[999] w-[480px]"
-                  >
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 border border-white/10">
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-amber-500 mb-4">Filter Properties</p>
-                      <div className="grid grid-cols-2 gap-4">
-                        {filterFields?.slice(0, 8).map((field) => (
-                          <div key={field.name}>
-                            <label className="text-[8px] font-bold uppercase tracking-wider text-slate-500 mb-1.5 block">
-                              {field.label}
-                            </label>
-                            <select
-                              name={field.name}
-                              value={filters[field.name] || ""}
-                              onChange={handleFilterChange}
-                              className="w-full px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-xs font-medium cursor-pointer"
-                            >
-                              <option value="">All</option>
-                              {getUniqueValues(propertyList, field.name).map((opt) => (
-                                <option key={opt} value={opt}>{opt}</option>
-                              ))}
-                            </select>
-                          </div>
-                        ))}
                       </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            )}
 
-            {/* SEARCH BUTTON */}
-            <button
-              onClick={handleSearch}
-              className="ml-2 px-6 md:px-8 py-4 rounded-full bg-amber-500 text-black font-bold uppercase tracking-wider text-[10px] md:text-xs hover:bg-black hover:text-white transition-all shadow-md"
-            >
-              Search
-            </button>
+            {/* LOCATION SUGGESTIONS */}
+            <AnimatePresence>
+              {showSuggestions && !aiMode && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-xl shadow-xl border overflow-hidden z-[999]"
+                >
+                  <div className="px-4 py-2 border-b bg-slate-50 dark:bg-slate-800/50">
+                    <p className="text-[8px] font-bold uppercase text-amber-500">Popular Locations</p>
+                  </div>
+
+                  {isLoading ? (
+                    <div className="py-8 text-center">
+                      <Loader2 className="w-4 h-4 animate-spin mx-auto text-amber-500" />
+                    </div>
+                  ) : apiSuggestions.length > 0 ? (
+                    <div className="max-h-[320px] overflow-y-auto">
+                      {apiSuggestions.map((location, index) => {
+                        const badge = getBadgeInfo(location.type, location.category);
+                        return (
+                          <button
+                            key={index}
+                            onClick={() => handleLocationSelect(location)}
+                            className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors border-b last:border-0 group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center group-hover:text-amber-500">
+                                {getLocationIcon(location.type, location.category)}
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm group-hover:text-amber-500">
+                                  {location.name}
+                                </p>
+                                <span className={`text-[7px] px-1.5 py-0.5 rounded-full ${badge.color}`}>
+                                  {badge.text}
+                                </span>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
+        </div>
+
+     
+
+        {/* FILTER SIDEBAR COMPONENT with outside click detection */}
+        <div ref={sidebarRef}>
+          <FilterSidebar
+            isOpen={showFilters}
+            onClose={() => setShowFilters(false)}
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onApplyFilters={handleFilterApply}
+            onClearFilters={handleFilterClear}
+            propertyCount={totalResults || propertyList.length}
+            filterFields={filterFields}
+            getUniqueValues={getUniqueValues}
+            propertyList={propertyList}
+          />
         </div>
       </div>
     </div>

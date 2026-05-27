@@ -1,3 +1,4 @@
+// PropertyListing.jsx - Complete with Search Bar Input Field
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from "react-router-dom";
@@ -6,11 +7,14 @@ import {
   ChevronLeft, ChevronRight, ArrowRight,
   Phone, Mail, Building2, Home, Calendar,
   IndianRupee, ChevronDown, Briefcase, Crown, Sparkles, 
-  Clock, User, Star, Share2, Heart, DollarSign, Eye, X, Loader2
+  Clock, User, Star, Share2, Heart, DollarSign, Eye, X, Loader2,
+  Grid3x3, List, SlidersHorizontal
 } from 'lucide-react';
 import { FaWhatsapp } from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
 import useGetAllProperty from "../../hooks/useGetAllProperty";
+import FilterSidebar from './FilterSidebar';
+import SortBar from './homecommon/SortBar ';
 
 // Helper functions for property type detection
 const isOffPlan = (property) => {
@@ -62,21 +66,40 @@ const PropertyListing = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [apiSuggestions, setApiSuggestions] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [viewMode, setViewMode] = useState('grid');
+  const [currentSort, setCurrentSort] = useState('featured');
+  const [isInputFocused, setIsInputFocused] = useState(false);
   
   const searchTimeoutRef = useRef(null);
   const containerRef = useRef(null);
+  const inputRef = useRef(null);
+  const sidebarRef = useRef(null);
   
   const TOMTOM_API_KEY = "YDlNOyLlX4RImV4fciotLz74L5JXykXG";
 
+  // Filters state
   const [filters, setFilters] = useState({
-    city: "", propertytype: "", price: "", squarefoot: "",
-    bedroom: "", bathroom: "", floor: "", state: "", aminities: "",
-    offeringType: "", category: ""
+    city: "", 
+    propertytype: [], 
+    minPrice: "", 
+    maxPrice: "",
+    minSquarefoot: "",
+    maxSquarefoot: "",
+    bedroom: "", 
+    bathroom: "", 
+    furnishingType: "",
+    amenities: [],
+    keywords: [],
+    has360Tour: "",
+    hasVideoTour: "",
+    offeringType: "", 
+    category: ""
   });
 
   // Fetch location suggestions from TomTom
@@ -134,6 +157,7 @@ const PropertyListing = () => {
     const handleClickOutside = (event) => {
       if (containerRef.current && !containerRef.current.contains(event.target)) {
         setShowSuggestions(false);
+        setIsInputFocused(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -145,8 +169,8 @@ const PropertyListing = () => {
     setSearchQuery(location.name);
     setSelectedLocation(location);
     setShowSuggestions(false);
+    setIsInputFocused(false);
     setHasSearched(true);
-    // Update filter with selected city
     setFilters(prev => ({ ...prev, city: location.name }));
     setCurrentPage(1);
   };
@@ -157,6 +181,10 @@ const PropertyListing = () => {
       setHasSearched(true);
       setFilters(prev => ({ ...prev, city: searchQuery }));
       setCurrentPage(1);
+      setIsInputFocused(false);
+      if (inputRef.current) {
+        inputRef.current.blur();
+      }
     }
   };
 
@@ -168,17 +196,47 @@ const PropertyListing = () => {
     }
   };
 
-  // Get location badge color
-  const getLocationBadgeColor = (type) => {
-    switch (type) {
-      case "POI":
-        return "bg-amber-500/20 text-amber-500";
-      case "Geography":
-        return "bg-blue-500/20 text-blue-500";
-      default:
-        return "bg-slate-500/20 text-slate-400";
-    }
+  // Handle input focus
+  const handleInputFocus = () => {
+    setIsInputFocused(true);
+    setShowSuggestions(true);
   };
+
+  // Handle filter button click from input - opens sidebar
+  const handleInputFilterClick = () => {
+    setShowFilters(true);
+  };
+
+  // Handle click outside to close sidebar
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showFilters && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        setShowFilters(false);
+      }
+    };
+    
+    if (showFilters) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showFilters]);
+
+  // Handle escape key to close sidebar
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === "Escape" && showFilters) {
+        setShowFilters(false);
+      }
+    };
+    
+    document.addEventListener("keydown", handleEscapeKey);
+    return () => {
+      document.removeEventListener("keydown", handleEscapeKey);
+    };
+  }, [showFilters]);
 
   // Catch redirect from home page
   useEffect(() => {
@@ -191,48 +249,91 @@ const PropertyListing = () => {
     }
   }, [location.state]);
 
-  const limit = 20; 
-  const { propertyList = [], loading, pagination = {} } = useGetAllProperty(currentPage, limit, filters);
+  // Prepare filters for API
+  const apiFilters = useMemo(() => {
+    const apiFilter = {};
+    
+    if (filters.city) apiFilter.city = filters.city;
+    if (filters.category) apiFilter.category = filters.category;
+    if (filters.offeringType) apiFilter.offeringType = filters.offeringType;
+    if (filters.furnishingType) apiFilter.furnishingType = filters.furnishingType;
+    
+    if (filters.propertytype && filters.propertytype.length > 0) {
+      apiFilter.propertytypeList = filters.propertytype.join(',');
+    }
+    if (filters.amenities && filters.amenities.length > 0) {
+      apiFilter.amenities = filters.amenities.join(',');
+    }
+    
+    if (filters.minPrice) apiFilter.minPrice = filters.minPrice;
+    if (filters.maxPrice) apiFilter.maxPrice = filters.maxPrice;
+    if (filters.minSquarefoot) apiFilter.minSquarefoot = filters.minSquarefoot;
+    if (filters.maxSquarefoot) apiFilter.maxSquarefoot = filters.maxSquarefoot;
+    if (filters.bedroom) apiFilter.bedroom = filters.bedroom;
+    if (filters.bathroom) apiFilter.bathroom = filters.bathroom;
+    
+    return apiFilter;
+  }, [filters]);
 
-  const filterFields = [
-    { name: "city", label: "CITY", icon: <MapPin size={14} className="text-amber-500" /> },
-    { name: "propertytype", label: "TYPE", icon: <Home size={14} className="text-amber-500" /> },
-    { name: "category", label: "CATEGORY", icon: <Building2 size={14} className="text-amber-500" /> },
-    { name: "offeringType", label: "OFFERING", icon: <DollarSign size={14} className="text-amber-500" /> },
-    { name: "price", label: "PRICE", icon: <IndianRupee size={14} className="text-amber-500" /> },
-    { name: "squarefoot", label: "AREA", icon: <Ruler size={14} className="text-amber-500" /> },
-    { name: "bedroom", label: "BEDS", icon: <Bed size={14} className="text-amber-500" /> },
-    { name: "bathroom", label: "BATHS", icon: <Bath size={14} className="text-amber-500" /> },
-  ];
+  const limit = 12; 
+  const { propertyList = [], loading, pagination = {} } = useGetAllProperty(currentPage, limit, apiFilters);
 
-  const getUniqueValues = (key) => {
-    if (!propertyList) return [];
-    return [...new Set(propertyList.map(item => item[key]).filter(Boolean))].sort();
+  // Sort properties
+  const sortedProperties = useMemo(() => {
+    const properties = [...propertyList];
+    switch (currentSort) {
+      case 'price_asc':
+        return properties.sort((a, b) => (a.price || 0) - (b.price || 0));
+      case 'price_desc':
+        return properties.sort((a, b) => (b.price || 0) - (a.price || 0));
+      case 'beds_asc':
+        return properties.sort((a, b) => (a.bedroom || 0) - (b.bedroom || 0));
+      case 'beds_desc':
+        return properties.sort((a, b) => (b.bedroom || 0) - (a.bedroom || 0));
+      case 'area_asc':
+        return properties.sort((a, b) => (a.squarefoot || 0) - (b.squarefoot || 0));
+      case 'area_desc':
+        return properties.sort((a, b) => (b.squarefoot || 0) - (a.squarefoot || 0));
+      case 'newest':
+        return properties.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      default:
+        return properties;
+    }
+  }, [propertyList, currentSort]);
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+    setCurrentPage(1);
+  };
+
+  const handleApplyFilters = () => {
+    setCurrentPage(1);
+    setShowFilters(false);
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      city: "", propertytype: [], minPrice: "", maxPrice: "", 
+      minSquarefoot: "", maxSquarefoot: "", bedroom: "", bathroom: "", 
+      furnishingType: "", amenities: [], keywords: [], 
+      has360Tour: "", hasVideoTour: "", offeringType: "", category: ""
+    });
+    
+    setSearchQuery("");
+    setSelectedLocation(null);
+    setHasSearched(false);
+    setCurrentPage(1);
   };
 
   const handleWhatsApp = (e, property) => {
     e.stopPropagation();
-    
     const managementNo = "971585852283";
     const agentNo = property.agentId?.phone?.replace(/\s+/g, "") || "971500000000";
     const agentName = property.agentId?.name || "Property Consultant";
     const propertyTitle = property.propertyTitleEn || property.propertyname;
-    const propertyType = property.propertytype || (isCommercial(property) ? "Commercial Space" : "Residential");
-    const propertyStatus = isOffPlan(property) ? "Off-Plan" : (isRent(property) ? "Rental" : "Sale");
-
-    const propDetails = `*Property:* ${propertyTitle}\n*Type:* ${propertyType}\n*Status:* ${propertyStatus}\n*Price:* AED ${Number(property.price).toLocaleString()}${isRent(property) ? `/${property.rentedPeriod?.toLowerCase().replace("per ", "") || "year"}` : ""}\n*Location:* ${property.community || property.city}\n*Area:* ${property.squarefoot?.toLocaleString()} sqft\n*Ref:* ${property._id}`;
-    
-    const msgToManagement = encodeURIComponent(`🏢 *NEW INQUIRY - HOMOGET*\n\n━━━━━━━━━━━━━━━━━━━━\n📋 *PROPERTY DETAILS*\n━━━━━━━━━━━━━━━━━━━━\n${propDetails}\n\n━━━━━━━━━━━━━━━━━━━━\n👤 *AGENT:* ${agentName}\n📞 *Contact:* ${agentNo}\n\n🕐 *Time:* ${new Date().toLocaleString()}`);
-    
-    const msgToAgent = encodeURIComponent(`👋 *Hello ${agentName},*\n\nI am interested in your listing:\n\n━━━━━━━━━━━━━━━━━━━━\n🏠 *${propertyTitle}*\n━━━━━━━━━━━━━━━━━━━━\n💰 *Price:* AED ${Number(property.price).toLocaleString()}\n📍 *Location:* ${property.community || property.city}\n📐 *Area:* ${property.squarefoot?.toLocaleString()} sqft\n\nPlease share viewing availability.`);
-
-    window.open(`https://wa.me/${managementNo}?text=${msgToManagement}`, "_blank");
-    
-    setTimeout(() => {
-      if (window.confirm(`✅ Inquiry sent to Management.\n\nNotify ${agentName} directly?`)) {
-        window.open(`https://wa.me/${agentNo}?text=${msgToAgent}`, "_blank");
-      }
-    }, 1000);
+    const msg = encodeURIComponent(`🏢 *Property Inquiry*\n\n🏠 ${propertyTitle}\n💰 AED ${Number(property.price).toLocaleString()}\n📍 ${property.community || property.city}\n\nI'm interested in this property.`);
+    window.open(`https://wa.me/${managementNo}?text=${msg}`, "_blank");
   };
 
   const handleCall = (e, phone) => {
@@ -244,8 +345,7 @@ const PropertyListing = () => {
     e.stopPropagation();
     const propertyTitle = property.propertyTitleEn || property.propertyname;
     const subject = encodeURIComponent(`Inquiry: ${propertyTitle}`);
-    const body = encodeURIComponent(`Hello,\n\nI am interested in:\n\nProperty: ${propertyTitle}\nPrice: AED ${Number(property.price).toLocaleString()}\nLocation: ${property.community || property.city}\n\nPlease provide more information.`);
-    window.location.href = `mailto:info@homoget.ae?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:info@homoget.ae?subject=${subject}`;
   };
 
   const handleShare = (e, property) => {
@@ -260,220 +360,217 @@ const PropertyListing = () => {
     }
   };
 
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
-    setCurrentPage(1);
-  };
-
-  const clearFilters = () => {
-    setFilters({ 
-      city: "", propertytype: "", price: "", squarefoot: "", 
-      bedroom: "", bathroom: "", floor: "", state: "", aminities: "", 
-      offeringType: "", category: "" 
-    });
-    setSearchQuery("");
-    setSelectedLocation(null);
-    setHasSearched(false);
-    setCurrentPage(1);
-  };
-
   return (
     <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0c]' : 'bg-slate-50'}`}>
       
-      {/* --- HERO SECTION with TomTom Search --- */}
-      <section className="relative w-full h-[65vh] flex items-center overflow-hidden">
-        <img
-          src="https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=2000"
-          alt="Dubai Skyline"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-b from-[#0a0a0c]/80 to-[#0a0a0c]' : 'bg-gradient-to-b from-black/50 to-white'}`} />
-        
-        <div className="relative z-10 max-w-7xl mx-auto px-6 w-full mt-[-50px]">
-          <h1 className={`text-2xl md:text-4xl font-black tracking-tighter ${isDark ? 'text-white' : 'text-white'} leading-[0.8] mb-4`}>
-            Property <br />
-            <span className="text-amber-500 font-serif italic font-light lowercase">Listings</span>
-          </h1>
-          <p className={`max-w-md text-sm font-medium text-white/80 mb-8`}>
-            Homoget Properties offers a verified portfolio of luxury assets ensuring full compliance with UAE market regulations.
-          </p>
 
-          {/* SEARCH BAR WITH TOMTOM */}
-          <div className="relative z-50 w-full max-w-2xl mb-8" ref={containerRef}>
-            <div className="flex items-center bg-white/90 backdrop-blur-xl rounded-full border border-white/20 p-2 shadow-2xl">
-              <Search className="text-amber-500 ml-4" size={20} />
-              <div className="relative flex-1">
-                <input 
-                  type="text" 
-                  placeholder="Search by community, tower or area..." 
-                  className="w-full bg-transparent border-none outline-none px-4 py-3 text-sm font-bold text-slate-800 placeholder-slate-400"
-                  value={searchQuery}
-                  onFocus={() => setShowSuggestions(true)}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                />
-                
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2"
-                  >
-                    <X size={16} className="text-slate-400 hover:text-amber-500" />
-                  </button>
-                )}
-                
-                {/* Suggestions Dropdown */}
-                <AnimatePresence>
-                  {showSuggestions && (searchQuery.length >= 2 || isSearching) && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden z-[100]"
-                    >
-                      <div className="px-5 py-3 border-b border-slate-100 dark:border-white/10">
-                        <p className="text-[9px] font-black text-amber-500 uppercase tracking-wider">
-                          Popular Locations in Dubai
-                        </p>
-                      </div>
-                      
-                      {isSearching ? (
-                        <div className="py-8 text-center">
-                          <Loader2 className="w-5 h-5 animate-spin mx-auto text-amber-500" />
-                          <p className="text-xs text-slate-500 mt-2">Searching...</p>
-                        </div>
-                      ) : apiSuggestions.length > 0 ? (
-                        <div className="max-h-80 overflow-y-auto">
-                          {apiSuggestions.map((location, index) => (
-                            <button
-                              key={index}
-                              onClick={() => handleLocationSelect(location)}
-                              className="w-full text-left px-5 py-3 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors border-b border-slate-100 dark:border-white/5 last:border-0"
-                            >
-                              <div className="flex items-start gap-3">
-                                <MapPin className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <p className="text-sm font-semibold text-slate-800 dark:text-white">
-                                      {location.name}
-                                    </p>
-                                    {location.type && (
-                                      <span className={`text-[8px] px-2 py-0.5 rounded-full ${getLocationBadgeColor(location.type)}`}>
-                                        {location.type}
-                                      </span>
-                                    )}
-                                  </div>
-                                  {location.address && (
-                                    <p className="text-[10px] text-slate-500 mt-0.5 truncate">
-                                      {location.address}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      ) : searchQuery.length >= 2 ? (
-                        <div className="py-8 text-center">
-                          <p className="text-sm text-slate-500">No locations found</p>
-                        </div>
-                      ) : null}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-              
-              <button 
-                onClick={handleSearch}
-                className="bg-amber-500 text-white px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-amber-600 transition-all"
+
+<section className="relative w-full h-[60vh] md:h-[65vh] flex items-center overflow-visible">
+  <div className="absolute inset-0 z-0">
+    <img 
+      src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2000&auto=format&fit=crop" 
+      className="w-full h-full object-cover" 
+      alt="Luxury Property" 
+    />
+    <div className={`absolute inset-0 ${isDark ? 'bg-black/60' : 'bg-black/50'}`} />
+  </div>
+  
+  <div className="max-w-[1400px] mx-auto w-full px-6 md:px-12 relative z-20">
+    <motion.div 
+      initial={{ opacity: 0, y: 40 }} 
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+    >
+      <div className="inline-flex items-center gap-3 px-4 py-2  mt-10 md:mt-0 rounded-full bg-amber-500 text-black mb-6 shadow-xl">
+        <Crown size={14} />
+        <span className="text-[10px] font-serif tracking-widest uppercase">Premium Collection</span>
+      </div>
+      
+      <h1 className={`text-2xl md:text-4xl  leading-[1.1] font-serif font-bold mb-4 text-white`}>
+        Find Your <br />
+        <span className="text-amber-500">Dream Property</span>
+      </h1>
+
+      <p className={`max-w-2xl text-base md:text-lg font-light leading-relaxed mb-8 text-white/80`}>
+        The most prestigious properties in the real estate market. 
+        We curate high-yield residential and commercial properties across Dubai.
+      </p>
+
+      {/* SEARCH BAR INPUT FIELD - FIXED Z-INDEX */}
+      <div className="relative w-full max-w-2xl" ref={containerRef}>
+        <div className={`
+          flex items-center bg-white/95 backdrop-blur-xl rounded-full border transition-all duration-300 p-1 shadow-2xl
+          ${isInputFocused ? 'ring-2 ring-amber-500/50 border-amber-500/30' : 'border-white/20'}
+        `}>
+          <Search className="text-amber-500 ml-4" size={20} />
+          <div className="relative flex-1">
+            <input 
+              ref={inputRef}
+              type="text" 
+              placeholder="Search by community, tower or area..." 
+              className="w-full bg-transparent border-none outline-none px-3 py-3 text-sm text-slate-800 placeholder-slate-400"
+              value={searchQuery}
+              onFocus={handleInputFocus}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2"
               >
-                Search
+                <X size={16} className="text-slate-400 hover:text-amber-500 transition-colors" />
               </button>
+            )}
+            
+            {/* LOCATION SUGGESTIONS - HIGH Z-INDEX */}
+            <AnimatePresence>
+              {showSuggestions && (searchQuery.length >= 2 || isSearching) && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden z-[9999]"
+                >
+                  <div className="px-4 py-2 border-b border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-slate-800/50">
+                    <p className="text-[9px] font-black text-amber-500 uppercase tracking-wider">POPULAR LOCATIONS</p>
+                  </div>
+                  {isSearching ? (
+                    <div className="py-8 text-center">
+                      <Loader2 className="w-5 h-5 animate-spin mx-auto text-amber-500" />
+                    </div>
+                  ) : apiSuggestions.length > 0 ? (
+                    <div className="max-h-80 overflow-y-auto">
+                      {apiSuggestions.map((location, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleLocationSelect(location)}
+                          className="w-full text-left px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors border-b border-slate-100 dark:border-white/5 last:border-0 group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <MapPin size={14} className="text-slate-400 group-hover:text-amber-500 transition-colors" />
+                            <div>
+                              <p className="text-sm font-medium text-slate-700 dark:text-white group-hover:text-amber-500 transition-colors">
+                                {location.name}
+                              </p>
+                              {location.address && (
+                                <p className="text-[10px] text-slate-500">{location.address}</p>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : searchQuery.length >= 2 ? (
+                    <div className="py-6 text-center">
+                      <p className="text-xs text-slate-500">No locations found. Try a different search.</p>
+                    </div>
+                  ) : null}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          
+          {/* FILTER BUTTON */}
+          <motion.button 
+            onClick={handleInputFilterClick}
+            initial={{ opacity: 0, width: 0, marginLeft: 0 }}
+            animate={{ 
+              opacity: isInputFocused ? 1 : 0,
+              width: isInputFocused ? 'auto' : 0,
+              marginLeft: isInputFocused ? 8 : 0,
+              paddingLeft: isInputFocused ? 12 : 0,
+              paddingRight: isInputFocused ? 12 : 0,
+            }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className={`
+              flex items-center gap-2 rounded-full bg-amber-500 text-black font-semibold text-sm
+              hover:bg-amber-600 hover:scale-105 transition-all overflow-hidden whitespace-nowrap
+            `}
+            style={{ 
+              paddingTop: 8,
+              paddingBottom: 8,
+            }}
+          >
+            <SlidersHorizontal size={16} />
+            <span className="text-xs font-bold">Filters</span>
+          </motion.button>
+          
+          {/* Search button */}
+          <motion.button 
+            onClick={handleSearch}
+            className="ml-1 px-5 py-2 rounded-full bg-black text-white font-semibold text-xs hover:bg-amber-500 hover:text-black transition-all"
+            animate={{
+              marginLeft: isInputFocused ? 4 : 0
+            }}
+          >
+            Search
+          </motion.button>
+        </div>
+        
+        {/* Hint text */}
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isInputFocused ? 1 : 0 }}
+          className="text-white/60 text-[10px] mt-3 flex items-center justify-start gap-2"
+        >
+          <Filter size={10} />
+          <span>Click the Filters button to refine your search by property type, price, bedrooms & more</span>
+        </motion.p>
+      </div>
+    </motion.div>
+  </div>
+</section>
+      
+      {/* --- FILTER & SORT BAR --- */}
+      <div className="sticky top-0  bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-white/10">
+        <div className="max-w-7xl mx-auto px-6 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowFilters(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 transition-all shadow-md"
+              >
+                <Filter size={16} /> All Filters
+              </button>
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/10 rounded-xl p-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-amber-500 text-white' : 'text-slate-500'}`}
+                >
+                  <Grid3x3 size={16} />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-amber-500 text-white' : 'text-slate-500'}`}
+                >
+                  <List size={16} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <p className="text-sm text-slate-500 hidden sm:block">
+                {sortedProperties.length} properties found
+              </p>
+              <SortBar currentSort={currentSort} onSortChange={setCurrentSort} totalResults={sortedProperties.length} />
             </div>
           </div>
         </div>
-      </section>
-
-      {/* --- FILTER PANEL --- */}
-      <section className="max-w-7xl mx-auto px-6 mt-[-100px] relative z-[60]">
-        <div className="md:hidden mb-4">
-          <button
-            onClick={() => setShowMobileFilters(!showMobileFilters)}
-            className="w-full bg-white rounded-2xl p-4 flex items-center justify-between shadow-lg"
-          >
-            <div className="flex items-center gap-2">
-              <Filter size={18} className="text-amber-500" />
-              <span className="text-xs font-black uppercase">Filters</span>
-            </div>
-            <ChevronDown className={`transition-transform ${showMobileFilters ? 'rotate-180' : ''}`} size={18} />
-          </button>
-        </div>
-
-        <AnimatePresence>
-          {(showMobileFilters || window.innerWidth >= 768) && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="bg-white rounded-[2.5rem] p-6 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-100"
-            >
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-                {filterFields.map((field) => (
-                  <div key={field.name} className="relative">
-                    <label className="flex items-center gap-2 text-[9px] font-black text-slate-500 mb-2 tracking-widest">
-                      {field.icon} {field.label}
-                    </label>
-                    <div className="relative">
-                      <select 
-                        value={filters[field.name]}
-                        onChange={handleFilterChange}
-                        className="w-full bg-slate-50 text-[11px] font-bold text-slate-800 outline-none appearance-none cursor-pointer uppercase rounded-xl p-3 pr-8 border border-slate-100"
-                      >
-                        <option value="">ALL</option>
-                        {getUniqueValues(field.name).map(v => (
-                          <option key={v} value={v} className="text-black">{v}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-6 flex gap-3">
-                <button 
-                  onClick={clearFilters}
-                  className="flex-1 bg-slate-100 text-slate-600 font-black text-[10px] py-3 rounded-xl tracking-widest uppercase hover:bg-slate-200 transition-all"
-                >
-                  Clear All
-                </button>
-                <button 
-                  onClick={() => setCurrentPage(1)}
-                  className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-black text-[10px] py-3 rounded-xl tracking-widest transition-all uppercase shadow-lg"
-                >
-                  Apply Filters
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </section>
+      </div>
 
       {/* --- PROPERTY GRID --- */}
-      <div className="max-w-7xl mx-auto px-6 py-24">
-        <div className="flex justify-between items-center mb-8">
-          <p className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            {hasSearched ? `Found ${propertyList.length} Properties ${selectedLocation ? `in ${selectedLocation.name}` : ''}` : `${propertyList.length} Properties Available`}
-          </p>
-        </div>
-
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-amber-500"></div>
           </div>
-        ) : propertyList.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {propertyList.map((property) => {
+        ) : sortedProperties.length > 0 ? (
+          <div className={viewMode === 'grid' 
+            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
+            : "space-y-4"
+          }>
+            {sortedProperties.map((property, idx) => {
               const statusBadge = getStatusBadge(property);
               const isOffPlanProperty = isOffPlan(property);
               const isCommercialProperty = isCommercial(property);
@@ -483,248 +580,168 @@ const PropertyListing = () => {
               const agentName = property.agentId?.name || "Property Consultant";
               const agentImage = property.agentId?.profileImage;
               const agentRating = property.agentId?.rating || 4.8;
-              const hasValidAgent = property.agentId && Object.keys(property.agentId).length > 0;
 
-              return (
+              return viewMode === 'grid' ? (
                 <motion.div 
                   key={property._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ y: -8 }}
-                  className={`group rounded-[2rem] overflow-hidden shadow-xl transition-all duration-300 hover:shadow-2xl ${isDark ? 'bg-[#11141B]' : 'bg-white'} cursor-pointer flex flex-col border ${isDark ? 'border-white/5' : 'border-slate-100'}`}
+                  transition={{ delay: idx * 0.05 }}
+                  whileHover={{ y: -5 }}
                   onClick={() => navigate(`/property/${property._id}`, { state: { propertyData: property } })}
+                  className={`group rounded-2xl overflow-hidden shadow-md transition-all duration-300 hover:shadow-xl ${isDark ? 'bg-[#11141B]' : 'bg-white'} cursor-pointer border ${isDark ? 'border-white/5' : 'border-slate-200'}`}
                 >
-                  {/* Image Section */}
-                  <div className="relative h-64 overflow-hidden">
+                  <div className="relative h-52 overflow-hidden">
                     <img 
                       src={property.image?.[0] || "https://images.pexels.com/photos/2587054/pexels-photo-2587054.jpeg"} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                       alt={propertyTitle} 
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                    {/* Badges */}
-                    <div className="absolute top-4 left-4 flex gap-2 z-10">
-                      <span className={`px-3 py-1.5 backdrop-blur-md text-white text-[8px] font-black uppercase rounded-lg flex items-center gap-1.5 shadow-lg ${
-                        isOffPlanProperty ? "bg-gradient-to-r from-purple-600 to-pink-600" :
-                        isCommercialProperty ? "bg-gradient-to-r from-blue-600 to-cyan-600" :
-                        "bg-gradient-to-r from-amber-600 to-orange-600"
-                      }`}>
-                        {getPropertyTypeIcon(property)}
+                    <div className="absolute top-3 left-3 flex gap-2">
+                      <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase ${isOffPlanProperty ? 'bg-purple-600' : isCommercialProperty ? 'bg-blue-600' : 'bg-amber-500'} text-white`}>
                         {propertyType}
                       </span>
                     </div>
-                    
-                    <div className="absolute top-4 right-4 z-10">
-                      <span className={`px-3 py-1.5 backdrop-blur-md text-[8px] font-black uppercase rounded-lg border flex items-center gap-1.5 ${statusBadge.color}`}>
-                        {statusBadge.icon}
+                    <div className="absolute top-3 right-3">
+                      <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase ${statusBadge.color} backdrop-blur-sm`}>
                         {statusBadge.text}
                       </span>
                     </div>
-
-                    <div className="absolute bottom-4 left-4 z-10 flex items-center gap-1.5 text-white bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                    <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
                       <MapPin size={10} className="text-amber-400" />
-                      <span className="text-[9px] font-bold truncate max-w-[120px]">{location}, UAE</span>
+                      <span className="text-[9px] text-white truncate max-w-[100px]">{location}</span>
                     </div>
-
                     <button
                       onClick={(e) => handleWhatsApp(e, property)}
-                      className="absolute bottom-4 right-4 z-10 w-10 h-10 bg-[#25D366] rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                      className="absolute bottom-3 right-3 p-1.5 rounded-full bg-green-500 text-white shadow-md hover:scale-105 transition"
                     >
-                      <FaWhatsapp size={18} className="text-white" />
+                      <FaWhatsapp size={12} />
                     </button>
                   </div>
-
-                  {/* Content Section */}
-                  <div className="p-5 flex-1">
-                    <h3 className={`text-lg font-bold mb-1 line-clamp-1 group-hover:text-amber-500 transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white text-[10px] font-bold">
+                        {agentImage ? <img src={agentImage} className="w-full h-full rounded-full object-cover" /> : agentName.charAt(0)}
+                      </div>
+                      <span className="text-[10px] text-slate-500">Listed by {agentName}</span>
+                      <div className="flex items-center ml-auto">
+                        <Star size={10} className="text-amber-500 fill-amber-500" />
+                        <span className="text-[9px] ml-0.5">{agentRating}</span>
+                      </div>
+                    </div>
+                    <h3 className="font-bold text-base mb-1 line-clamp-1 group-hover:text-amber-500 transition-colors">
                       {propertyTitle}
                     </h3>
-
-                    {isCommercialProperty ? (
-                      <div className="flex items-center gap-3 py-2 mb-3">
-                        <div className="flex items-center gap-1.5 text-slate-500">
-                          <Building2 size={12} className="text-blue-500" />
-                          <span className="text-[9px] font-bold uppercase">{propertyType}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-slate-500">
-                          <Ruler size={12} className="text-blue-500" />
-                          <span className="text-[9px] font-bold uppercase">{property.squarefoot?.toLocaleString() || 0} sqft</span>
-                        </div>
-                      </div>
-                    ) : isOffPlanProperty ? (
-                      <div className="flex items-center gap-3 py-2 mb-3">
-                        <div className="flex items-center gap-1.5 text-slate-500">
-                          <Calendar size={12} className="text-purple-500" />
-                          <span className="text-[8px] font-bold uppercase">Handover: {property.deliveryDate || "2026"}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-slate-500">
-                          <Building2 size={12} className="text-purple-500" />
-                          <span className="text-[8px] font-bold uppercase truncate">{property.developerId?.companyName?.slice(0, 12) || "Premium"}</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-4 py-2 mb-3 border-y border-slate-100 dark:border-white/5">
-                        <div className="flex items-center gap-1.5">
-                          <Bed size={12} className="text-amber-500" />
-                          <span className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-700'}`}>{property.bedroom || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Bath size={12} className="text-amber-500" />
-                          <span className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-700'}`}>{property.bathroom || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Ruler size={12} className="text-amber-500" />
-                          <span className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-700'}`}>{property.squarefoot?.toLocaleString() || 0}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex items-baseline gap-1 mb-3">
-                      <span className="text-[9px] font-black text-slate-400">AED</span>
-                      <span className="text-xl font-black text-amber-500">{Number(property.price).toLocaleString()}</span>
-                      {isRent(property) && property.rentedPeriod && (
-                        <span className="text-[8px] text-slate-400 font-medium">/{property.rentedPeriod?.toLowerCase().replace("per ", "")?.slice(0, 3)}</span>
-                      )}
+                    <div className="flex items-center gap-3 py-2 mb-2">
+                      <div className="flex items-center gap-1"><Bed size={12} className="text-amber-500" /><span className="text-xs">{property.bedroom || 0}</span></div>
+                      <div className="flex items-center gap-1"><Bath size={12} className="text-amber-500" /><span className="text-xs">{property.bathroom || 0}</span></div>
+                      <div className="flex items-center gap-1"><Ruler size={12} className="text-amber-500" /><span className="text-xs">{property.squarefoot?.toLocaleString()} sqft</span></div>
                     </div>
-
-                    {isOffPlanProperty && property.completionPercentage && (
-                      <div className="mb-3">
-                        <div className="flex justify-between text-[7px] font-black uppercase text-slate-400 mb-1">
-                          <span>Construction Progress</span>
-                          <span>{property.completionPercentage}%</span>
-                        </div>
-                        <div className="h-1 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" style={{ width: `${property.completionPercentage}%` }} />
-                        </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[8px] text-slate-400">Starting From</p>
+                        <p className="text-lg font-bold text-amber-500">AED {property.price?.toLocaleString()}</p>
                       </div>
-                    )}
-
-                    {hasValidAgent && (
-                      <div className="flex items-center gap-2 pt-3 mt-2 border-t border-slate-100 dark:border-white/5">
-                        <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 flex-shrink-0">
-                          {agentImage ? (
-                            <img src={agentImage} alt={agentName} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">
-                              <User size={12} />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[7px] font-black uppercase tracking-wider text-slate-400">Listed by</p>
-                          <p className={`text-[10px] font-semibold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{agentName}</p>
-                        </div>
-                        <div className="flex items-center gap-0.5">
-                          <Star size={8} className="text-amber-500 fill-amber-500" />
-                          <span className="text-[8px] font-bold text-slate-500">{agentRating}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between gap-2 pt-3 mt-2 border-t border-slate-100 dark:border-white/5">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={(e) => handleCall(e, property.agentId?.phone)}
-                          className="p-2 rounded-xl bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition-all"
-                          title="Call Agent"
-                        >
-                          <Phone size={14} />
-                        </button>
-                        <button
-                          onClick={(e) => handleMail(e, property)}
-                          className="p-2 rounded-xl bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white transition-all"
-                          title="Email Agent"
-                        >
-                          <Mail size={14} />
-                        </button>
-                        <button
-                          onClick={(e) => handleShare(e, property)}
-                          className="p-2 rounded-xl bg-slate-500/10 text-slate-500 hover:bg-slate-500 hover:text-white transition-all"
-                          title="Share"
-                        >
-                          <Share2 size={14} />
-                        </button>
-                      </div>
-                      <button 
-                        onClick={() => navigate(`/property/${property._id}`, { state: { propertyData: property } })}
-                        className="px-4 py-2 rounded-xl bg-amber-500 text-white text-[9px] font-black uppercase tracking-wider hover:bg-amber-600 transition-all flex items-center gap-1"
-                      >
-                        View Details <ArrowRight size={12} />
+                      <button className="px-3 py-1.5 rounded-lg bg-amber-500 text-black text-[9px] font-bold uppercase hover:bg-amber-600 transition">
+                        View Details
                       </button>
                     </div>
                   </div>
                 </motion.div>
+              ) : (
+                <div
+                  key={property._id}
+                  onClick={() => navigate(`/property/${property._id}`, { state: { propertyData: property } })}
+                  className={`flex flex-col sm:flex-row gap-4 p-4 rounded-xl border transition-all cursor-pointer hover:shadow-md ${isDark ? 'bg-[#11141B] border-white/5' : 'bg-white border-slate-200'}`}
+                >
+                  <img src={property.image?.[0]} alt={propertyTitle} className="w-full sm:w-40 h-32 rounded-lg object-cover" />
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg mb-1">{propertyTitle}</h3>
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin size={12} className="text-amber-500" />
+                      <span className="text-xs text-slate-500">{location}, UAE</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-xl font-bold text-amber-500">AED {property.price?.toLocaleString()}</span>
+                      <div className="flex items-center gap-3 text-slate-500">
+                        <span className="flex items-center gap-1"><Bed size={14} /> {property.bedroom || 0}</span>
+                        <span className="flex items-center gap-1"><Bath size={14} /> {property.bathroom || 0}</span>
+                        <span className="flex items-center gap-1"><Ruler size={14} /> {property.squarefoot?.toLocaleString()} sqft</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button className="px-4 py-2 rounded-lg bg-amber-500 text-black text-xs font-bold uppercase hover:bg-amber-600 transition self-start">
+                    View Details
+                  </button>
+                </div>
               );
             })}
           </div>
         ) : (
-          <div className="col-span-full text-center py-20">
+          <div className="text-center py-20">
             <div className={`inline-flex p-6 rounded-full ${isDark ? 'bg-white/5' : 'bg-slate-100'} mb-4`}>
               <Search size={48} className="text-slate-400" />
             </div>
             <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
-              {hasSearched ? `No properties found in "${selectedLocation?.name || searchQuery}"` : "No properties found"}
+              No properties found
             </p>
-            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'} mt-2`}>
-              {hasSearched ? "Try a different location or adjust your filters" : "Try adjusting your filters or search criteria"}
-            </p>
-            {hasSearched && (
-              <button 
-                onClick={clearFilters}
-                className="mt-6 px-6 py-2 rounded-full bg-amber-500 text-black text-[10px] font-bold uppercase tracking-wider hover:bg-amber-600 transition-all"
-              >
-                Clear Search
-              </button>
-            )}
+            <p className="text-sm text-slate-500 mt-2">Try adjusting your filters or search criteria</p>
+            <button onClick={handleClearFilters} className="mt-6 px-6 py-2 rounded-full bg-amber-500 text-black text-[10px] font-bold uppercase hover:bg-amber-600 transition">
+              Clear Filters
+            </button>
           </div>
         )}
 
         {/* Pagination */}
-        {pagination.totalPages > 1 && propertyList.length > 0 && (
-          <div className="mt-16 flex justify-center items-center gap-2">
+        {pagination.totalPages > 1 && sortedProperties.length > 0 && (
+          <div className="mt-12 flex justify-center items-center gap-2">
             <button 
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(prev => prev - 1)}
-              className={`p-3 rounded-xl border transition-all ${currentPage === 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-amber-500 hover:text-white hover:border-amber-500'} ${isDark ? 'border-white/10 text-white' : 'border-slate-200 text-slate-800'}`}
+              className={`p-2 rounded-lg border transition-all ${currentPage === 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-amber-500 hover:text-white'} ${isDark ? 'border-white/10' : 'border-slate-200'}`}
             >
               <ChevronLeft size={18} />
             </button>
-            
             <div className="flex gap-1">
               {[...Array(Math.min(pagination.totalPages, 5))].map((_, i) => {
                 let pageNum;
-                if (pagination.totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= pagination.totalPages - 2) {
-                  pageNum = pagination.totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
-                
+                if (pagination.totalPages <= 5) pageNum = i + 1;
+                else if (currentPage <= 3) pageNum = i + 1;
+                else if (currentPage >= pagination.totalPages - 2) pageNum = pagination.totalPages - 4 + i;
+                else pageNum = currentPage - 2 + i;
                 return (
                   <button 
                     key={i}
                     onClick={() => setCurrentPage(pageNum)}
-                    className={`w-10 h-10 rounded-xl font-black text-xs transition-all ${currentPage === pageNum ? 'bg-amber-500 text-white shadow-lg' : `${isDark ? 'text-white border-white/10' : 'text-slate-800 border-slate-200'} border hover:bg-amber-500 hover:text-white hover:border-amber-500`}`}
+                    className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${currentPage === pageNum ? 'bg-amber-500 text-white' : isDark ? 'hover:bg-white/10' : 'hover:bg-slate-100'}`}
                   >
                     {pageNum}
                   </button>
                 );
               })}
             </div>
-            
             <button 
               disabled={currentPage === pagination.totalPages}
               onClick={() => setCurrentPage(prev => prev + 1)}
-              className={`p-3 rounded-xl border transition-all ${currentPage === pagination.totalPages ? 'opacity-30 cursor-not-allowed' : 'hover:bg-amber-500 hover:text-white hover:border-amber-500'} ${isDark ? 'border-white/10 text-white' : 'border-slate-200 text-slate-800'}`}
+              className={`p-2 rounded-lg border transition-all ${currentPage === pagination.totalPages ? 'opacity-30 cursor-not-allowed' : 'hover:bg-amber-500 hover:text-white'} ${isDark ? 'border-white/10' : 'border-slate-200'}`}
             >
               <ChevronRight size={18} />
             </button>
           </div>
         )}
+      </div>
+
+      {/* Filter Sidebar */}
+      <div ref={sidebarRef}>
+        <FilterSidebar
+          isOpen={showFilters}
+          onClose={() => setShowFilters(false)}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onApplyFilters={handleApplyFilters}
+          onClearFilters={handleClearFilters}
+          propertyCount={sortedProperties.length}
+        />
       </div>
     </div>
   );

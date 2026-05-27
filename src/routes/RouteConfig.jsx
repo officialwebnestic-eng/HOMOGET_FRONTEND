@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+            import React, { useContext } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import BaseLayout from "./BaseLayout";
 
@@ -429,9 +429,9 @@ export const PublicRoutes = () => {
              <Route path="/terms-of-service" element={<TermsOfService />} /> 
              <Route path="/trends" element={<Trends />} />
              <Route path="/explore" element={<Explore />} />
-             <Route path="/rent" element={<Rent />} />
-             <Route path="/buy" element={<Buy />} />
-             <Route path="/offplan" element={<OffPlan />} />
+             <Route path="/properties-for-rent" element={<Rent />} />
+             <Route path="/properties-for-buy" element={<Buy />} />
+             <Route path="/properties-for-offplan" element={<OffPlan />} />
              <Route path="/rera-compliance" element={<ReraCompliance />} />
              <Route path="/about-founder" element={<AboutFounder />} />
 
