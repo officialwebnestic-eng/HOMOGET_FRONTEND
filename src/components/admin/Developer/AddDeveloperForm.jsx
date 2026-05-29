@@ -3,7 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { 
   Building2, Save, X, Upload, Calendar, 
   MapPin, Hash, Award, Layers, FileText, Info,
-  Mail, Phone, ShieldCheck, Briefcase, Globe, Sparkles
+  Mail, Phone, ShieldCheck, Briefcase, Globe, Sparkles,
+  ChevronLeft, TrendingUp, Users, Home
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { http } from "../../../axios/axios";
@@ -18,12 +19,13 @@ const AddDeveloperForm = () => {
   const { addToast } = useToast();
   
   const isDark = theme === "dark";
-  const brandGold = "#C5A059";
+  const brandColor = "#f59e0b";
   const BACKEND_URL = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:5000";
 
   const [logoPreview, setLogoPreview] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeSection, setActiveSection] = useState("identity");
 
   const [formData, setFormData] = useState({
     companyName: "",
@@ -88,7 +90,7 @@ const AddDeveloperForm = () => {
     try {
       const response = id ? await http.put(`/developers/${id}`, data) : await http.post(`/developers`, data);
       if (response.data.success) {
-        addToast(id ? "Registry Updated" : "Developer Enrolled", "success");
+        addToast(id ? "Developer Updated Successfully" : "Developer Registered Successfully", "success");
         navigate("/viewdevelopers");
       }
     } catch (err) {
@@ -98,191 +100,245 @@ const AddDeveloperForm = () => {
     }
   };
 
+  // Section Navigation
+  const sections = [
+    { id: "identity", label: "Identity", icon: <Building2 size={14} /> },
+    { id: "compliance", label: "Compliance", icon: <ShieldCheck size={14} /> },
+    { id: "contact", label: "Contact", icon: <Globe size={14} /> },
+    { id: "narrative", label: "Narrative", icon: <FileText size={14} /> },
+  ];
+
   // Shared Styles
-  const cardClass = `p-8 rounded-[2.5rem] border transition-all duration-500 ${isDark ? "bg-[#161B26]/50 border-white/5 backdrop-blur-xl" : "bg-white border-slate-100 shadow-xl shadow-slate-200/50"}`;
-  const inputClass = `w-full px-6 py-4 rounded-2xl text-[11px] font-bold uppercase tracking-widest outline-none border transition-all duration-300 ${isDark ? "bg-[#0F1219] border-white/5 text-white focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059]/20" : "bg-slate-50 border-slate-200 text-slate-900 focus:border-[#C5A059] focus:bg-white"}`;
-  const labelClass = "text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 block flex items-center gap-2";
+  const cardClass = `p-6 md:p-8 rounded-2xl border transition-all duration-300 ${isDark ? "bg-[#11141B] border-white/10" : "bg-white border-slate-200 shadow-sm"}`;
+  const inputClass = `w-full px-4 py-3 rounded-xl text-sm font-medium outline-none border transition-all duration-300 ${isDark ? "bg-[#0a0a0c] border-white/10 text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500" : "bg-slate-50 border-slate-200 text-slate-900 focus:border-amber-500 focus:bg-white"}`;
+  const labelClass = "text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2 block flex items-center gap-2";
 
   return (
-    <div className={`min-h-screen p-6 md:p-12 ${isDark ? "bg-[#0A0C10] text-white" : "bg-[#F8FAFC] text-slate-900"}`}>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-6xl mx-auto">
+    <div className={`min-h-screen ${isDark ? "bg-[#0a0a0c]" : "bg-slate-50"}`}>
+      <div className="max-w-6xl mx-auto p-4 md:p-8">
         
-        {/* TOP NAVIGATION BAR */}
-        <div className="flex justify-between items-center mb-12">
-          <div className="flex items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-[#C5A059] flex items-center justify-center shadow-lg shadow-[#C5A059]/20">
-              <Building2 className="text-white" size={28} />
-            </div>
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => navigate(-1)} 
+              className={`p-2 rounded-xl transition-all ${isDark ? "hover:bg-white/10" : "hover:bg-slate-100"}`}
+            >
+              <ChevronLeft size={20} className={isDark ? "text-slate-400" : "text-slate-600"} />
+            </button>
             <div>
-              <h1 className="text-3xl font-black tracking-tighter uppercase italic">
-                {id ? "Edit" : "New"} <span style={{ color: brandGold }}>Developer</span>
+              <h1 className={`text-2xl md:text-3xl font-bold tracking-tight ${isDark ? "text-white" : "text-slate-800"}`}>
+                {id ? "Edit" : "Add"} <span className="text-amber-500">Developer</span>
               </h1>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]">Institutional Asset Registry</p>
+              <p className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                {id ? "Update developer information" : "Register new development partner"}
+              </p>
             </div>
           </div>
-          <button onClick={() => navigate(-1)} className={`p-4 rounded-2xl border transition-all ${isDark ? "border-white/5 hover:bg-white/5 text-slate-400" : "border-slate-200 hover:bg-slate-100 text-slate-600"}`}>
-            <X size={20} />
-          </button>
+          <div className={`px-4 py-2 rounded-full border ${isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-slate-100"}`}>
+            <p className="text-[9px] font-bold uppercase tracking-wider text-amber-500">RERA Certified</p>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Section Navigation */}
+        <div className="flex flex-wrap gap-2 mb-8 pb-2 overflow-x-auto scrollbar-thin">
+          {sections.map((section) => (
+            <button
+              key={section.id}
+              onClick={() => {
+                const el = document.getElementById(`section-${section.id}`);
+                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                setActiveSection(section.id);
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
+                activeSection === section.id
+                  ? "bg-amber-500 text-black shadow-md"
+                  : isDark
+                    ? "bg-white/5 text-slate-400 hover:bg-white/10"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              {section.icon} {section.label}
+            </button>
+          ))}
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {/* COLUMN 1: IDENTITY & LOGO */}
-            <div className="lg:col-span-1 space-y-8">
-              <div className={cardClass}>
-                <div className="flex items-center gap-3 mb-8">
-                    <Sparkles className="text-[#C5A059]" size={18} />
-                    <h3 className="text-[11px] font-black uppercase tracking-widest">Brand Identity</h3>
-                </div>
-                
-                <div className="flex flex-col items-center">
-                  <div 
-                    onClick={() => fileInputRef.current.click()}
-                    className={`group relative w-full aspect-square rounded-[3rem] border-2 border-dashed flex items-center justify-center cursor-pointer transition-all overflow-hidden ${isDark ? "border-white/10 bg-[#0F1219] hover:border-[#C5A059]/50" : "border-slate-200 bg-slate-50 hover:border-[#C5A059]"}`}
-                  >
-                    {logoPreview ? (
-                      <img src={logoPreview} alt="Preview" className="w-full h-full object-contain p-8 group-hover:scale-110 transition-transform duration-500" />
-                    ) : (
-                      <div className="text-center p-6">
-                        <div className="w-16 h-16 rounded-full bg-[#C5A059]/10 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                          <Upload size={24} className="text-[#C5A059]" />
-                        </div>
-                        <span className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">Click to upload brandmark</span>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                        <span className="text-[10px] text-white font-bold uppercase tracking-widest">Update Logo</span>
-                    </div>
-                  </div>
-                  <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
-                </div>
+          {/* SECTION 1: IDENTITY */}
+          <div id="section-identity" className={`scroll-mt-24 ${cardClass}`}>
+            <div className="flex items-center gap-3 mb-6 pb-3 border-b border-slate-200 dark:border-white/10">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <Building2 size={18} className="text-amber-500" />
               </div>
-
-              <div className={cardClass}>
-                 <label className={labelClass}><Layers size={14} className="text-[#C5A059]"/> Portfolio Size</label>
-                 <input name="totalProjects" value={formData.totalProjects} onChange={handleChange} type="number" className={inputClass} placeholder="Total Projects" />
-                 <p className="text-[9px] text-slate-500 font-bold mt-4 italic uppercase tracking-tighter">* Total units or individual projects</p>
-              </div>
+              <h3 className="text-sm font-bold uppercase tracking-wider">Brand Identity</h3>
             </div>
-
-            {/* COLUMN 2 & 3: FORM DETAILS */}
-            <div className="lg:col-span-2 space-y-8">
-              
-              {/* BENTO SECTION: CORE DETAILS */}
-              <div className={cardClass}>
-                <div className="flex items-center gap-3 mb-8">
-                    <ShieldCheck className="text-[#C5A059]" size={18} />
-                    <h3 className="text-[11px] font-black uppercase tracking-widest">Corporate & Compliance</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Logo Upload */}
+              <div className="md:col-span-1">
+                <label className={labelClass}>Company Logo</label>
+                <div 
+                  onClick={() => fileInputRef.current.click()}
+                  className={`relative aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden group ${
+                    isDark ? "border-white/10 bg-[#0a0a0c] hover:border-amber-500/50" : "border-slate-200 bg-slate-50 hover:border-amber-500"
+                  }`}
+                >
+                  {logoPreview ? (
+                    <>
+                      <img src={logoPreview} alt="Preview" className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <Upload size={20} className="text-white" />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center p-4">
+                      <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-3">
+                        <Upload size={20} className="text-amber-500" />
+                      </div>
+                      <p className="text-[9px] font-bold uppercase text-slate-400">Click to upload logo</p>
+                    </div>
+                  )}
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="md:col-span-2">
-                        <label className={labelClass}><Building2 size={14} className="text-[#C5A059]"/> Commercial Name</label>
-                        <input name="companyName" value={formData.companyName} onChange={handleChange} type="text" className={inputClass} required />
-                    </div>
-                    
-                    <div>
-                        <label className={labelClass}><Hash size={14} className="text-[#C5A059]"/> Trade License</label>
-                        <input name="tradeLicenseNumber" value={formData.tradeLicenseNumber} onChange={handleChange} type="text" className={inputClass} required />
-                    </div>
-                    
-                    <div>
-                        <label className={labelClass}><Award size={14} className="text-[#C5A059]"/> RERA Registration</label>
-                        <input name="reraRegistrationNumber" value={formData.reraRegistrationNumber} onChange={handleChange} type="text" className={inputClass} required />
-                    </div>
-
-                    <div>
-                        <label className={labelClass}><Calendar size={14} className="text-[#C5A059]"/> Founded Year</label>
-                        <input name="establishedYear" value={formData.establishedYear} onChange={handleChange} type="number" className={inputClass} required />
-                    </div>
-
-                    <div>
-                        <label className={labelClass}><Briefcase size={14} className="text-[#C5A059]"/> Developer Type</label>
-                        <select name="developerType" value={formData.developerType} onChange={handleChange} className={inputClass}>
-                            <option value="Private">Private</option>
-                            <option value="Government">Government</option>
-                            <option value="Semi-Government">Semi-Government</option>
-                        </select>
-                    </div>
-                </div>
+                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
               </div>
 
-              {/* BENTO SECTION: CONTACT & LOCATION */}
-              <div className={cardClass}>
-                 <div className="flex items-center gap-3 mb-8">
-                    <Globe className="text-[#C5A059]" size={18} />
-                    <h3 className="text-[11px] font-black uppercase tracking-widest">Contact & Headquarters</h3>
+              <div className="md:col-span-2 space-y-4">
+                <div>
+                  <label className={labelClass}>Company Name <span className="text-red-500">*</span></label>
+                  <input name="companyName" value={formData.companyName} onChange={handleChange} type="text" className={inputClass} placeholder="e.g., Emaar Properties" required />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className={labelClass}><Mail size={14} className="text-[#C5A059]"/> Corporate Email</label>
-                        <input name="officialEmail" value={formData.officialEmail} onChange={handleChange} type="email" className={inputClass} required />
-                    </div>
-                    <div>
-                        <label className={labelClass}><Phone size={14} className="text-[#C5A059]"/> Contact Number</label>
-                        <input name="contactNumber" value={formData.contactNumber} onChange={handleChange} type="text" className={inputClass} required />
-                    </div>
-                    <div className="md:col-span-2">
-                        <label className={labelClass}><MapPin size={14} className="text-[#C5A059]"/> Official HQ Address</label>
-                        <input name="officeAddress" value={formData.officeAddress} onChange={handleChange} type="text" className={inputClass} required />
-                    </div>
-                </div>
-              </div>
-
-              {/* BENTO SECTION: NARRATIVE */}
-              <div className={cardClass}>
-                <div className="flex items-center gap-3 mb-8">
-                    <FileText className="text-[#C5A059]" size={18} />
-                    <h3 className="text-[11px] font-black uppercase tracking-widest">Market Presence</h3>
-                </div>
-                <div className="space-y-6">
-                    <div>
-                        <label className={labelClass}><Info size={14} className="text-[#C5A059]"/> Specialization</label>
-                        <input name="specialization" value={formData.specialization} onChange={handleChange} type="text" placeholder="Luxury, Waterfront, Commercial..." className={inputClass} />
-                    </div>
-                    <div>
-                        <label className={labelClass}>Company Bio / History</label>
-                        <textarea 
-                            name="details" 
-                            value={formData.details} 
-                            onChange={handleChange} 
-                            rows="5" 
-                            className={`${inputClass} h-40 resize-none normal-case py-5`}
-                            placeholder="Describe the developer's journey and notable achievements..."
-                        />
-                    </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClass}>Developer Type</label>
+                    <select name="developerType" value={formData.developerType} onChange={handleChange} className={inputClass}>
+                      <option value="Private">Private Developer</option>
+                      <option value="Government">Government Entity</option>
+                      <option value="Semi-Government">Semi-Government</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Established Year</label>
+                    <input name="establishedYear" value={formData.establishedYear} onChange={handleChange} type="number" className={inputClass} />
+                  </div>
                 </div>
               </div>
-
             </div>
           </div>
 
-          {/* FLOATING ACTION BAR */}
-          <motion.div 
-            initial={{ y: 100 }} 
-            animate={{ y: 0 }} 
-            className={`sticky bottom-10 p-6 rounded-[2.5rem] border flex justify-between items-center backdrop-blur-2xl ${isDark ? "bg-[#161B26]/80 border-[#C5A059]/20" : "bg-white/80 border-slate-200 shadow-2xl"}`}
-          >
-            <div className="hidden md:block">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Status: Ready for Sync</p>
-                <p className="text-[9px] text-[#C5A059] font-bold">Authenticated Admin Session</p>
+          {/* SECTION 2: COMPLIANCE */}
+          <div id="section-compliance" className={`scroll-mt-24 ${cardClass}`}>
+            <div className="flex items-center gap-3 mb-6 pb-3 border-b border-slate-200 dark:border-white/10">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <ShieldCheck size={18} className="text-amber-500" />
+              </div>
+              <h3 className="text-sm font-bold uppercase tracking-wider">Compliance & Licensing</h3>
             </div>
-            <button 
-              type="submit" 
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className={labelClass}>Trade License Number</label>
+                <input name="tradeLicenseNumber" value={formData.tradeLicenseNumber} onChange={handleChange} type="text" className={inputClass} placeholder="e.g., 1523268" />
+              </div>
+              <div>
+                <label className={labelClass}>RERA Registration Number</label>
+                <input name="reraRegistrationNumber" value={formData.reraRegistrationNumber} onChange={handleChange} type="text" className={inputClass} placeholder="e.g., ORN: 52933" />
+              </div>
+              <div>
+                <label className={labelClass}>Total Projects</label>
+                <div className="relative">
+                  <Building2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input name="totalProjects" value={formData.totalProjects} onChange={handleChange} type="number" className={`${inputClass} pl-10`} placeholder="0" />
+                </div>
+              </div>
+              <div>
+                <label className={labelClass}>Specialization</label>
+                <input name="specialization" value={formData.specialization} onChange={handleChange} type="text" className={inputClass} placeholder="Luxury, Waterfront, Commercial..." />
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 3: CONTACT */}
+          <div id="section-contact" className={`scroll-mt-24 ${cardClass}`}>
+            <div className="flex items-center gap-3 mb-6 pb-3 border-b border-slate-200 dark:border-white/10">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <Globe size={18} className="text-amber-500" />
+              </div>
+              <h3 className="text-sm font-bold uppercase tracking-wider">Contact & Location</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className={labelClass}>Official Email</label>
+                <div className="relative">
+                  <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input name="officialEmail" value={formData.officialEmail} onChange={handleChange} type="email" className={`${inputClass} pl-10`} placeholder="contact@developer.com" />
+                </div>
+              </div>
+              <div>
+                <label className={labelClass}>Contact Number</label>
+                <div className="relative">
+                  <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input name="contactNumber" value={formData.contactNumber} onChange={handleChange} type="tel" className={`${inputClass} pl-10`} placeholder="+971 XX XXX XXXX" />
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <label className={labelClass}>Office Address</label>
+                <div className="relative">
+                  <MapPin size={16} className="absolute left-3 top-4 text-slate-400" />
+                  <textarea name="officeAddress" value={formData.officeAddress} onChange={handleChange} rows={2} className={`${inputClass} pl-10 resize-none`} placeholder="Full corporate address" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 4: NARRATIVE */}
+          <div id="section-narrative" className={`scroll-mt-24 ${cardClass}`}>
+            <div className="flex items-center gap-3 mb-6 pb-3 border-b border-slate-200 dark:border-white/10">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <FileText size={18} className="text-amber-500" />
+              </div>
+              <h3 className="text-sm font-bold uppercase tracking-wider">Company Narrative</h3>
+            </div>
+            
+            <div>
+              <label className={labelClass}>Company Bio / History</label>
+              <textarea 
+                name="details" 
+                value={formData.details} 
+                onChange={handleChange} 
+                rows={6} 
+                className={`${inputClass} resize-none`}
+                placeholder="Describe the developer's journey, achievements, and market presence..."
+              />
+              <p className="text-[9px] text-slate-500 mt-2 italic">Maximum 1000 characters</p>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-end pt-4">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className={`px-6 py-3 rounded-xl text-sm font-bold uppercase tracking-wider transition-all ${isDark ? "bg-white/5 text-slate-300 hover:bg-white/10" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
               disabled={isLoading}
-              className="w-full md:w-auto px-16 py-5 rounded-2xl bg-[#C5A059] text-white text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-[#C5A059]/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+              className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-bold text-sm uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
             >
               {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
               ) : (
-                <><Save size={18} /> {id ? "Update Registry" : "Enshrine Developer"}</>
+                <Save size={16} />
               )}
+              {isLoading ? "Saving..." : (id ? "Update Developer" : "Register Developer")}
             </button>
-          </motion.div>
+          </div>
         </form>
-      </motion.div>
+      </div>
     </div>
   );
 };

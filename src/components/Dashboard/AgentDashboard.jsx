@@ -394,41 +394,7 @@ const AgentDashboard = () => {
         )}
       </div>
 
-      {/* RECENT TRANSACTIONS TABLE */}
-      <div className={`rounded-2xl border ${colors.card} overflow-hidden mb-8`}>
-        <div className="p-6 border-b border-slate-200 dark:border-white/10 flex flex-wrap justify-between items-center gap-4">
-          <div>
-            <h3 className="text-base font-bold">Recent Transactions</h3>
-            <p className={`text-[9px] ${colors.subText} mt-0.5`}>Latest property deals and activities</p>
-          </div>
-          <span className={`text-[8px] font-bold px-2 py-1 rounded-lg ${colors.subText} bg-slate-100 dark:bg-white/5`}>{recentOrder.length} Entries</span>
-        </div>
-        <div className="overflow-x-auto">
-          {recentOrder.length > 0 ? (
-            <table className="w-full text-left">
-              <thead><tr className={`text-[8px] font-bold uppercase tracking-wider ${colors.subText} border-b`}>
-                <th className="px-6 py-4">Property</th><th className="px-6 py-4">Client</th><th className="px-6 py-4">Price</th>
-                <th className="px-6 py-4">Payment</th><th className="px-6 py-4">Date</th><th className="px-6 py-4">Status</th><th className="px-6 py-4 text-right">Action</th>
-              </tr></thead>
-              <tbody>
-                {recentOrder.map((t, idx) => (
-                  <tr key={t._id} className="border-b hover:bg-amber-500/5">
-                    <td className="px-6 py-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center"><Home size={16} className="text-amber-500" /></div><div><p className="text-sm font-medium">{t.propertyId?.propertyname || 'Asset'}</p><p className="text-[9px] text-slate-500">{t.propertyId?.city}</p></div></div></td>
-                    <td className="px-6 py-4"><p className="text-xs font-medium">{t.userId?.name || 'Guest'}</p><p className="text-[9px] text-slate-500">{t.userId?.email}</p></td>
-                    <td className="px-6 py-4"><span className="text-sm font-bold text-amber-500">AED {t.propertyId?.price?.toLocaleString()}</span></td>
-                    <td className="px-6 py-4"><div className="flex items-center gap-1.5 text-[9px]">{t.paymentMethod === 'bank_transfer' ? <Banknote size={12} /> : <CreditCard size={12} />}<span>{t.paymentMethod?.replace('_', ' ') || 'N/A'}</span></div></td>
-                    <td className="px-6 py-4"><div className="flex items-center gap-1.5"><Calendar size={10} /><span>{new Date(t.createdAt).toLocaleDateString()}</span></div></td>
-                    <td className="px-6 py-4"><span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-bold ${t.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>{t.status === 'confirmed' ? <CheckCircle size={10} /> : <Clock size={10} />}{t.status || 'Pending'}</span></td>
-                    <td className="px-6 py-4 text-right"><button onClick={() => navigate(`/agentlatestboking/${t._id}`)} className="p-2 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-amber-500 transition"><Eye size={14} /></button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="py-20 text-center"><Activity size={40} className="mx-auto mb-4 opacity-20" /><p className="text-[10px] font-bold uppercase opacity-30">No recent transactions</p></div>
-          )}
-        </div>
-      </div>
+     
 
       {/* BOTTOM TIPS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

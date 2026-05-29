@@ -71,16 +71,26 @@ export default function Sidebar() {
         className={`fixed top-0 left-0 h-full z-[160] border-r flex flex-col shadow-2xl overflow-hidden ${ct.bg}`}
       >
         {/* LOGO AREA */}
-        <div className={`flex items-center justify-center px-5 h-20 border-b backdrop-blur-md sticky top-0 z-20 ${ct.header}`}>
-          <Link
-            to={!isAuthenticated ? "/" : user?.role === "admin" ? "/admin-dashboard" : "/agent-dashboard"}
-            className="overflow-hidden flex items-center gap-2"
-          >
-            <img src={navbarlogo} alt="Logo" className={`h-25 transition-all duration-300 ${!isOpen ? "mx-auto" : ""}`} />
+       \
 
-          </Link>
 
-        </div>
+
+          <div className={`flex items-center justify-center  h-10 md:h-15 border-b transition-all duration-300 ${isDark ? "border-slate-800" : "border-gray-100"}`}>
+  <Link             to={!isAuthenticated ? "/" : user?.role === "admin" ? "/admin-dashboard" : "/agent-dashboard"}
+ className="hover:scale-105 transition-transform duration-300 flex items-center justify-center w-full px-3">
+    <img 
+      src={navbarlogo} 
+      alt="Logo" 
+      className="w-auto object-contain"
+      style={{ 
+        height: "clamp(7.5rem, 5vh, 3.5rem)",
+        maxWidth: "90%"
+      }} 
+    />
+  </Link>
+</div>
+
+       
 
 
         {/* NAVIGATION */}

@@ -50,12 +50,20 @@ export default function AgentSidebar() {
         {isOpen && (
           <>
             {/* Branding */}
-            <div className={`flex items-center justify-center h-24 border-b ${isDark ? "border-slate-800" : "border-gray-100"}`}>
-              <Link to="/" className="hover:scale-105 transition-transform duration-300">
-                <img src={navbarlogo} alt="Logo" className="h-12 w-auto object-contain" />
-              </Link>
-            </div>
-
+            {/* Branding - Fluid logo sizing using clamp */}
+<div className={`flex items-center justify-center h-10 md:h-20 border-b transition-all duration-300 ${isDark ? "border-slate-800" : "border-gray-100"}`}>
+  <Link to="/" className="hover:scale-105 transition-transform duration-300 flex items-center justify-center w-full px-3">
+    <img 
+      src={navbarlogo} 
+      alt="Logo" 
+      className="w-auto object-contain"
+      style={{ 
+        height: "clamp(7.5rem, 5vh, 3.5rem)",
+        maxWidth: "90%"
+      }} 
+    />
+  </Link>
+</div>
             {/* Navigation */}
             <div className="flex-1 overflow-y-auto py-6 px-4 custom-scrollbar space-y-8">
               {/* Section: Overview */}

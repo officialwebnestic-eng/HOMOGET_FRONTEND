@@ -1,27 +1,8 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
-import {
-  ChevronDownIcon,
-  Bars3Icon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+import { ChevronDownIcon, Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useTheme } from "../../context/ThemeContext";
 import { useSidebar } from "../../context/SidebarContext";
-import {
-  MoonIcon,
-  SunIcon,
-  LogOut,
-  ChevronRight,
-  Settings,
-  Menu as MenuLucide,
-  Home,
-  TrendingUp,
-  Building2,
-  MapPin,
-  Briefcase,
-  User,
-  Heart,
-  DollarSign,
-} from "lucide-react";
+import { MoonIcon, SunIcon, LogOut, ChevronRight, Settings, Menu as MenuLucide, Home, TrendingUp, Building2, MapPin, User, Heart, DollarSign } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { navbarlogo } from "../../ExportImages";
@@ -35,6 +16,7 @@ export default function Navbar() {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeMegaMenu, setActiveMegaMenu] = useState(null);
+  const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const navigate = useNavigate();
@@ -44,67 +26,89 @@ export default function Navbar() {
 
   const showSidebarToggle = isAuthenticated && user?.role !== "user";
 
-  // Helper function to navigate with filters
   const navigateWithFilters = (filters) => {
     navigate("/properties", { state: { filters } });
+    setActiveMegaMenu(null);
+    setActiveMobileDropdown(null);
+    setIsMobileMenuOpen(false);
   };
 
-  // Navigation handlers
   const handleBuyClick = (subCategory = null) => {
-    const filters = {
-      offeringType: "Sale",
-      category: "Residential",
-      ...(subCategory && { propertytype: subCategory })
-    };
+    const filters = { offeringType: "Sale", category: "Residential", ...(subCategory && { propertytype: subCategory }) };
     navigateWithFilters(filters);
   };
 
   const handleRentClick = (subCategory = null) => {
-    const filters = {
-      offeringType: "Rent",
-      category: "Residential",
-      ...(subCategory && { propertytype: subCategory })
-    };
+    const filters = { offeringType: "Rent", category: "Residential", ...(subCategory && { propertytype: subCategory }) };
     navigateWithFilters(filters);
   };
 
   const handleOffPlanClick = (developer = null) => {
-    const filters = {
-      category: "Off-Plan",
-      ...(developer && { developerName: developer })
-    };
+    const filters = { category: "Off-Plan", ...(developer && { developerName: developer }) };
     navigateWithFilters(filters);
   };
 
   const handleCommercialClick = (type = null, offering = "Sale") => {
-    const filters = {
-      category: "Commercial",
-      offeringType: offering,
-      ...(type && { propertytype: type })
-    };
+    const filters = { category: "Commercial", offeringType: offering, ...(type && { propertytype: type }) };
     navigateWithFilters(filters);
   };
 
   const getNavItems = () => {
     if (!isAuthenticated || user?.role === "user") {
-      return ["Home", "About Us", "Buy", "Rent", "Off-Plan", "Resources", "Careers"];
+      return ["Home", "About Us", "Buy", "Rent", "Off-Plan", "Resources", "Careers", "Contact Us"];
     }
-    return ["Home", "About Us", "Resources", "Careers"]; // Added About Us for other roles too
+     return  []
+  
   };
 
   const navItems = getNavItems();
 
+  // Mega menu content
+  const buyMenuItems = {
+    sections: [
+      { title: "Residential Sale", items: ["Apartments", "Villas", "Townhouses", "Penthouses"], action: handleBuyClick },
+      { title: "Commercial Sale", items: ["Office Space", "Retail", "Warehouse", "Land"], action: (item) => handleCommercialClick(item, "Sale") }
+    ],
+    promo: { title: "Secure Your Asset", subtitle: "Buying Guide", bgClass: "bg-[#2D2D6E]", action: () => handleBuyClick() },
+    footer: [
+      { label: "Residential", icon: <Home size={10} />, action: () => handleBuyClick() },
+      { label: "Commercial", icon: <Building2 size={10} />, action: () => handleCommercialClick(null, "Sale") }
+    ]
+  };
+
+  const rentMenuItems = {
+    sections: [
+      { title: "Residential Rent", items: ["Apartments", "Studios", "Villas", "Short Term"], action: handleRentClick },
+      { title: "Commercial Rent", items: ["Office Space", "Retail", "Warehouse"], action: (item) => handleCommercialClick(item, "Rent") }
+    ],
+    promo: { title: "Find Your Home", subtitle: "Rental Insights", bgClass: "bg-[#5D46A0]", action: () => handleRentClick() },
+    footer: [
+      { label: "Find Agent", icon: <MapPin size={10} />, action: () => navigate("/agents") },
+      { label: "Short Term", icon: <TrendingUp size={10} />, action: () => handleRentClick("Short Term") }
+    ]
+  };
+
+  const offplanMenuItems = {
+    sections: [
+      { title: "New Launches", items: ["Emaar Projects", "Damac Hills", "Nakheel", "Sobha Realty"], action: (item) => handleOffPlanClick(item.split(" ")[0]) },
+      { title: "By Handover", items: ["Handover 2025", "Handover 2026", "Handover 2027"], action: (item) => navigateWithFilters({ category: "Off-Plan", deliveryDate: item.split(" ")[1] }) }
+    ],
+    promo: { title: "Invest Early", subtitle: "High ROI Projects", bgClass: "bg-[#f59e0b]", action: () => handleOffPlanClick() },
+    footer: [
+      { label: "Project Map", icon: <MapPin size={10} />, action: () => navigate("/project-map") },
+      { label: "Payment Plans", icon: <DollarSign size={10} />, action: () => navigateWithFilters({ category: "Off-Plan", hasPaymentPlan: true }) }
+    ]
+  };
+
   useEffect(() => {
     setIsMobileMenuOpen(false);
     setActiveMegaMenu(null);
+    setActiveMobileDropdown(null);
   }, [location]);
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (
-        profileDropdownRef.current &&
-        !profileDropdownRef.current.contains(event.target)
-      ) {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
         setIsProfileOpen(false);
       }
     }
@@ -118,580 +122,517 @@ export default function Navbar() {
     navigate("/login");
   };
 
-  const currentTheme = {
-    bg: isDark ? "bg-[#0a0a0c]/95" : "bg-white/95",
-    text: isDark ? "text-white" : "text-[#1a1a1e]",
-    textSecondary: isDark ? "text-gray-400" : "text-slate-500",
-    border: isDark ? "border-white/5" : "border-slate-100",
-    dropdown: isDark
-      ? "bg-[#161B26] border-white/10 shadow-2xl"
-      : "bg-white border-slate-100 shadow-2xl",
-    accent: "#ff8a00",
+  const toggleMobileDropdown = (menuName) => {
+    setActiveMobileDropdown(activeMobileDropdown === menuName ? null : menuName);
   };
 
   const renderBadge = (type) => {
     if (!type) return null;
-    const colors = {
-      HOT: "bg-red-500",
-      NEW: "bg-blue-500",
-      TRENDING: "bg-[#ff8a00]",
-    };
-    return (
-      <span
-        className={`ml-1.5 px-1.5 py-0.5 rounded text-[7px] font-black text-white uppercase ${colors[type]}`}
-      >
-        {type}
-      </span>
-    );
+    const colors = { HOT: "bg-red-500", NEW: "bg-blue-500", TRENDING: "bg-[#f59e0b]" };
+    return <span className={`ml-1 px-1 py-0.5 rounded text-[6px] font-black text-white uppercase ${colors[type]}`}>{type}</span>;
   };
+
+  const navLinkClass = "px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 hover:text-amber-500 transition-colors whitespace-nowrap flex items-center gap-1 cursor-pointer";
+
+  // Desktop dropdown component
+  const DesktopDropdown = ({ isOpen, children }) => (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+          className="absolute top-full left-0 mt-1 w-[620px] rounded-xl border overflow-hidden shadow-2xl z-50 bg-white dark:bg-[#161B26] border-slate-200 dark:border-white/10"
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  const SmallDesktopDropdown = ({ isOpen, children }) => (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+          className="absolute top-full left-0 mt-1 w-52 rounded-xl border p-2 z-50 bg-white dark:bg-[#161B26] border-slate-200 dark:border-white/10 shadow-2xl"
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  // Mobile dropdown component
+  const MobileDropdown = ({ title, isOpen, onToggle, children }) => (
+    <div className="border-b border-slate-100 dark:border-white/10">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between py-3 text-[11px] font-bold uppercase tracking-wider"
+      >
+        {title}
+        <ChevronDownIcon className={`h-3 w-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="pb-3 pl-4 space-y-2">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 
   return (
     <>
-      <nav
-        className={`sticky top-0 z-[100] backdrop-blur-xl ${currentTheme.bg} border-b ${currentTheme.border}`}
-      >
-        <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-10 h-20 flex items-center justify-between gap-4">
-          {/* Logo Section */}
-          <div className="flex items-center gap-3 lg:gap-6">
-            {showSidebarToggle && (
-              <button
-                onClick={toggleSidebar}
-                className="p-2.5 rounded-xl bg-white/5 hover:bg-[#ff8a00] text-black transition-all"
-              >
-                <MenuLucide size={20} />
-              </button>
-            )}
-            <Link to="/" className="flex-shrink-0">
-              <img
-                src={navbarlogo}
-                alt="Logo"
-                className="h-15 md:h-30 w-auto object-contain"
-              />
-            </Link>
-          </div>
-
-          {/* Desktop Navigation */}
-          {(!isAuthenticated || user?.role === "user") && (
-            <div className="hidden xl:flex items-center space-x-1">
-              <Link
-                to="/"
-                className={`px-3 lg:px-4 py-7 text-[10px] lg:text-[11px] font-black uppercase tracking-widest ${currentTheme.text} hover:text-[#ff8a00] transition-colors`}
-              >
-                Home
-              </Link>
-              <Link
-                to="/about-us"
-                className={`px-3 lg:px-4 py-7 text-[10px] lg:text-[11px] font-black uppercase tracking-widest ${currentTheme.text} hover:text-[#ff8a00] transition-colors`}
-              >
-                About Us
-              </Link>
-
-              {/* Buy Mega Menu */}
-              <div
-                className="relative py-7"
-                onMouseEnter={() => setActiveMegaMenu("Buy")}
-                onMouseLeave={() => setActiveMegaMenu(null)}
-              >
-                <button
-                  className={`px-3 lg:px-4 flex items-center gap-1 text-[10px] lg:text-[11px] font-black uppercase tracking-widest ${currentTheme.text} ${activeMegaMenu === "Buy" ? "text-[#ff8a00]" : ""} transition-colors`}
-                >
-                  Buy
-                  <ChevronDownIcon
-                    className={`h-3 w-3 transition-transform ${activeMegaMenu === "Buy" ? "rotate-180" : ""}`}
-                  />
+      <nav className={`sticky top-0 z-[100] backdrop-blur-xl ${isDark ? "bg-[#0a0a0c]/95" : "bg-white/95"} border-b ${isDark ? "border-white/5" : "border-slate-100"}`}>
+        <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 lg:h-16 gap-4">
+            
+            {/* Left Section */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {showSidebarToggle && (
+                <button onClick={toggleSidebar} className="p-1.5 rounded-lg  hover:bg-[#f59e0b]  text-black  transition-all">
+                  <MenuLucide size={16} />
                 </button>
-                <AnimatePresence>
-                  {activeMegaMenu === "Buy" && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 15 }}
-                      className={`absolute left-0 top-full w-[90vw] max-w-[700px] rounded-2xl lg:rounded-[2rem] border overflow-hidden ${currentTheme.dropdown}`}
-                    >
-                      <div className="p-6 lg:p-8 flex flex-col lg:flex-row gap-6 lg:gap-8">
-                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                          <div>
-                            <h4 className="text-[9px] lg:text-[10px] font-black text-[#ff8a00] uppercase mb-3 tracking-widest border-b border-slate-200 dark:border-white/10 pb-2">
-                              Residential Sale
-                            </h4>
-                            <div className="flex flex-col gap-2">
-                              {["Apartments", "Villas", "Townhouses", "Penthouses"].map((item) => (
-                                <button
-                                  key={item}
-                                  onClick={() => handleBuyClick(item)}
-                                  className="text-left text-xs lg:text-sm font-medium text-slate-700 dark:text-gray-300 hover:text-[#ff8a00] transition-all"
-                                >
-                                  {item}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <h4 className="text-[9px] lg:text-[10px] font-black text-[#ff8a00] uppercase mb-3 tracking-widest border-b border-slate-200 dark:border-white/10 pb-2">
-                              Commercial Sale
-                            </h4>
-                            <div className="flex flex-col gap-2">
-                              {["Office Space", "Retail", "Warehouse", "Land"].map((item) => (
-                                <button
-                                  key={item}
-                                  onClick={() => handleCommercialClick(item, "Sale")}
-                                  className="text-left text-xs lg:text-sm font-medium text-slate-700 dark:text-gray-300 hover:text-[#ff8a00] transition-all"
-                                >
-                                  {item}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleBuyClick()}
-                          className="w-full lg:w-48 rounded-2xl lg:rounded-3xl p-5 bg-[#2D2D6E] text-white flex flex-col justify-end shadow-xl hover:scale-105 transition-transform"
-                        >
-                          <p className="text-[8px] lg:text-[9px] font-black uppercase opacity-60">
-                            Buying Guide
-                          </p>
-                          <p className="text-sm lg:text-base font-black leading-tight mt-1">
-                            Secure Your Asset
-                          </p>
-                          <ChevronRight size={14} className="mt-2 opacity-60" />
-                        </button>
-                      </div>
-                      <div className="bg-black/5 dark:bg-white/5 p-3 flex flex-wrap items-center gap-2 border-t border-slate-200 dark:border-white/10">
-                        <button
-                          onClick={() => handleBuyClick()}
-                          className="px-3 py-1.5 bg-white dark:bg-white/10 rounded-xl text-[8px] font-black uppercase flex items-center gap-1.5 border border-slate-200 dark:border-white/10 hover:border-[#ff8a00] hover:text-[#ff8a00] transition-all"
-                        >
-                          <Home size={12} /> Residential
-                        </button>
-                        <button
-                          onClick={() => handleCommercialClick(null, "Sale")}
-                          className="px-3 py-1.5 bg-white dark:bg-white/10 rounded-xl text-[8px] font-black uppercase flex items-center gap-1.5 border border-slate-200 dark:border-white/10 hover:border-[#ff8a00] hover:text-[#ff8a00] transition-all"
-                        >
-                          <Building2 size={12} /> Commercial
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Rent Mega Menu */}
-              <div
-                className="relative py-7"
-                onMouseEnter={() => setActiveMegaMenu("Rent")}
-                onMouseLeave={() => setActiveMegaMenu(null)}
-              >
-                <button
-                  className={`px-3 lg:px-4 flex items-center gap-1 text-[10px] lg:text-[11px] font-black uppercase tracking-widest ${currentTheme.text} ${activeMegaMenu === "Rent" ? "text-[#ff8a00]" : ""} transition-colors`}
-                >
-                  Rent
-                  <ChevronDownIcon className="h-3 w-3" />
-                </button>
-                <AnimatePresence>
-                  {activeMegaMenu === "Rent" && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 15 }}
-                      className={`absolute left-0 top-full w-[90vw] max-w-[700px] rounded-2xl lg:rounded-[2rem] border overflow-hidden ${currentTheme.dropdown}`}
-                    >
-                      <div className="p-6 lg:p-8 flex flex-col lg:flex-row gap-6 lg:gap-8">
-                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                          <div>
-                            <h4 className="text-[9px] lg:text-[10px] font-black text-[#ff8a00] uppercase mb-3 tracking-widest border-b border-slate-200 dark:border-white/10 pb-2">
-                              Residential Rent
-                            </h4>
-                            <div className="flex flex-col gap-2">
-                              {["Apartments", "Studios", "Villas", "Short Term"].map((item) => (
-                                <button
-                                  key={item}
-                                  onClick={() => handleRentClick(item)}
-                                  className="text-left text-xs lg:text-sm font-medium text-slate-700 dark:text-gray-300 hover:text-[#ff8a00] transition-all"
-                                >
-                                  {item}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <h4 className="text-[9px] lg:text-[10px] font-black text-[#ff8a00] uppercase mb-3 tracking-widest border-b border-slate-200 dark:border-white/10 pb-2">
-                              Commercial Rent
-                            </h4>
-                            <div className="flex flex-col gap-2">
-                              {["Office Space", "Retail", "Warehouse"].map((item) => (
-                                <button
-                                  key={item}
-                                  onClick={() => handleCommercialClick(item, "Rent")}
-                                  className="text-left text-xs lg:text-sm font-medium text-slate-700 dark:text-gray-300 hover:text-[#ff8a00] transition-all"
-                                >
-                                  {item}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleRentClick()}
-                          className="w-full lg:w-48 rounded-2xl lg:rounded-3xl p-5 bg-[#5D46A0] text-white flex flex-col justify-end shadow-xl hover:scale-105 transition-transform"
-                        >
-                          <p className="text-[8px] lg:text-[9px] font-black uppercase opacity-60">
-                            Rental Insights
-                          </p>
-                          <p className="text-sm lg:text-base font-black leading-tight mt-1">
-                            Find Your Home
-                          </p>
-                          <ChevronRight size={14} className="mt-2 opacity-60" />
-                        </button>
-                      </div>
-                      <div className="bg-black/5 dark:bg-white/5 p-3 flex flex-wrap items-center gap-2 border-t border-slate-200 dark:border-white/10">
-                        <button
-                          onClick={() => handleRentClick()}
-                          className="px-3 py-1.5 bg-white dark:bg-white/10 rounded-xl text-[8px] font-black uppercase flex items-center gap-1.5 border border-slate-200 dark:border-white/10 hover:border-[#ff8a00] hover:text-[#ff8a00] transition-all"
-                        >
-                          <MapPin size={12} /> Find Agent
-                        </button>
-                        <button
-                          onClick={() => handleRentClick("Short Term")}
-                          className="px-3 py-1.5 bg-white dark:bg-white/10 rounded-xl text-[8px] font-black uppercase flex items-center gap-1.5 border border-slate-200 dark:border-white/10 hover:border-[#ff8a00] hover:text-[#ff8a00] transition-all"
-                        >
-                          <TrendingUp size={12} /> Short Term
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Off-Plan Mega Menu */}
-              <div
-                className="relative py-7"
-                onMouseEnter={() => setActiveMegaMenu("Off-Plan")}
-                onMouseLeave={() => setActiveMegaMenu(null)}
-              >
-                <button
-                  className={`px-3 lg:px-4 flex items-center gap-1 text-[10px] lg:text-[11px] font-black uppercase tracking-widest ${currentTheme.text} ${activeMegaMenu === "Off-Plan" ? "text-[#ff8a00]" : ""} transition-colors`}
-                >
-                  Off-Plan
-                  <ChevronDownIcon className="h-3 w-3" />
-                </button>
-                <AnimatePresence>
-                  {activeMegaMenu === "Off-Plan" && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 15 }}
-                      className={`absolute left-0 top-full w-[90vw] max-w-[700px] rounded-2xl lg:rounded-[2rem] border overflow-hidden ${currentTheme.dropdown}`}
-                    >
-                      <div className="p-6 lg:p-8 flex flex-col lg:flex-row gap-6 lg:gap-8">
-                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                          <div>
-                            <h4 className="text-[9px] lg:text-[10px] font-black text-[#ff8a00] uppercase mb-3 tracking-widest border-b border-slate-200 dark:border-white/10 pb-2">
-                              New Launches
-                            </h4>
-                            <div className="flex flex-col gap-2">
-                              {["Emaar Projects", "Damac Hills", "Nakheel", "Sobha Realty"].map((item) => (
-                                <button
-                                  key={item}
-                                  onClick={() => handleOffPlanClick(item.split(" ")[0])}
-                                  className="text-left text-xs lg:text-sm font-medium text-slate-700 dark:text-gray-300 hover:text-[#ff8a00] transition-all"
-                                >
-                                  {item}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <h4 className="text-[9px] lg:text-[10px] font-black text-[#ff8a00] uppercase mb-3 tracking-widest border-b border-slate-200 dark:border-white/10 pb-2">
-                              By Handover
-                            </h4>
-                            <div className="flex flex-col gap-2">
-                              {["Handover 2025", "Handover 2026", "Handover 2027"].map((item) => (
-                                <button
-                                  key={item}
-                                  onClick={() => navigateWithFilters({ category: "Off-Plan", deliveryDate: item.split(" ")[1] })}
-                                  className="text-left text-xs lg:text-sm font-medium text-slate-700 dark:text-gray-300 hover:text-[#ff8a00] transition-all"
-                                >
-                                  {item}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleOffPlanClick()}
-                          className="w-full lg:w-48 rounded-2xl lg:rounded-3xl p-5 bg-[#ff8a00] text-white flex flex-col justify-end shadow-xl hover:scale-105 transition-transform"
-                        >
-                          <p className="text-[8px] lg:text-[9px] font-black uppercase opacity-60">
-                            High ROI Projects
-                          </p>
-                          <p className="text-sm lg:text-base font-black leading-tight mt-1">
-                            Invest Early
-                          </p>
-                          <ChevronRight size={14} className="mt-2 opacity-60" />
-                        </button>
-                      </div>
-                      <div className="bg-black/5 dark:bg-white/5 p-3 flex flex-wrap items-center gap-2 border-t border-slate-200 dark:border-white/10">
-                        <button
-                          onClick={() => navigate("/project-map")}
-                          className="px-3 py-1.5 bg-white dark:bg-white/10 rounded-xl text-[8px] font-black uppercase flex items-center gap-1.5 border border-slate-200 dark:border-white/10 hover:border-[#ff8a00] hover:text-[#ff8a00] transition-all"
-                        >
-                          <MapPin size={12} /> Project Map
-                        </button>
-                        <button
-                          onClick={() => navigateWithFilters({ category: "Off-Plan", hasPaymentPlan: true })}
-                          className="px-3 py-1.5 bg-white dark:bg-white/10 rounded-xl text-[8px] font-black uppercase flex items-center gap-1.5 border border-slate-200 dark:border-white/10 hover:border-[#ff8a00] hover:text-[#ff8a00] transition-all"
-                        >
-                          <DollarSign size={12} /> Payment Plans
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Resources Dropdown */}
-              <div
-                className="relative py-7"
-                onMouseEnter={() => setActiveMegaMenu("resources")}
-                onMouseLeave={() => setActiveMegaMenu(null)}
-              >
-                <button
-                  className={`px-3 lg:px-4 flex items-center gap-1 text-[10px] lg:text-[11px] font-black uppercase tracking-widest ${currentTheme.text} ${activeMegaMenu === "resources" ? "text-[#ff8a00]" : ""} transition-colors`}
-                >
-                  Resources <ChevronDownIcon className="h-3 w-3" />
-                </button>
-                <AnimatePresence>
-                  {activeMegaMenu === "resources" && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`absolute left-0 top-full w-64 rounded-2xl lg:rounded-[2rem] border p-3 ${currentTheme.dropdown}`}
-                    >
-                      {sidebarLinks.map((item) => (
-                        <Link
-                          key={item.name}
-                          to={item.href}
-                          className={`flex items-center justify-between px-4 lg:px-5 py-3 rounded-2xl text-[9px] lg:text-[10px] font-black uppercase tracking-widest ${currentTheme.text} hover:bg-[#ff8a00] hover:text-white transition-all`}
-                        >
-                          {item.name} {renderBadge(item.badge)}
-                        </Link>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              <Link
-                to="/contact-us"
-                className={`px-3 lg:px-4 py-7 text-[10px] lg:text-[11px] font-black uppercase tracking-widest ${currentTheme.text} hover:text-[#ff8a00] transition-colors flex items-center gap-2`}
-              >
-                Contact Us
-               
-              </Link>
+              )}
+              {(user?.role === "user" || !isAuthenticated) && (
+                <Link to="/" className="flex-shrink-0">
+                  <img src={navbarlogo} alt="Logo" className="h-20 md:h-25 w-auto object-contain" />
+                </Link>
+              )}
             </div>
-          )}
 
-          {/* Right Section */}
-          <div className="flex items-center gap-2 lg:gap-4">
-            <button
-              onClick={toggleTheme}
-              className={`p-2 lg:p-2.5 rounded-full transition-all ${isDark ? "text-amber-400 bg-white/5" : "text-slate-600 bg-slate-100"}`}
-            >
-              {isDark ? <SunIcon size={16} /> : <MoonIcon size={16} />}
-            </button>
-
-            {!isAuthenticated ? (
-              <Link
-                to="/login"
-                className="px-4 lg:px-7 py-2 lg:py-3 text-[9px] lg:text-[10px] font-black uppercase tracking-widest rounded-full bg-[#ff8a00] text-white shadow-lg shadow-orange-500/20 hover:bg-[#e67c00] transition-all"
-              >
-                Login
-              </Link>
-            ) : (
-              <div className="relative" ref={profileDropdownRef}>
-                <button
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="h-9 w-9 lg:h-10 lg:w-10 rounded-full bg-[#ff8a00] border-2 border-white/20 flex items-center justify-center text-white font-black hover:scale-105 transition-all"
-                >
-                  {user?.firstname?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
-                </button>
-                <AnimatePresence>
-                  {isProfileOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                      className={`absolute right-0 mt-3 w-72 rounded-2xl lg:rounded-[2rem] border overflow-hidden ${currentTheme.dropdown}`}
-                    >
-                      <div className={`px-5 py-4 border-b ${currentTheme.border}`}>
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="h-12 w-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white font-black text-lg">
-                            {user?.firstname?.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="flex-1">
-                            <p className={`text-sm font-bold ${currentTheme.text}`}>
-                              {user?.firstname} {user?.lastname}
-                            </p>
-                            <p className={`text-[10px] ${currentTheme.textSecondary} truncate`}>
-                              {user?.email}
-                            </p>
-                          </div>
-                        </div>
-                        <span className="inline-block px-2 py-1 rounded-full bg-[#ff8a00]/10 text-[#ff8a00] text-[8px] font-black uppercase tracking-wider">
-                          {user?.role || "USER"} PRO
-                        </span>
-                      </div>
-
-                      <div className="p-2">
-                        {user?.role === "user" && (
-                          <>
-                            <Link
-                              to="/user-profile"
-                              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-black tracking-widest ${currentTheme.text} hover:bg-[#ff8a00]/10 transition-all`}
-                              onClick={() => setIsProfileOpen(false)}
-                            >
-                              <User size={16} className="text-[#ff8a00]" />
-                              My Profile
-                            </Link>
-                            <Link
-                              to="/my-properties"
-                              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-black tracking-widest ${currentTheme.text} hover:bg-[#ff8a00]/10 transition-all`}
-                              onClick={() => setIsProfileOpen(false)}
-                            >
-                              <Home size={16} className="text-[#ff8a00]" />
-                              My Properties
-                            </Link>
-                            <Link
-                              to="/wishlist"
-                              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-black tracking-widest ${currentTheme.text} hover:bg-[#ff8a00]/10 transition-all`}
-                              onClick={() => setIsProfileOpen(false)}
-                            >
-                              <Heart size={16} className="text-[#ff8a00]" />
-                              Wishlist
-                            </Link>
-                          </>
-                        )}
-
-                        {user?.role !== "user" && (
-                          <Link
-                            to={`/${user?.role?.toLowerCase()}-dashboard`}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-black tracking-widest ${currentTheme.text} hover:bg-[#ff8a00]/10 transition-all`}
-                            onClick={() => setIsProfileOpen(false)}
-                          >
-                            <Home size={16} className="text-[#ff8a00]" />
-                            Dashboard
-                          </Link>
-                        )}
-
-                        <Link
-                          to="/settings"
-                          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-black tracking-widest ${currentTheme.text} hover:bg-[#ff8a00]/10 transition-all`}
-                          onClick={() => setIsProfileOpen(false)}
-                        >
-                          <Settings size={16} className="text-[#ff8a00]" />
-                          Settings
-                        </Link>
-
-                        <div className={`border-t ${currentTheme.border} my-2`} />
-
-                        <button
-                          onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-black text-red-500 hover:bg-red-500/10 transition-all"
-                        >
-                          <LogOut size={16} /> Sign Out
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center justify-center flex-1">
+              <div className="flex items-center space-x-0.5">
+                {navItems.map((item) => {
+                  if (item === "Home") {
+                    return (
+                      <Link key={item} to="/" className={navLinkClass}>
+                        {item}
+                      </Link>
+                    );
+                  }
+                  
+                  if (item === "About Us" || item === "Contact Us") {
+                    return (
+                      <Link key={item} to={item === "About Us" ? "/about-us" : "/contact-us"} className={navLinkClass}>
+                        {item}
+                      </Link>
+                    );
+                  }
+                  
+                  if (item === "Careers") {
+                    return (
+                      <Link key={item} to="/careers" className={navLinkClass}>
+                        {item}
+                        <span className="bg-amber-500 text-black text-[6px] px-1.5 py-0.5 rounded-full font-bold ml-1">HIRING</span>
+                      </Link>
+                    );
+                  }
+                  
+                  if (item === "Buy") {
+                    return (
+                      <div key={item} className="relative" onMouseEnter={() => setActiveMegaMenu("Buy")} onMouseLeave={() => setActiveMegaMenu(null)}>
+                        <button className={`${navLinkClass} ${activeMegaMenu === "Buy" ? "text-amber-500" : ""}`}>
+                          Buy <ChevronDownIcon className={`h-2.5 w-2.5 transition-transform ${activeMegaMenu === "Buy" ? "rotate-180" : ""}`} />
                         </button>
+                        <DesktopDropdown isOpen={activeMegaMenu === "Buy"}>
+                          <div className="p-4 flex gap-4">
+                            <div className="flex-1 grid grid-cols-2 gap-4">
+                              {buyMenuItems.sections.map((section, idx) => (
+                                <div key={idx}>
+                                  <h4 className="text-[9px] font-bold text-amber-500 uppercase mb-2 tracking-wider">{section.title}</h4>
+                                  <div className="space-y-1">
+                                    {section.items.map((subItem) => (
+                                      <button key={subItem} onClick={() => section.action(subItem)} className="block text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:text-amber-500 transition-colors py-1">
+                                        {subItem}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <button onClick={buyMenuItems.promo.action} className="w-36 rounded-lg p-3 bg-[#2D2D6E] text-white flex flex-col justify-end shadow-lg hover:scale-105 transition-transform">
+                              <p className="text-[7px] font-bold uppercase opacity-60">{buyMenuItems.promo.subtitle}</p>
+                              <p className="text-[11px] font-bold leading-tight mt-0.5">{buyMenuItems.promo.title}</p>
+                              <ChevronRight size={12} className="mt-1 opacity-60" />
+                            </button>
+                          </div>
+                          <div className="bg-gray-50 dark:bg-white/5 p-3 flex gap-2 border-t">
+                            {buyMenuItems.footer.map((footerItem, idx) => (
+                              <button key={idx} onClick={footerItem.action} className="px-3 py-1.5 rounded-lg text-[8px] font-bold uppercase flex items-center gap-1.5 bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 hover:border-amber-500 hover:text-amber-500 transition-all">
+                                {footerItem.icon} {footerItem.label}
+                              </button>
+                            ))}
+                          </div>
+                        </DesktopDropdown>
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    );
+                  }
+                  
+                  if (item === "Rent") {
+                    return (
+                      <div key={item} className="relative" onMouseEnter={() => setActiveMegaMenu("Rent")} onMouseLeave={() => setActiveMegaMenu(null)}>
+                        <button className={`${navLinkClass} ${activeMegaMenu === "Rent" ? "text-amber-500" : ""}`}>
+                          Rent <ChevronDownIcon className={`h-2.5 w-2.5 transition-transform ${activeMegaMenu === "Rent" ? "rotate-180" : ""}`} />
+                        </button>
+                        <DesktopDropdown isOpen={activeMegaMenu === "Rent"}>
+                          <div className="p-4 flex gap-4">
+                            <div className="flex-1 grid grid-cols-2 gap-4">
+                              {rentMenuItems.sections.map((section, idx) => (
+                                <div key={idx}>
+                                  <h4 className="text-[9px] font-bold text-amber-500 uppercase mb-2 tracking-wider">{section.title}</h4>
+                                  <div className="space-y-1">
+                                    {section.items.map((subItem) => (
+                                      <button key={subItem} onClick={() => section.action(subItem)} className="block text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:text-amber-500 transition-colors py-1">
+                                        {subItem}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <button onClick={rentMenuItems.promo.action} className="w-36 rounded-lg p-3 bg-[#5D46A0] text-white flex flex-col justify-end shadow-lg hover:scale-105 transition-transform">
+                              <p className="text-[7px] font-bold uppercase opacity-60">{rentMenuItems.promo.subtitle}</p>
+                              <p className="text-[11px] font-bold leading-tight mt-0.5">{rentMenuItems.promo.title}</p>
+                              <ChevronRight size={12} className="mt-1 opacity-60" />
+                            </button>
+                          </div>
+                          <div className="bg-gray-50 dark:bg-white/5 p-3 flex gap-2 border-t">
+                            {rentMenuItems.footer.map((footerItem, idx) => (
+                              <button key={idx} onClick={footerItem.action} className="px-3 py-1.5 rounded-lg text-[8px] font-bold uppercase flex items-center gap-1.5 bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 hover:border-amber-500 hover:text-amber-500 transition-all">
+                                {footerItem.icon} {footerItem.label}
+                              </button>
+                            ))}
+                          </div>
+                        </DesktopDropdown>
+                      </div>
+                    );
+                  }
+                  
+                  if (item === "Off-Plan") {
+                    return (
+                      <div key={item} className="relative" onMouseEnter={() => setActiveMegaMenu("Off-Plan")} onMouseLeave={() => setActiveMegaMenu(null)}>
+                        <button className={`${navLinkClass} ${activeMegaMenu === "Off-Plan" ? "text-amber-500" : ""}`}>
+                          Off-Plan <ChevronDownIcon className={`h-2.5 w-2.5 transition-transform ${activeMegaMenu === "Off-Plan" ? "rotate-180" : ""}`} />
+                        </button>
+                        <DesktopDropdown isOpen={activeMegaMenu === "Off-Plan"}>
+                          <div className="p-4 flex gap-4">
+                            <div className="flex-1 grid grid-cols-2 gap-4">
+                              {offplanMenuItems.sections.map((section, idx) => (
+                                <div key={idx}>
+                                  <h4 className="text-[9px] font-bold text-amber-500 uppercase mb-2 tracking-wider">{section.title}</h4>
+                                  <div className="space-y-1">
+                                    {section.items.map((subItem) => (
+                                      <button key={subItem} onClick={() => section.action(subItem)} className="block text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:text-amber-500 transition-colors py-1">
+                                        {subItem}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <button onClick={offplanMenuItems.promo.action} className="w-36 rounded-lg p-3 bg-[#f59e0b] text-black flex flex-col justify-end shadow-lg hover:scale-105 transition-transform">
+                              <p className="text-[7px] font-bold uppercase opacity-60">{offplanMenuItems.promo.subtitle}</p>
+                              <p className="text-[11px] font-bold leading-tight mt-0.5">{offplanMenuItems.promo.title}</p>
+                              <ChevronRight size={12} className="mt-1 opacity-60" />
+                            </button>
+                          </div>
+                          <div className="bg-gray-50 dark:bg-white/5 p-3 flex gap-2 border-t">
+                            {offplanMenuItems.footer.map((footerItem, idx) => (
+                              <button key={idx} onClick={footerItem.action} className="px-3 py-1.5 rounded-lg text-[8px] font-bold uppercase flex items-center gap-1.5 bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 hover:border-amber-500 hover:text-amber-500 transition-all">
+                                {footerItem.icon} {footerItem.label}
+                              </button>
+                            ))}
+                          </div>
+                        </DesktopDropdown>
+                      </div>
+                    );
+                  }
+                  
+                  if (item === "Resources") {
+                    return (
+                      <div key={item} className="relative" onMouseEnter={() => setActiveMegaMenu("resources")} onMouseLeave={() => setActiveMegaMenu(null)}>
+                        <button className={`${navLinkClass} ${activeMegaMenu === "resources" ? "text-amber-500" : ""}`}>
+                          Resources <ChevronDownIcon className="h-2.5 w-2.5" />
+                        </button>
+                        <SmallDesktopDropdown isOpen={activeMegaMenu === "resources"}>
+                          {sidebarLinks.map((link) => (
+                            <Link key={link.name} to={link.href} className="flex items-center justify-between px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 hover:bg-amber-500 hover:text-white transition-all" onClick={() => setActiveMegaMenu(null)}>
+                              {link.name} {renderBadge(link.badge)}
+                            </Link>
+                          ))}
+                        </SmallDesktopDropdown>
+                      </div>
+                    );
+                  }
+                  
+                  return null;
+                })}
               </div>
-            )}
+            </div>
 
-            <button
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="xl:hidden p-2 text-current"
-            >
-              <Bars3Icon className="h-7 w-7 sm:h-8 sm:w-8" />
-            </button>
+            {/* Right Section */}
+            <div className="flex items-center gap-2 lg:gap-2 flex-shrink-0">
+              <button onClick={toggleTheme} className={`p-1.5 rounded-full transition-all ${isDark ? "text-amber-400 bg-white/5" : "text-slate-600 bg-slate-100"}`}>
+                {isDark ? <SunIcon size={14} /> : <MoonIcon size={14} />}
+              </button>
+
+              {!isAuthenticated ? (
+                <Link to="/login" className="px-4 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-full bg-amber-500 text-white shadow-md hover:bg-amber-600 transition-all">
+                  Login
+                </Link>
+              ) : (
+                <div className="relative" ref={profileDropdownRef}>
+                  <button onClick={() => setIsProfileOpen(!isProfileOpen)} className="h-7 w-7 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 border-2 border-white/20 flex items-center justify-center text-white font-bold text-[11px] hover:scale-105 transition-all">
+                    {user?.firstname?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
+                  </button>
+                  <AnimatePresence>
+                    {isProfileOpen && (
+                      <motion.div initial={{ opacity: 0, scale: 0.95, y: -10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -10 }} className="absolute right-0 mt-2 w-56 rounded-xl border overflow-hidden z-50 bg-white dark:bg-[#161B26] border-slate-200 dark:border-white/10 shadow-2xl">
+                        <div className="p-3 border-b border-slate-100 dark:border-white/10">
+                          <div className="flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-[11px]">
+                              {user?.firstname?.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-[11px] font-bold truncate">{user?.firstname} {user?.lastname}</p>
+                              <p className="text-[8px] text-slate-500 truncate">{user?.email}</p>
+                            </div>
+                          </div>
+                          <span className="inline-block mt-1.5 px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[6px] font-bold uppercase tracking-wider">
+                            {user?.role || "USER"}
+                          </span>
+                        </div>
+                        <div className="p-1">
+                          {user?.role === "user" && (
+                            <>
+                              <Link to="/user-profile" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+                                <User size={12} className="text-amber-500" /> Profile
+                              </Link>
+                              <Link to="/my-properties" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+                                <Home size={12} className="text-amber-500" /> My Properties
+                              </Link>
+                              <Link to="/wishlist" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+                                <Heart size={12} className="text-amber-500" /> Wishlist
+                              </Link>
+                            </>
+                          )}
+                          {user?.role !== "user" && (
+                            <Link to={`/${user?.role?.toLowerCase()}-dashboard`} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+                              <Home size={12} className="text-amber-500" /> Dashboard
+                            </Link>
+                          )}
+                          <Link to="/settings" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+                            <Settings size={12} className="text-amber-500" /> Settings
+                          </Link>
+                          <div className="border-t my-1 border-slate-100 dark:border-white/10" />
+                          <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold text-red-500 hover:bg-red-500/10 transition-all">
+                            <LogOut size={12} /> Sign Out
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-1.5 text-current">
+                <Bars3Icon className="h-6 w-6" />
+              </button>
+            </div>
           </div>
         </div>
       </nav>
 
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 25 }}
-            className={`fixed inset-0 z-[200] flex flex-col ${isDark ? "bg-[#0a0a0c] text-white" : "bg-white text-[#1a1a1e]"}`}
-          >
-            <div className={`p-5 sm:p-8 flex items-center justify-between border-b ${currentTheme.border}`}>
-              <img src={navbarlogo} alt="Logo" className="h-8 sm:h-10" />
-              <button
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 sm:p-3 bg-red-500/10 text-red-500 rounded-full"
-              >
-                <XMarkIcon className="h-6 w-6 sm:h-7 sm:w-7" />
-              </button>
+     {/* Mobile Menu with Dropdowns */}
+<AnimatePresence>
+  {isMobileMenuOpen && (
+    <motion.div
+      initial={{ x: "100%" }}
+      animate={{ x: 0 }}
+      exit={{ x: "100%" }}
+      transition={{ type: "spring", damping: 25 }}
+      className={`fixed inset-0 z-[200] flex flex-col ${isDark ? "bg-[#0a0a0c]" : "bg-white"}`}
+    >
+      <div className="p-4 flex items-center justify-between border-b border-slate-200 dark:border-white/10">
+        <img src={navbarlogo} alt="Logo" className="h-10" />
+        <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-full bg-red-500/10 text-red-500">
+          <XMarkIcon className="h-5 w-5" />
+        </button>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto p-4 space-y-1">
+        {/* Home */}
+        <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="block py-3 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
+          Home
+        </Link>
+        
+        {/* About Us */}
+        <Link to="/about-us" onClick={() => setIsMobileMenuOpen(false)} className="block py-3 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
+          About Us
+        </Link>
+        
+        {/* Buy Dropdown */}
+        <MobileDropdown
+          title="Buy"
+          isOpen={activeMobileDropdown === "Buy"}
+          onToggle={() => toggleMobileDropdown("Buy")}
+        >
+          <div className="space-y-4">
+            {/* Residential and Commercial in Grid Layout */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Residential Sale */}
+              <div>
+                <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">Residential Sale</p>
+                <div className="space-y-1">
+                  {buyMenuItems.sections[0].items.map((item) => (
+                    <button key={item} onClick={() => handleBuyClick(item)} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Commercial Sale */}
+              <div>
+                <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">Commercial Sale</p>
+                <div className="space-y-1">
+                  {buyMenuItems.sections[1].items.map((item) => (
+                    <button key={item} onClick={() => handleCommercialClick(item, "Sale")} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-5 sm:p-8 space-y-4">
-              <Link
-                to="/"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`block text-lg sm:text-xl font-black uppercase tracking-widest ${currentTheme.text} border-b ${currentTheme.border} pb-4`}
-              >
-                Home
-              </Link>
-              <Link
-                to="/about-us"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`block text-lg sm:text-xl font-black uppercase tracking-widest ${currentTheme.text} border-b ${currentTheme.border} pb-4`}
-              >
-                About Us
-              </Link>
-
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  handleBuyClick();
-                }}
-                className={`block w-full text-left text-lg sm:text-xl font-black uppercase tracking-widest ${currentTheme.text} border-b ${currentTheme.border} pb-4`}
-              >
-                Buy
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  handleRentClick();
-                }}
-                className={`block w-full text-left text-lg sm:text-xl font-black uppercase tracking-widest ${currentTheme.text} border-b ${currentTheme.border} pb-4`}
-              >
-                Rent
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  handleOffPlanClick();
-                }}
-                className={`block w-full text-left text-lg sm:text-xl font-black uppercase tracking-widest ${currentTheme.text} border-b ${currentTheme.border} pb-4`}
-              >
-                Off-Plan
-              </button>
- <Link
-                to="/contact-us"
-                className={`px-3 lg:px-4 py-7 text-[10px] lg:text-[11px] font-black uppercase tracking-widest ${currentTheme.text} hover:text-[#ff8a00] transition-colors flex items-center gap-2`}
-              >
-                Contact Us
-               
-              </Link>
+            
+            {/* Promo Button */}
+            <button onClick={buyMenuItems.promo.action} className="mt-2 w-full py-2 rounded-lg bg-[#2D2D6E] text-white text-[9px] font-bold uppercase">
+              {buyMenuItems.promo.title}
+            </button>
+          </div>
+        </MobileDropdown>
+        
+        {/* Rent Dropdown */}
+        <MobileDropdown
+          title="Rent"
+          isOpen={activeMobileDropdown === "Rent"}
+          onToggle={() => toggleMobileDropdown("Rent")}
+        >
+          <div className="space-y-4">
+            {/* Residential and Commercial in Grid Layout */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Residential Rent */}
+              <div>
+                <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">Residential Rent</p>
+                <div className="space-y-1">
+                  {rentMenuItems.sections[0].items.map((item) => (
+                    <button key={item} onClick={() => handleRentClick(item)} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Commercial Rent */}
+              <div>
+                <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">Commercial Rent</p>
+                <div className="space-y-1">
+                  {rentMenuItems.sections[1].items.map((item) => (
+                    <button key={item} onClick={() => handleCommercialClick(item, "Rent")} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            
+            {/* Promo Button */}
+            <button onClick={rentMenuItems.promo.action} className="mt-2 w-full py-2 rounded-lg bg-[#5D46A0] text-white text-[9px] font-bold uppercase">
+              {rentMenuItems.promo.title}
+            </button>
+          </div>
+        </MobileDropdown>
+        
+        {/* Off-Plan Dropdown */}
+        <MobileDropdown
+          title="Off-Plan"
+          isOpen={activeMobileDropdown === "Off-Plan"}
+          onToggle={() => toggleMobileDropdown("Off-Plan")}
+        >
+          <div className="space-y-4">
+            {/* New Launches and By Handover in Grid Layout */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* New Launches */}
+              <div>
+                <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">New Launches</p>
+                <div className="space-y-1">
+                  {offplanMenuItems.sections[0].items.map((item) => (
+                    <button key={item} onClick={() => handleOffPlanClick(item.split(" ")[0])} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* By Handover */}
+              <div>
+                <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">By Handover</p>
+                <div className="space-y-1">
+                  {offplanMenuItems.sections[1].items.map((item) => (
+                    <button key={item} onClick={() => navigateWithFilters({ category: "Off-Plan", deliveryDate: item.split(" ")[1] })} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Promo Button */}
+            <button onClick={offplanMenuItems.promo.action} className="mt-2 w-full py-2 rounded-lg bg-[#f59e0b] text-black text-[9px] font-bold uppercase">
+              {offplanMenuItems.promo.title}
+            </button>
+          </div>
+        </MobileDropdown>
+        
+        {/* Resources Dropdown */}
+        <MobileDropdown
+          title="Resources"
+          isOpen={activeMobileDropdown === "Resources"}
+          onToggle={() => toggleMobileDropdown("Resources")}
+        >
+          <div className="grid grid-cols-1 gap-1 pl-2">
+            {sidebarLinks.map((link) => (
+              <Link key={link.name} to={link.href} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between py-2 text-[10px] font-medium hover:text-amber-500">
+                {link.name} {renderBadge(link.badge)}
+              </Link>
+            ))}
+          </div>
+        </MobileDropdown>
+        
+        {/* Contact Us */}
+        <Link to="/contact-us" onClick={() => setIsMobileMenuOpen(false)} className="block py-3 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
+          Contact Us
+        </Link>
+        
+        {/* Careers */}
+        <Link to="/careers" onClick={() => setIsMobileMenuOpen(false)} className="block py-3 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
+          Careers <span className="ml-1 bg-amber-500 text-black text-[6px] px-1.5 py-0.5 rounded-full font-bold">HIRING</span>
+        </Link>
+      </div>
+    </motion.div>
+  )}
+</AnimatePresence>
     </>
   );
 }

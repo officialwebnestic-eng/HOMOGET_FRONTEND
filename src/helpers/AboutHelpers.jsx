@@ -359,15 +359,39 @@ export const founderData = {
     { year: "2025", event: "Established Webnestic Technology" }
   ],
 
-  socials: [
-    { name: "LinkedIn", icon: "Linkedin", url: "https://linkedin.com/in/truemrsingh" },
-    { name: "Instagram", icon: "Instagram", url: "https://instagram.com/truemrsingh" },
-    { name: "Twitter", icon: "Twitter", url: "https://twitter.com/truemrsingh" },
-    { name: "Facebook", icon: "Facebook", url: "https://facebook.com/truemrsingh" },
-    { name: "YouTube", icon: "Youtube", url: "https://youtube.com/@truemrsingh" },
-    { name: "TikTok", icon: "Music", url: "https://tiktok.com/@truemrsingh" }
-  ],
-
+  socials:[
+  { 
+    "name": "LinkedIn", 
+    "icon": "Linkedin", 
+    "url": "https://www.linkedin.com/in/homogetfinder" 
+  },
+  { 
+    "name": "Instagram", 
+    "icon": "Instagram", 
+    "url": "https://www.instagram.com/homogetsearch?igsh=MWowMWp5eTRza3Q0" 
+  },
+ 
+  { 
+    "name": "Facebook", 
+    "icon": "Facebook", 
+    "url": "https://www.facebook.com/share/1BeJoJSnyG/" 
+  },
+  { 
+    "name": "YouTube", 
+    "icon": "Youtube", 
+    "url": "https://youtube.com/@homogetsearch?si=5e-5qZUM3wQPmboU" 
+  },
+  { 
+    "name": "TikTok", 
+    "icon": "Music", 
+    "url": "https://www.tiktok.com/@homogetsearch?_r=1&_t=ZS-96cyPsMun4h" 
+  },
+  { 
+    "name": "Pinterest", 
+    "icon": "Pinterest", 
+    "url": "https://pin.it/3OGBdm41s" 
+  }
+],
   shayari: {
     title: "A Poet's Soul",
     verse: `हर सपना एक नई सुबह की तरह होता है,

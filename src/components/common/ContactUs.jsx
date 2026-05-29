@@ -95,8 +95,8 @@ const ContactUs = () => {
             <div className="space-y-8">
               {[
                 { icon: MapPin, title: "Location", detail: "R-118, 2nd Floor, Wasl Building, Makani No. 2809195296, Bur Dubai, Dubai, United Arab Emirates", color: "text-amber-500" },
-                { icon: Phone, title: "Private Line", detail: "+971 58 585 2283", color: "text-emerald-500" },
-                { icon: Mail, title: "Inquiries", detail: "contact@homoget.ae", color: "text-blue-500" },
+                { icon: Phone, title: "Private Line", detail: "+971 5859195853", color: "text-emerald-500" },
+                { icon: Mail, title: "Inquiries", detail: "Info@homoget.ae", color: "text-blue-500" },
                 { icon: Clock, title: "Availability", detail: "Mon-Sat: 09:00 - 18:00", color: "text-purple-500" }
               ].map((item, idx) => (
                 <div key={idx} className="flex gap-5">

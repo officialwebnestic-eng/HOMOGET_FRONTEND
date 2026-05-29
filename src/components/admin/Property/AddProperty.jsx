@@ -5,41 +5,13 @@ import { http } from "../../../axios/axios";
 import useGetAllAgent from "../../../hooks/useGetAllAgent";
 import { useTheme } from "../../../context/ThemeContext";
 import {
-  Upload,
-  X,
-  MapPin,
-  Loader2,
-  Sparkles,
-  ShieldCheck,
-  FileText,
-  Wallet,
-  Building2,
-  Plus,
-  Trash2,
-  Search,
-  Globe,
-  Bed,
-  Bath,
-  Layers,
-  Navigation,
-  Home,
-  Camera,
-  CheckCircle2,
-  User,
-  Hash,
-  Calendar,
-  DollarSign,
-  TrendingUp,
-  Clock,
-  Video,
-  Circle,
-  Award,
-  Eye
+  Upload, X, MapPin, Loader2, Sparkles, ShieldCheck, FileText,
+  Wallet, Building2, Plus, Trash2, Bed, Bath,
+  Layers, Camera, CheckCircle2, Hash, DollarSign, Home
 } from "lucide-react";
 import { useToast } from "../../../model/SuccessToasNotification";
-
-// Import Helpers
-import { DUBAI_AREAS, AMENITIES } from "../../../helpers/AddPropertyHelpers";
+import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
+import LocationSearch from "./LocationSearch";
 
 const AddProperty = () => {
   const { theme } = useTheme();
@@ -53,9 +25,7 @@ const AddProperty = () => {
   const [langTab, setLangTab] = useState("en");
   const [developers, setDevelopers] = useState([]);
   const [loadingDevs, setLoadingDevs] = useState(false);
-  const [locationQuery, setLocationQuery] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedLocationData, setSelectedLocationData] = useState(null);
   const [searchAmenity, setSearchAmenity] = useState("");
   const [activeSection, setActiveSection] = useState("basic");
   const [selectedAgent, setSelectedAgent] = useState(null);
@@ -65,6 +35,12 @@ const AddProperty = () => {
   );
 
   const CURRENCIES = ["AED", "USD", "EUR", "GBP", "INR", "SAR", "QAR", "OMR", "KWD", "BHD"];
+
+  const generateReferenceNumber = () => {
+    const year = new Date().getFullYear();
+    const random = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
+    return `HMG-${year}-${random}`;
+  };
 
   const {
     register,
@@ -84,8 +60,11 @@ const AddProperty = () => {
       amenities: [],
       propertyAge: "Brand New",
       status: "Active",
+      publishingStatus: "Published",
       trakheesiNumber: "",
+      refrenceNo: generateReferenceNumber(),
       nearByLocations: [{ locationName: "", distance: "", transportType: "Drive" }],
+      nearByProjects: [],
     },
   });
 
@@ -94,20 +73,18 @@ const AddProperty = () => {
     name: "nearByLocations",
   });
 
-  // --- Watchers ---
   const watchCategory = watch("category");
   const watchOffering = watch("offeringType");
   const watchPermit = watch("permitType");
   const watchAmenities = watch("amenities") || [];
   const watchAgentId = watch("agentId");
 
-  // Auto-populate agent ORN and BRN when agent is selected
+  // Auto-populate agent ORN and BRN
   useEffect(() => {
     if (watchAgentId && agentList.length > 0) {
       const agent = agentList.find(a => a._id === watchAgentId);
       if (agent) {
         setSelectedAgent(agent);
-        // Auto-populate reraORN and brnNumber from agent's reraLicenseNumber
         if (agent.reraLicenseNumber) {
           setValue("reraORN", agent.reraLicenseNumber);
           setValue("brnNumber", agent.reraLicenseNumber);
@@ -120,16 +97,35 @@ const AddProperty = () => {
     }
   }, [watchAgentId, agentList, setValue]);
 
-  // --- Dynamic Enums ---
-  const resTypes = [
-    "Apartments", "Bulk Units", "Bungalow", "Compound", "Duplex",
-    "Hotel Apartment", "Penthouse", "Townhouse", "Villa", "Whole Building"
-  ];
-  const commTypes = [
-    "Business Center", "Coworking Space", "Factory", "Farm", "Full Floor",
+  // Handle location selection from LocationSearch component
+  const handleLocationSelect = (location) => {
+    if (location) {
+      setSelectedLocationData(location);
+      setValue("locationId", location.id || location.location_id);
+      setValue("locationPath", location.path || `${location.id}`);
+      // Use the correct property names from your API response
+      const displayAddr = location.title || location.subtitle || `${location.name}, Dubai`;
+      setValue("displayAddress", displayAddr);
+      setValue("address", displayAddr);
+      if (location.coordinates) {
+        setValue("coordinates", location.coordinates);
+      }
+      addToast(`Location selected: ${location.name || location.title}`, "success");
+    } else {
+      setSelectedLocationData(null);
+      setValue("locationId", "");
+      setValue("locationPath", "");
+      setValue("displayAddress", "");
+      setValue("address", "");
+      setValue("coordinates", "");
+    }
+  };
+
+  const resTypes = ["Apartments", "Bulk Units", "Bungalow", "Compound", "Duplex",
+    "Hotel Apartment", "Penthouse", "Townhouse", "Villa", "Whole Building"];
+  const commTypes = ["Business Center", "Coworking Space", "Factory", "Farm", "Full Floor",
     "Half Floor", "Labor Camp", "Land", "Office Space", "Retail", "Shop",
-    "Showroom", "Staff Accommodation", "Warehouse", "Whole Building"
-  ];
+    "Showroom", "Staff Accommodation", "Warehouse", "Whole Building"];
   const offPlanTypes = ["Apartments", "Villas", "Townhouses", "Penthouses", "Land"];
 
   const getPropertyTypes = () => {
@@ -138,7 +134,6 @@ const AddProperty = () => {
     return resTypes;
   };
 
-  // --- Data Fetching ---
   useEffect(() => {
     const fetchDevelopers = async () => {
       try {
@@ -153,42 +148,6 @@ const AddProperty = () => {
     };
     fetchDevelopers();
   }, []);
-
-  // TomTom Location Search
-  useEffect(() => {
-    const fetchLocations = async () => {
-      const TOMTOM_KEY = "YDlNOyLlX4RImV4fciotLz74L5JXykXG";
-      if (locationQuery.length < 2) {
-        setSuggestions([]);
-        return;
-      }
-      try {
-        const url = `https://api.tomtom.com/search/2/search/${encodeURIComponent(locationQuery)}.json?key=${TOMTOM_KEY}&countrySet=AE&lat=25.2048&lon=55.2708&radius=50000&limit=10&typeahead=true`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (!data.results) return;
-        const filtered = data.results.map((item) => ({
-          id: item.id,
-          name: item.poi?.name || item.address?.freeformAddress,
-          address: item.address?.freeformAddress,
-          community: item.address?.municipalitySubdivision || item.address?.municipality || "Dubai",
-        }));
-        setSuggestions(filtered);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    const debounce = setTimeout(fetchLocations, 400);
-    return () => clearTimeout(debounce);
-  }, [locationQuery]);
-
-  const handleSelectLocation = (item) => {
-    const fullAddress = `${item.name}, ${item.community}, Dubai`;
-    setValue("address", fullAddress);
-    setValue("community", item.community);
-    setLocationQuery(fullAddress);
-    setShowSuggestions(false);
-  };
 
   const toggleAmenity = (amenity) => {
     const current = watchAmenities;
@@ -209,260 +168,422 @@ const AddProperty = () => {
   ];
 
   const onSubmit = async (data) => {
-    if (files.length === 0) return addToast("Media Portfolio Required", "error");
+    // Validation
+    if (files.length === 0) {
+      addToast("Media Portfolio Required", "error");
+      return;
+    }
+    
+    if (!data.locationId) {
+      addToast("Please select a valid location from the search", "error");
+      return;
+    }
+    
     setIsSubmitting(true);
+    
     try {
       const formData = new FormData();
-      Object.keys(data).forEach((key) => {
-        if (key === "nearByLocations" || key === "amenities") {
-          formData.append(key, JSON.stringify(data[key]));
-        } else if (typeof data[key] === "object") {
-          formData.append(key, JSON.stringify(data[key]));
-        } else {
-          formData.append(key, data[key]);
+      
+      const payload = {
+        propertyTitleEn: data.propertyTitleEn,
+        propertyTitleAr: data.propertyTitleAr || "",
+        price: Number(data.price),
+        currency: data.currency,
+        category: data.category,
+        propertytype: data.propertytype,
+        offeringType: data.offeringType,
+        rentedPeriod: data.rentedPeriod || "",
+        cheques: data.cheques ? Number(data.cheques) : undefined,
+        developerId: data.developerId || null,
+        agentId: data.agentId,
+        permitType: data.permitType,
+        trakheesiNumber: data.trakheesiNumber || "",
+        reraORN: data.reraORN || "",
+        brnNumber: data.brnNumber || "",
+        bedroom: Number(data.bedroom) || 0,
+        bathroom: Number(data.bathroom) || 0,
+        totalFloor: data.totalFloor ? Number(data.totalFloor) : undefined,
+        squarefoot: Number(data.squarefoot),
+        unitNo: data.unitNo || "",
+        parkingSlots: Number(data.parkingSlots) || 0,
+        furnishingType: data.furnishingType || "Unfurnished",
+        propertyAge: data.propertyAge || "Brand New",
+        ownerName: data.ownerName || "",
+        availability: data.availability || "Immediately",
+        descriptionEn: data.descriptionEn,
+        descriptionAr: data.descriptionAr || "",
+        address: data.address,
+        displayAddress: data.displayAddress,
+        locationId: data.locationId,
+        locationPath: data.locationPath || "",
+        coordinates: data.coordinates || {},
+        amenities: data.amenities || [],
+        nearByLocations: data.nearByLocations || [],
+        nearByProjects: data.nearByProjects || [],
+        videos: data.videos || "",
+        virtualTour360: data.virtualTour360 || "",
+        videoTourLink: data.videoTourLink || "",
+        status: data.status || "Active",
+        publishingStatus: data.publishingStatus || "Published",
+        refrenceNo: data.refrenceNo
+      };
+      
+      // Append all payload fields to FormData
+      Object.keys(payload).forEach((key) => {
+        if (payload[key] !== undefined && payload[key] !== null && payload[key] !== "") {
+          if (typeof payload[key] === "object" && !(payload[key] instanceof File)) {
+            formData.append(key, JSON.stringify(payload[key]));
+          } else {
+            formData.append(key, payload[key]);
+          }
         }
       });
+      
+      // Append images
       files.forEach((file) => formData.append("image", file));
-      formData.append("userType", "admin");
-
-      const res = await http.post("/addproperty", formData);
+      
+      const res = await http.post("/addproperty", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      
       if (res.data.success) {
-        addToast("Dubai Asset Live", "success");
+        addToast("Property Added Successfully", "success");
+        // Reset form
         reset();
         setFiles([]);
-        setLocationQuery("");
         setSelectedAgent(null);
+        setSelectedLocationData(null);
+        setLocationSearchQuery("");
+        setValue("refrenceNo", generateReferenceNumber());
       }
     } catch (e) {
-      addToast(e.response?.data?.message || "Sync Failed", "error");
+      console.error("Submission error:", e);
+      addToast(e.response?.data?.message || "Failed to add property", "error");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const inputClass = `w-full px-4 py-3 rounded-xl border outline-none focus:ring-1 focus:ring-amber-500 transition-all text-sm font-semibold ${isDark ? "bg-[#1A1F2B] border-white/10 text-white" : "bg-white border-slate-200 text-slate-900 shadow-sm"
-    }`;
-  const labelClass = "text-[9px] font-bold uppercase text-slate-500 mb-1 block tracking-wider";
+  // Add state for LocationSearch clear
+  const [locationSearchQuery, setLocationSearchQuery] = useState("");
+
+  const inputClass = `w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all text-sm font-medium ${
+    isDark ? "bg-[#1A1F2B] border-white/10 text-white" : "bg-white border-slate-200 text-slate-900 shadow-sm"
+  }`;
+  const labelClass = "text-[10px] font-bold uppercase text-slate-500 mb-1.5 block tracking-wider";
   const requiredStar = <span className="text-red-500 ml-0.5">*</span>;
 
   return (
-    <div className={`min-h-screen pb-20 ${isDark ? "bg-[#0F1219]" : "bg-[#F8FAFC]"}`}>
-      {/* MODERN HEADER */}
-      <header className={`sticky top-0 z-[100] border-b backdrop-blur-md ${isDark ? "bg-[#0F1219]/90 border-white/5" : "bg-white/90 border-slate-200"}`}>
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center shadow-lg">
-              <Building2 className="text-black" size={20} />
-            </div>
-            <div>
-              <h1 className="text-lg font-black uppercase italic leading-none">
-                Homoget <span className="text-amber-500">Dubai</span>
-              </h1>
-              <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1">
-                Real Estate Management
-              </p>
-            </div>
+    <div className={`min-h-screen pb-20 ${isDark ? "bg-gradient-to-br from-[#0F1219] via-[#0F1219] to-[#1a1f2e]" : "bg-gradient-to-br from-[#F8FAFC] via-[#F8FAFC] to-[#f1f5f9]"}`}>
+      {/* Header */}
+<header className={`sticky top-0 z-[100] border-b backdrop-blur-xl transition-all duration-300 ${isDark ? "bg-[#0F1219]/95 border-white/5" : "bg-white/95 border-slate-200"}`}>
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex flex-wrap items-center justify-between py-3 md:py-0 md:h-20">
+      
+      {/* Logo with Premium Styling */}
+      <div className="flex items-center gap-3 group">
+        <div className="relative">
+          <div className="absolute inset-0 bg-amber-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+          <div className="relative w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center shadow-lg">
+            <Building2 className="text-white w-4 h-4 md:w-5 md:h-5" />
           </div>
-          <button
-            onClick={handleSubmit(onSubmit)}
-            disabled={isSubmitting}
-            className="px-8 py-3.5 bg-amber-500 text-black rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-amber-400 transition-all flex items-center gap-2"
-          >
-            {isSubmitting ? <Loader2 className="animate-spin" size={14} /> : <Sparkles size={14} />}
-            {isSubmitting ? "Syncing..." : "Launch Asset"}
-          </button>
         </div>
-      </header>
+        <div>
+          <h1 className="text-sm md:text-lg font-black uppercase italic leading-none tracking-tight">
+            Homoget <span className="text-amber-500">Dubai</span>
+          </h1>
+          <p className="hidden sm:block text-[7px] md:text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-0.5">
+            Real Estate Management
+          </p>
+        </div>
+      </div>
+
+      {/* Reference Number - Desktop */}
+      <div className={`hidden lg:flex items-center gap-3 px-4 py-2 rounded-xl ${isDark ? "bg-amber-500/5 border border-amber-500/20" : "bg-amber-50 border border-amber-200"}`}>
+        <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+          <Hash size={14} className="text-amber-500" />
+        </div>
+        <div>
+          <p className="text-[8px] uppercase font-bold text-slate-500 tracking-wider">Reference Number</p>
+          <p className="text-sm font-mono font-bold text-amber-500">{watch("refrenceNo") || "Auto-generated"}</p>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-3">
+        {/* Status Badge with Icon */}
+        <div className={`hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider ${
+          watch("publishingStatus") === "Published" 
+            ? "bg-green-500/10 text-green-500 border border-green-500/20" 
+            : "bg-slate-500/10 text-slate-500 border border-slate-500/20"
+        }`}>
+          <div className={`w-1.5 h-1.5 rounded-full ${watch("publishingStatus") === "Published" ? "bg-green-500" : "bg-slate-500"}`}></div>
+          {watch("publishingStatus") || "Draft"}
+        </div>
+
+        {/* Launch Button */}
+        <button
+          onClick={handleSubmit(onSubmit)}
+          disabled={isSubmitting}
+          className="group relative px-4 md:px-6 lg:px-8 py-2 md:py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-black rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-wider shadow-lg hover:shadow-xl transition-all flex items-center gap-2 disabled:opacity-50 overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+          {isSubmitting ? <Loader2 className="animate-spin w-3 h-3 md:w-4 md:h-4" /> : <Sparkles className="w-3 h-3 md:w-4 md:h-4" />}
+          <span className="hidden xs:inline">{isSubmitting ? "Syncing..." : "Launch Asset"}</span>
+          <span className="xs:hidden">{isSubmitting ? "Sync" : "Launch"}</span>
+        </button>
+      </div>
+
+      {/* Mobile Reference Line */}
+      <div className="flex lg:hidden items-center justify-between w-full mt-3 pt-3 border-t border-slate-200 dark:border-white/10">
+        <div className="flex items-center gap-2">
+          <Hash size={12} className="text-amber-500" />
+          <p className="text-[8px] uppercase font-bold text-slate-500">Reference:</p>
+          <p className="text-[10px] font-mono font-bold text-amber-500 truncate max-w-[200px]">
+            {watch("refrenceNo") || "Auto-generated"}
+          </p>
+        </div>
+        {/* Mobile Status Badge */}
+        <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[7px] font-black uppercase tracking-wider sm:hidden ${
+          watch("publishingStatus") === "Published" 
+            ? "bg-green-500/10 text-green-500" 
+            : "bg-slate-500/10 text-slate-500"
+        }`}>
+          <div className={`w-1 h-1 rounded-full ${watch("publishingStatus") === "Published" ? "bg-green-500" : "bg-slate-500"}`}></div>
+          {watch("publishingStatus") === "Published" ? "Pub" : "Draft"}
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
 
       <main className="max-w-6xl mx-auto px-6 mt-10 space-y-8">
-        {/* Section Navigation */}
-        <div className="flex flex-wrap gap-2 sticky top-20 z-50 bg-inherit py-3">
-          {sections.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => {
-                const el = document.getElementById(`section-${section.id}`);
-                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                setActiveSection(section.id);
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all ${activeSection === section.id
-                  ? "bg-amber-500 text-black"
-                  : isDark
-                    ? "bg-white/5 text-slate-400 hover:bg-white/10"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-            >
-              {section.icon} {section.label}
-            </button>
-          ))}
-        </div>
+     {/* Section Navigation - With Custom Scrollbar */}
+<div className="sticky top-20 z-50 bg-inherit py-3">
+  <style jsx>{`
+    .section-scrollbar::-webkit-scrollbar {
+      height: 3px;
+    }
+    .section-scrollbar::-webkit-scrollbar-track {
+      background: ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'};
+      border-radius: 10px;
+    }
+    .section-scrollbar::-webkit-scrollbar-thumb {
+      background: ${isDark ? '#f59e0b' : '#d97706'};
+      border-radius: 10px;
+    }
+    .section-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: ${isDark ? '#fbbf24' : '#f59e0b'};
+    }
+  `}</style>
+  
+  <div className="overflow-x-auto section-scrollbar pb-2">
+    <div className="flex gap-2 min-w-max px-1">
+      {sections.map((section, idx) => (
+        <button
+          key={section.id}
+          onClick={() => {
+            const el = document.getElementById(`section-${section.id}`);
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+            setActiveSection(section.id);
+          }}
+          className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl text-[8px] md:text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
+            activeSection === section.id
+              ? "bg-amber-500 text-black shadow-lg"
+              : isDark
+                ? "bg-white/5 text-slate-400 hover:bg-white/10"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+          }`}
+        >
+          <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${
+            activeSection === section.id 
+              ? "bg-black text-amber-500" 
+              : isDark ? "bg-white/20 text-slate-300" : "bg-slate-300 text-slate-700"
+          }`}>
+            {idx + 1}
+          </span>
+          <span className="hidden xs:inline">{section.icon}</span>
+          <span className="text-[9px] md:text-[8px]">{section.label}</span>
+        </button>
+      ))}
+    </div>
+  </div>
+</div>
 
-        {/* ===== SECTION 1: BASIC INFO ===== */}
-        <div id="section-basic" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-          <SectionHeader icon={<Home />} title="Basic Information" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-2">
-              <label className={labelClass}>Property Title (English) {requiredStar}</label>
-              <input {...register("propertyTitleEn", { required: true })} className={inputClass} placeholder="e.g., Luxury Penthouse with Burj View" />
-              {errors.propertyTitleEn && <p className="text-red-500 text-[9px] mt-1">Required</p>}
-            </div>
-            <div className="md:col-span-2">
-              <label className={labelClass}>Property Title (Arabic)</label>
-              <input {...register("propertyTitleAr")} className={`${inputClass} text-right font-arabic`} placeholder="عنوان العقار بالعربية" />
-            </div>
-            <div>
-              <label className={labelClass}>Category {requiredStar}</label>
-              <select {...register("category", { required: true })} className={inputClass}>
-                <option value="Residential">Residential</option>
-                <option value="Commercial">Commercial</option>
-                <option value="Off-Plan">Off-Plan</option>
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Property Type {requiredStar}</label>
-              <select {...register("propertytype", { required: true })} className={inputClass}>
-                <option value="">Select Type</option>
-                {getPropertyTypes().map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Offering Type {requiredStar}</label>
-              <select {...register("offeringType", { required: true })} className={inputClass}>
-                <option value="Sale">For Sale</option>
-                <option value="Rent">For Rent</option>
-              </select>
-            </div>
-            {watchOffering === "Rent" && (
-              <div>
-                <label className={labelClass}>Rented Period {requiredStar}</label>
-                <select {...register("rentedPeriod", { required: watchOffering === "Rent" })} className={inputClass}>
-                  <option value="Per Year">Per Year</option>
-                  <option value="Per Month">Per Month</option>
-                  <option value="Per Week">Per Week</option>
-                  <option value="Per Day">Per Day</option>
-                </select>
-              </div>
-            )}
-            <div>
-              <label className={labelClass}>Status</label>
-              <select {...register("status")} className={inputClass}>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-        </div>
+      {/* SECTION 1: BASIC INFO */}
+<div id="section-basic" className={`p-6 md:p-8 rounded-[2rem] border scroll-mt-24 transition-all duration-300 ${isDark ? "bg-[#161B26] border-white/5 shadow-xl shadow-black/20" : "bg-white border-slate-100 shadow-xl shadow-slate-100/50"}`}>
+  <SectionHeader icon={<Home className="text-amber-500" />} title="Basic Information" />
+  
+  {/* Modernized Reference & Status Layout */}
+  <div className="mb-8 grid grid-cols-1 lg:grid-cols-4 gap-4 items-end p-5 rounded-2xl bg-gradient-to-br from-amber-500/[0.03] to-transparent border border-amber-500/10">
+    <div className="lg:col-span-3">
+      <label className={`${labelClass} flex items-center gap-1.5 mb-2`}>
+        <Hash size={14} className="text-amber-500" />
+        Reference Number {requiredStar}
+      </label>
+      <div className="relative">
+        <input 
+          {...register("refrenceNo", { required: true })} 
+          placeholder="e.g., DXB-APT-2026-001"
+          className={`${inputClass} w-full font-mono tracking-wider pl-4 pr-4 py-3 border focus:ring-2 focus:ring-amber-500/40`} 
+        />
+      </div>
+      {errors.refrenceNo && <p className="text-red-500 text-[9px] mt-1">Reference number is required</p>}
+    </div>
 
-        {/* ===== SECTION 2: COMPLIANCE ===== */}
+    <div className="lg:col-span-1">
+      <label className={`${labelClass} mb-2 block`}>Publishing Status</label>
+      <select 
+        {...register("publishingStatus")} 
+        className={`${inputClass} w-full py-3 px-3 cursor-pointer bg-no-repeat`}
+      >
+        <option value="Published">✅ Published</option>
+        <option value="unpublished">📄 Unpublished</option>
+      </select>
+    </div>
+  </div>
+  
+  {/* Main Information Form Grid */}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="md:col-span-2">
+      <label className={labelClass}>Property Title (English) {requiredStar}</label>
+      <input {...register("propertyTitleEn", { required: true })} className={inputClass} />
+      {errors.propertyTitleEn && <p className="text-red-500 text-[9px] mt-1">Required</p>}
+    </div>
+    
+    <div className="md:col-span-2">
+      <label className={labelClass}>Property Title (Arabic)</label>
+      <input {...register("propertyTitleAr")} className={`${inputClass} text-right font-arabic`} dir="rtl" />
+    </div>
+    
+    <div>
+      <label className={labelClass}>Category {requiredStar}</label>
+      <select {...register("category", { required: true })} className={inputClass}>
+        <option value="Residential">🏠 Residential</option>
+        <option value="Commercial">🏢 Commercial</option>
+        <option value="Off-Plan">📐 Off-Plan</option>
+      </select>
+    </div>
+    
+    <div>
+      <label className={labelClass}>Property Type {requiredStar}</label>
+      <select {...register("propertytype", { required: true })} className={inputClass}>
+        <option value="">Select Type</option>
+        {getPropertyTypes().map((t) => (<option key={t} value={t}>{t}</option>))}
+      </select>
+      {errors.propertytype && <p className="text-red-500 text-[9px] mt-1">Required</p>}
+    </div>
+    
+    <div>
+      <label className={labelClass}>Offering Type {requiredStar}</label>
+      <select {...register("offeringType", { required: true })} className={inputClass}>
+        <option value="Sale">💰 For Sale</option>
+        <option value="Rent">📋 For Rent</option>
+      </select>
+    </div>
+    
+    {watchOffering === "Rent" && (
+      <div>
+        <label className={labelClass}>Rented Period {requiredStar}</label>
+        <select {...register("rentedPeriod", { required: watchOffering === "Rent" })} className={inputClass}>
+          <option value="Per Year">Per Year</option>
+          <option value="Per Month">Per Month</option>
+          <option value="Per Week">Per Week</option>
+          <option value="Per Day">Per Day</option>
+        </select>
+      </div>
+    )}
+    
+    <div>
+      <label className={labelClass}>Status</label>
+      <select {...register("status")} className={inputClass}>
+        <option value="Active">✅ Active</option>
+        <option value="Inactive">⭕ Inactive</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+        {/* SECTION 2: COMPLIANCE */}
         <div id="section-compliance" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
           <SectionHeader icon={<ShieldCheck />} title="License & Compliance" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className={labelClass}>Permit Authority {requiredStar}</label>
               <select {...register("permitType", { required: true })} className={inputClass}>
-                <option value="RERA">RERA (Dubai)</option>
-                <option value="DTC">DTC</option>
-                <option value="DIFC">DIFC</option>
-                <option value="JAFZA">JAFZA</option>
-                <option value="None">None</option>
+                <option value="RERA">🏛️ RERA (Dubai)</option>
+                <option value="DTC">📜 DTC</option>
+                <option value="DIFC">💼 DIFC</option>
+                <option value="JAFZA">⚓ JAFZA</option>
+                <option value="None">❌ None</option>
               </select>
             </div>
-            
-            {/* Trakheesi Number - Only for RERA permit */}
             {watchPermit === "RERA" && (
               <div>
                 <label className={labelClass}>Trakheesi Number</label>
-                <input {...register("trakheesiNumber")} className={inputClass} placeholder="Permit ID" />
+                <input {...register("trakheesiNumber")} className={inputClass} />
               </div>
             )}
-
-            {/* Assigned Agent - Now auto-populates ORN/BRN */}
             <div>
               <label className={labelClass}>Assigned Agent {requiredStar}</label>
               <select {...register("agentId", { required: true })} className={inputClass}>
                 <option value="">Choose Broker...</option>
-                {agentList?.map((a) => (
-                  <option key={a._id} value={a._id}>{a.name} {a.reraLicenseNumber ? `(RERA: ${a.reraLicenseNumber})` : ''}</option>
-                ))}
+                {agentList?.map((a) => (<option key={a._id} value={a._id}>{a.name}</option>))}
               </select>
+              {errors.agentId && <p className="text-red-500 text-[9px] mt-1">Required</p>}
             </div>
-
-            {/* Auto-populated RERA ORN (Read-only) */}
             <div>
               <label className={labelClass}>RERA ORN</label>
-              <input 
-                {...register("reraORN")} 
-                className={`${inputClass} bg-slate-100 dark:bg-white/5 cursor-not-allowed`} 
-                placeholder="Auto-filled from agent"
-                readOnly
-              />
-              <p className="text-[8px] text-slate-400 mt-1">Auto-populated from selected agent</p>
+              <input {...register("reraORN")} className={`${inputClass} cursor-not-allowed bg-slate-100 dark:bg-white/5`} readOnly />
             </div>
-
-            {/* Auto-populated BRN Number (Read-only) */}
             <div>
               <label className={labelClass}>BRN Number</label>
-              <input 
-                {...register("brnNumber")} 
-                className={`${inputClass} bg-slate-100 dark:bg-white/5 cursor-not-allowed`} 
-                placeholder="Auto-filled from agent"
-                readOnly
-              />
-              <p className="text-[8px] text-slate-400 mt-1">Auto-populated from selected agent</p>
+              <input {...register("brnNumber")} className={`${inputClass} cursor-not-allowed bg-slate-100 dark:bg-white/5`} readOnly />
             </div>
-
             <div>
               <label className={labelClass}>Owner Name</label>
-              <input {...register("ownerName")} className={inputClass} placeholder="Full Name" />
+              <input {...register("ownerName")} className={inputClass} />
             </div>
-
             {watchCategory === "Off-Plan" && (
               <div className="border border-dashed border-amber-500/20 p-3 rounded-xl bg-amber-500/5">
                 <label className={`${labelClass} text-amber-500`}>Developer Partner</label>
                 <select {...register("developerId")} className={inputClass}>
                   <option value="">{loadingDevs ? "Fetching..." : "Select Developer..."}</option>
-                  {developers.map((dev) => (
-                    <option key={dev._id} value={dev._id}>{dev.companyName}</option>
-                  ))}
+                  {developers.map((dev) => (<option key={dev._id} value={dev._id}>{dev.companyName}</option>))}
                 </select>
               </div>
             )}
           </div>
         </div>
 
-        {/* ===== SECTION 3: SPECIFICATIONS ===== */}
+        {/* SECTION 3: SPECIFICATIONS */}
         <div id="section-specs" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
           <SectionHeader icon={<Layers />} title="Physical Specifications" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div>
               <label className={labelClass}>Bedrooms</label>
               <select {...register("bedroom")} className={inputClass}>
-                {[...Array(21).keys()].map((i) => (
-                  <option key={i} value={i}>{i === 0 ? "Studio" : i + " Beds"}</option>
-                ))}
+                {[...Array(21).keys()].map((i) => (<option key={i} value={i}>{i === 0 ? "Studio" : i}</option>))}
               </select>
             </div>
             <div>
               <label className={labelClass}>Bathrooms</label>
               <select {...register("bathroom")} className={inputClass}>
-                {[...Array(11).keys()].map((i) => (
-                  <option key={i} value={i}>{i} Baths</option>
-                ))}
+                {[...Array(11).keys()].map((i) => (<option key={i} value={i}>{i}</option>))}
               </select>
             </div>
             <div>
               <label className={labelClass}>Total Floors</label>
-              <input type="number" {...register("totalFloor")} className={inputClass} placeholder="Floors" />
+              <input type="number" {...register("totalFloor")} className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>Area (sqft) {requiredStar}</label>
-              <input type="number" {...register("squarefoot", { required: true })} className={inputClass} placeholder="Size in sqft" />
+              <input type="number" {...register("squarefoot", { required: true })} className={inputClass} />
+              {errors.squarefoot && <p className="text-red-500 text-[9px] mt-1">Required</p>}
             </div>
             <div>
               <label className={labelClass}>Unit/Suite No</label>
-              <input {...register("unitNo")} className={inputClass} placeholder="e.g., 1201" />
+              <input {...register("unitNo")} className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>Parking Slots</label>
@@ -498,106 +619,89 @@ const AddProperty = () => {
           </div>
         </div>
 
-        {/* ===== SECTION 4: LOCATION ===== */}
+        {/* SECTION 4: LOCATION */}
         <div id="section-location" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-          <SectionHeader icon={<MapPin />} title="Location & Geography" />
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="relative">
-                <label className={labelClass}>Address Search {requiredStar}</label>
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-                  <input
-                    value={locationQuery}
-                    onChange={(e) => { setLocationQuery(e.target.value); setShowSuggestions(true); }}
-                    className={`${inputClass} pl-12`}
-                    placeholder="Search by community, tower or area..."
-                  />
-                </div>
-                {showSuggestions && suggestions.length > 0 && (
-                  <div className={`absolute z-[110] w-full mt-1 border rounded-xl shadow-2xl overflow-hidden ${isDark ? "bg-[#1A1F2B] border-white/10" : "bg-white border-slate-200"}`}>
-                    {suggestions.map((s, i) => (
-                      <div key={i} onClick={() => handleSelectLocation(s)} className={`px-4 py-3 cursor-pointer hover:bg-amber-500/10 border-b last:border-0 ${isDark ? "border-white/5" : "border-slate-100"}`}>
-                        <p className="text-xs font-bold uppercase">{s.name}</p>
-                        <p className="text-[10px] text-slate-500">{s.community}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div>
-                <label className={labelClass}>Community {requiredStar}</label>
-                <select {...register("community", { required: true })} className={inputClass}>
-                  <option value="">Select Area...</option>
-                  {DUBAI_AREAS.map((a) => (
-                    <option key={a} value={a}>{a}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="md:col-span-2">
-                <label className={labelClass}>Full Address {requiredStar}</label>
-                <input {...register("address", { required: true })} className={inputClass} placeholder="Complete Address" />
-              </div>
+          <SectionHeader icon={<MapPin />} title="Location" />
+          
+          <input type="hidden" {...register("locationId")} />
+          <input type="hidden" {...register("locationPath")} />
+          <input type="hidden" {...register("coordinates")} />
+          
+          <LocationSearch 
+            onLocationSelect={handleLocationSelect}
+            initialValue=""
+            isDark={isDark}
+            error={errors.locationId?.message}
+            required={true}
+          />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div className="md:col-span-2">
+              <label className={labelClass}>Display Address {requiredStar}</label>
+              <input {...register("displayAddress", { required: true })} className={inputClass} />
             </div>
+            <div className="md:col-span-2">
+              <label className={labelClass}>Full Address {requiredStar}</label>
+              <input {...register("address", { required: true })} className={inputClass} />
+            </div>
+          </div>
 
-            <div className="space-y-4">
-              <label className={labelClass}>Nearby Locations</label>
-              {fields.map((item, index) => (
-                <div key={item.id} className="grid grid-cols-1 md:grid-cols-5 gap-4 bg-black/5 dark:bg-white/5 p-4 rounded-xl items-end">
-                  <div className="md:col-span-2">
-                    <input {...register(`nearByLocations.${index}.locationName`, { required: true })} placeholder="Landmark Name" className={inputClass} />
-                  </div>
-                  <div>
-                    <input {...register(`nearByLocations.${index}.distance`, { required: true })} placeholder="Distance (e.g., 5 min)" className={inputClass} />
-                  </div>
-                  <div>
-                    <select {...register(`nearByLocations.${index}.transportType`)} className={inputClass} defaultValue="Drive">
-                      <option value="Drive">Drive</option>
-                      <option value="Walk">Walk</option>
-                      <option value="Metro">Metro</option>
-                    </select>
-                  </div>
-                  <button type="button" onClick={() => remove(index)} className="h-14 px-4 flex items-center justify-center text-red-500 hover:bg-red-500/10 rounded-xl transition-all">
-                    <Trash2 size={18} />
-                  </button>
+          {/* Nearby Locations */}
+          <div className="space-y-4 mt-6">
+            <label className={labelClass}>Nearby Locations</label>
+            {fields.map((item, index) => (
+              <div key={item.id} className="grid grid-cols-1 md:grid-cols-5 gap-4 bg-black/5 dark:bg-white/5 p-4 rounded-xl items-end">
+                <div className="md:col-span-2">
+                  <input {...register(`nearByLocations.${index}.locationName`)} placeholder="Landmark Name" className={inputClass} />
                 </div>
-              ))}
-              <button type="button" onClick={() => append({ locationName: "", distance: "", transportType: "Drive" })} className="flex items-center gap-2 text-[10px] font-black uppercase text-amber-500 tracking-widest">
-                <Plus size={14} /> Add Nearby Location
-              </button>
-            </div>
+                <div>
+                  <input {...register(`nearByLocations.${index}.distance`)} placeholder="Distance (e.g., 5 min)" className={inputClass} />
+                </div>
+                <div>
+                  <select {...register(`nearByLocations.${index}.transportType`)} className={inputClass}>
+                    <option value="Drive">🚗 Drive</option>
+                    <option value="Walk">🚶 Walk</option>
+                    <option value="Metro">🚇 Metro</option>
+                  </select>
+                </div>
+                <button type="button" onClick={() => remove(index)} className="h-14 px-4 flex items-center justify-center text-red-500 hover:bg-red-500/10 rounded-xl transition-all">
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            ))}
+            <button type="button" onClick={() => append({ locationName: "", distance: "", transportType: "Drive" })} className="flex items-center gap-2 text-[10px] font-black uppercase text-amber-500 hover:gap-3 transition-all">
+              <Plus size={14} /> Add Nearby Location
+            </button>
           </div>
         </div>
 
-        {/* ===== SECTION 5: DESCRIPTION ===== */}
+        {/* SECTION 5: DESCRIPTION */}
         <div className={`p-8 rounded-[2rem] border ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
           <div className="flex justify-between items-center mb-6">
             <SectionHeader icon={<FileText />} title="Description" />
             <div className="flex bg-black/10 dark:bg-white/10 p-1 rounded-xl">
               {["en", "ar"].map((l) => (
                 <button key={l} type="button" onClick={() => setLangTab(l)} className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${langTab === l ? "bg-amber-500 text-black" : "text-slate-500"}`}>
-                  {l === "en" ? "English" : "Arabic"}
+                  {l === "en" ? "English" : "العربية"}
                 </button>
               ))}
             </div>
           </div>
           <AnimatePresence mode="wait">
-            <motion.div key={langTab} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-4">
-              <div>
-                <label className={labelClass}>{langTab === "en" ? "Description" : "الوصف"} {requiredStar}</label>
-                <textarea rows={6} {...register(langTab === "en" ? "descriptionEn" : "descriptionAr", { required: true })} className={`${inputClass} ${langTab === "ar" ? "text-right font-arabic" : ""}`} />
-              </div>
+            <motion.div key={langTab} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
+              <textarea rows={6} {...register(langTab === "en" ? "descriptionEn" : "descriptionAr", { required: true })} className={inputClass} />
             </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* ===== SECTION 6: PRICING ===== */}
+        {/* SECTION 6: PRICING */}
         <div id="section-pricing" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-          <SectionHeader icon={<Wallet />} title="Pricing & Valuation" />
+          <SectionHeader icon={<Wallet />} title="Pricing" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className={labelClass}>Price {requiredStar}</label>
-              <input type="number" {...register("price", { required: true })} className={`${inputClass} text-xl font-black text-amber-500`} placeholder="0.00" />
+              <input type="number" {...register("price", { required: true })} className={`${inputClass} text-xl font-black text-amber-500`} />
+              {errors.price && <p className="text-red-500 text-[9px] mt-1">Required</p>}
             </div>
             <div>
               <label className={labelClass}>Currency {requiredStar}</label>
@@ -617,29 +721,32 @@ const AddProperty = () => {
           </div>
         </div>
 
-        {/* ===== SECTION 7: MEDIA ===== */}
+        {/* SECTION 7: MEDIA */}
         <div id="section-media" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-          <SectionHeader icon={<Camera />} title="Media Portfolio" />
+          <SectionHeader icon={<Camera />} title="Media" />
           <div className="space-y-6">
-            <div className="border-2 border-dashed border-slate-700/50 rounded-2xl p-8 text-center cursor-pointer hover:bg-amber-500/5 transition-all" onClick={() => document.getElementById("file-up").click()}>
-              <Upload className="mx-auto mb-2 text-amber-500" size={24} />
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Drop 4K Visuals Here {requiredStar}</p>
-              <input id="file-up" type="file" multiple hidden accept="image/*" onChange={(e) => setFiles([...files, ...Array.from(e.target.files)])} />
+            <div className="border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer hover:bg-amber-500/5 transition-all" onClick={() => document.getElementById("file-up")?.click()}>
+              <Upload className="mx-auto mb-2 text-amber-500" size={32} />
+              <p className="text-[10px] font-black text-slate-500 uppercase">Drop Images Here {requiredStar}</p>
+              <p className="text-[8px] text-slate-400 mt-1">Upload high-quality images of the property</p>
+              <input id="file-up" type="file" multiple hidden accept="image/*" onChange={(e) => setFiles([...files, ...Array.from(e.target.files || [])])} />
             </div>
-            <div className="flex gap-2 mt-4 flex-wrap">
-              {files.map((f, i) => (
-                <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden group border border-white/10">
-                  <img src={URL.createObjectURL(f)} className="w-full h-full object-cover" alt="" />
-                  <button type="button" onClick={() => setFiles(files.filter((_, idx) => idx !== i))} className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
-                    <X className="text-white" size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
+            {files.length > 0 && (
+              <div className="flex gap-2 mt-4 flex-wrap">
+                {files.map((f, i) => (
+                  <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden group border border-white/10">
+                    <img src={URL.createObjectURL(f)} className="w-full h-full object-cover" alt="" />
+                    <button type="button" onClick={() => setFiles(files.filter((_, idx) => idx !== i))} className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                      <X className="text-white" size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className={labelClass}>Video URL</label>
-                <input {...register("videos")} className={inputClass} placeholder="Video URL" />
+                <input {...register("videos")} className={inputClass} placeholder="https://youtube.com/..." />
               </div>
               <div>
                 <label className={labelClass}>Virtual Tour 360</label>
@@ -653,19 +760,25 @@ const AddProperty = () => {
           </div>
         </div>
 
-        {/* ===== SECTION 8: AMENITIES ===== */}
+        {/* SECTION 8: AMENITIES */}
         <div id="section-amenities" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-          <SectionHeader icon={<Sparkles />} title="Amenities & Facilities" />
+          <SectionHeader icon={<Sparkles />} title="Amenities" />
           <div className="mb-5">
-            <input type="text" placeholder="Search amenities..." value={searchAmenity} onChange={(e) => setSearchAmenity(e.target.value)} className={`w-full px-4 py-3 rounded-xl outline-none border text-sm font-medium transition-all ${isDark ? "bg-white/5 border-white/10 text-white" : "bg-slate-50 border-slate-200 text-black"}`} />
+            <input type="text" placeholder="Search amenities..." value={searchAmenity} onChange={(e) => setSearchAmenity(e.target.value)} className={inputClass} />
           </div>
           <div className="max-h-[420px] overflow-y-auto pr-2 custom-scrollbar">
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {filteredAmenities.map((amenity) => {
                 const isSelected = watchAmenities.includes(amenity);
                 return (
-                  <button key={amenity} type="button" onClick={() => toggleAmenity(amenity)} className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all gap-2 min-h-[90px] ${isSelected ? "bg-amber-500 border-amber-500 text-black shadow-md" : "bg-black/5 dark:bg-white/5 border-transparent text-slate-500 hover:border-amber-500/30"}`}>
-                    {isSelected ? <CheckCircle2 size={14} /> : <Plus size={14} />}
+                  <button key={amenity} type="button" onClick={() => toggleAmenity(amenity)} className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all gap-2 min-h-[90px] group ${
+                    isSelected 
+                      ? "bg-amber-500 border-amber-500 text-black shadow-md" 
+                      : isDark 
+                        ? "bg-white/5 border-white/5 text-slate-500 hover:border-amber-500/30 hover:bg-white/10" 
+                        : "bg-slate-50 border-slate-100 text-slate-500 hover:border-amber-500/30 hover:bg-slate-100"
+                  }`}>
+                    {isSelected ? <CheckCircle2 size={16} className="text-black" /> : <Plus size={16} className="group-hover:text-amber-500" />}
                     <span className="text-[10px] font-black uppercase text-center leading-tight">{amenity}</span>
                   </button>
                 );
@@ -674,14 +787,37 @@ const AddProperty = () => {
           </div>
         </div>
       </main>
+      
+      {/* Custom Scrollbar Styles */}
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: ${isDark ? '#1A1F2B' : '#f1f1f1'};
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: ${isDark ? '#3a3f4b' : '#cbd5e1'};
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: ${isDark ? '#4a4f5b' : '#94a3b8'};
+        }
+      `}</style>
     </div>
   );
 };
 
 const SectionHeader = ({ icon, title }) => (
   <div className="flex items-center gap-3 mb-6">
-    <div className="p-2.5 bg-amber-500/10 rounded-xl text-amber-500">{React.cloneElement(icon, { size: 18 })}</div>
-    <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{title}</h2>
+    <div className="p-2.5 bg-gradient-to-br from-amber-500/10 to-amber-600/10 rounded-xl text-amber-500">
+      {React.cloneElement(icon, { size: 18 })}
+    </div>
+    <div>
+      <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{title}</h2>
+      <div className="w-12 h-0.5 bg-amber-500 mt-1"></div>
+    </div>
   </div>
 );
 

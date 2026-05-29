@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Eye, Pencil, Trash2, Search, Building2, Plus, Award, ShieldCheck, Mail, Phone, Globe } from "lucide-react";
+import { Eye, Pencil, Trash2, Search, Building2, Plus, Award, ShieldCheck, Mail, Phone, Globe, MapPin, Calendar, Briefcase, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
 import { useTheme } from "../../../context/ThemeContext";
 import { useToast } from "../../../model/SuccessToasNotification";
 import { http } from "../../../axios/axios";
@@ -11,15 +10,16 @@ const ViewAllDeveloperList = () => {
   const [developers, setDevelopers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterType, setFilterType] = useState("all");
   const { theme } = useTheme();
   const { addToast } = useToast();
   
   const isDark = theme === "dark";
-  const brandGold = "#C5A059";
+  const brandColor = "#f59e0b";
 
- const BaseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000/";
+  const BaseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000/";
 
-  // 1. Fetch Logic
   const fetchDevelopers = async () => {
     try {
       setLoading(true);
@@ -38,7 +38,6 @@ const ViewAllDeveloperList = () => {
     fetchDevelopers();
   }, []);
 
-  // 2. Delete Logic
   const handleDelete = async (id) => {
     if (!window.confirm("Confirm removal from Corporate Registry?")) return;
     try {
@@ -50,132 +49,256 @@ const ViewAllDeveloperList = () => {
     }
   };
 
-  // 3. Search Filter
-  const filteredData = developers.filter(dev => 
-    dev.companyName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredData = developers.filter(dev => {
+    const matchesSearch = dev.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          dev.reraRegistrationNumber?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterType === "all" || dev.developerType === filterType;
+    return matchesSearch && matchesFilter;
+  });
 
-  // Skeleton UI for Loading State
+  const developerTypes = [...new Set(developers.map(d => d.developerType).filter(Boolean))];
+  
+  // Calculate total projects safely
+  const totalProjects = developers.reduce((sum, d) => sum + (d.totalProjects || 0), 0);
+  
+  // Calculate earliest established year safely
+  const earliestYear = developers.length > 0 
+    ? Math.min(...developers.map(d => d.establishedYear).filter(Boolean))
+    : 2020;
+
   const TableSkeleton = () => (
-    <div className="animate-pulse space-y-4 p-8">
+    <div className="space-y-4 p-6">
       {[1, 2, 3, 4, 5].map((i) => (
-        <div key={i} className={`h-20 rounded-2xl ${isDark ? 'bg-white/5' : 'bg-slate-100'}`} />
+        <div key={i} className={`h-24 rounded-xl animate-pulse ${isDark ? 'bg-white/5' : 'bg-slate-100'}`} />
       ))}
     </div>
   );
 
+  const getStatusColor = (status) => {
+    if (status === "Active") return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
+    return "bg-rose-500/10 text-rose-500 border-rose-500/20";
+  };
+
   return (
-    <div className={`p-6 md:p-10 min-h-screen transition-all duration-700 ${isDark ? "bg-[#0F1219]" : "bg-slate-50"}`}>
-      <div className="max-w-7xl mx-auto space-y-10">
+    <div className={`min-h-screen p-4 md:p-6 lg:p-8 transition-colors duration-300 ${isDark ? "bg-[#0a0a0c]" : "bg-slate-50"}`}>
+      <div className="max-w-7xl mx-auto">
         
         {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6 md:mb-8">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <Building2 size={20} style={{ color: brandGold }} />
-              <h2 className={`text-3xl font-black italic tracking-tighter ${isDark ? "text-white" : "text-slate-900"}`}>
-                Developer <span style={{ color: brandGold }}>Portfolio.</span>
+              <div className="p-2 rounded-xl bg-amber-500/10">
+                <Building2 size={20} className="text-amber-500" />
+              </div>
+              <h2 className={`text-xl md:text-2xl lg:text-3xl font-bold tracking-tight ${isDark ? "text-white" : "text-slate-800"}`}>
+                Developer <span className="text-amber-500">Portfolio</span>
               </h2>
             </div>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 italic">Partnership Management System</p>
+            <p className={`text-[8px] md:text-[9px] font-bold uppercase tracking-wider ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+              {developers.length} Partners • RERA Certified
+            </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
-            <div className="relative flex-1 md:flex-none">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            {/* Search */}
+            <div className="relative flex-1 md:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
                 type="text"
-                placeholder="SEARCH REGISTRY..."
+                placeholder="Search by name or RERA..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full md:w-72 pl-12 pr-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest outline-none border transition-all ${
-                  isDark ? "bg-[#161B26] border-white/5 text-white focus:border-[#C5A059]/50" : "bg-white border-slate-200 focus:border-[#C5A059]"
+                className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none border transition-all focus:ring-1 focus:ring-amber-500 ${
+                  isDark ? "bg-[#11141B] border-white/10 text-white placeholder:text-slate-500" : "bg-white border-slate-200 text-slate-800"
                 }`}
               />
             </div>
+
+            {/* Filter Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border ${
+                  showFilters 
+                    ? "bg-amber-500 text-black border-amber-500" 
+                    : isDark ? "bg-[#11141B] border-white/10 text-slate-300" : "bg-white border-slate-200 text-slate-600"
+                }`}
+              >
+                <Filter size={14} /> {filterType === "all" ? "All Types" : filterType}
+              </button>
+              <AnimatePresence>
+                {showFilters && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className={`absolute right-0 top-full mt-2 w-48 rounded-xl border shadow-lg overflow-hidden z-50 ${
+                      isDark ? "bg-[#11141B] border-white/10" : "bg-white border-slate-200"
+                    }`}
+                  >
+                    <button
+                      onClick={() => { setFilterType("all"); setShowFilters(false); }}
+                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${filterType === "all" ? "bg-amber-500/10 text-amber-500" : isDark ? "hover:bg-white/5" : "hover:bg-slate-50"}`}
+                    >
+                      All Developers
+                    </button>
+                    {developerTypes.map(type => (
+                      <button
+                        key={type}
+                        onClick={() => { setFilterType(type); setShowFilters(false); }}
+                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${filterType === type ? "bg-amber-500/10 text-amber-500" : isDark ? "hover:bg-white/5" : "hover:bg-slate-50"}`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <Link
               to="/createdeveloper"
-              style={{ backgroundColor: brandGold }}
-              className="px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-xl hover:scale-105 transition-all flex items-center gap-3"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 text-black text-[10px] font-bold uppercase tracking-wider hover:bg-amber-600 transition-all shadow-md"
             >
-              <Plus size={16} /> Enroll New
+              <Plus size={14} /> Add Developer
             </Link>
           </div>
         </div>
 
-        {/* Data Container */}
+        {/* Stats Cards - Responsive grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+          <StatCard title="Total Developers" value={developers.length} icon={<Building2 size={16} />} color="amber" isDark={isDark} />
+          <StatCard title="Active Partners" value={developers.filter(d => d.status === "Active").length} icon={<ShieldCheck size={16} />} color="emerald" isDark={isDark} />
+          <StatCard title="Total Projects" value={totalProjects} icon={<Briefcase size={16} />} color="blue" isDark={isDark} />
+          <StatCard title="Est. Since" value={earliestYear} icon={<Calendar size={16} />} color="purple" isDark={isDark} />
+        </div>
+
+        {/* Developer Table */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`rounded-[2.5rem] border overflow-hidden shadow-2xl transition-all duration-500 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100"}`}
+          className={`rounded-2xl border overflow-hidden shadow-sm ${isDark ? "bg-[#11141B] border-white/10" : "bg-white border-slate-200"}`}
         >
           {loading ? (
             <TableSkeleton />
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
+              <table className="w-full min-w-[800px]">
                 <thead>
-                  <tr className={isDark ? "bg-white/5" : "bg-slate-50"}>
-                    <th className="px-8 py-6 text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Identity</th>
-                    <th className="px-8 py-6 text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Legal</th>
-                    <th className="px-8 py-6 text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Metrics</th>
-                    <th className="px-8 py-6 text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Status</th>
-                    <th className="px-8 py-6 text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 text-right">Actions</th>
+                  <tr className={`border-b ${isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-slate-50"}`}>
+                    <th className="px-4 md:px-6 py-4 text-left text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-slate-500">Developer</th>
+                    <th className="px-4 md:px-6 py-4 text-left text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-slate-500">Contact</th>
+                    <th className="px-4 md:px-6 py-4 text-left text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-slate-500">Legal Info</th>
+                    <th className="px-4 md:px-6 py-4 text-left text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-slate-500">Portfolio</th>
+                    <th className="px-4 md:px-6 py-4 text-left text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-slate-500">Status</th>
+                    <th className="px-4 md:px-6 py-4 text-right text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-slate-500">Actions</th>
                   </tr>
                 </thead>
-                <tbody className={`divide-y ${isDark ? "divide-white/5" : "divide-slate-50"}`}>
+                <tbody className={`divide-y ${isDark ? "divide-white/10" : "divide-slate-100"}`}>
                   <AnimatePresence>
-                    {filteredData.map((dev) => (
+                    {filteredData.map((dev, idx) => (
                       <motion.tr
                         key={dev._id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="group hover:bg-[#C5A059]/5 transition-colors"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className="group hover:bg-amber-500/5 transition-colors"
                       >
-                        <td className="px-8 py-8">
-                          <div className="flex items-center gap-4">
-                            <div className="h-14 w-14 rounded-2xl bg-white p-2 border border-slate-100 flex items-center justify-center">
-                              <img 
-                                src={`${BaseUrl}/agents/${dev.companyLogo}`}
-                                className="max-h-full max-w-full object-contain" 
-                                alt="" 
-                                onError={(e) => e.target.src = 'https://via.placeholder.com/100?text=DEV'} 
-                              />
+                        {/* Developer Info */}
+                        <td className="px-4 md:px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-amber-500/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                              {dev.companyLogo ? (
+                                <img 
+                                  src={`${BaseUrl}/agents/${dev.companyLogo}`}
+                                  className="w-full h-full object-cover" 
+                                  alt={dev.companyName}
+                                  onError={(e) => e.target.src = 'https://via.placeholder.com/40?text=DEV'} 
+                                />
+                              ) : (
+                                <Building2 size={16} className="text-amber-500" />
+                              )}
                             </div>
-                            <div>
-                              <p className={`text-xs font-black uppercase tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>{dev.companyName}</p>
-                              <p className="text-[9px] font-bold text-slate-500 uppercase">Est. {dev.establishedYear}</p>
+                            <div className="min-w-0">
+                              <p className={`text-sm font-bold truncate ${isDark ? "text-white" : "text-slate-800"}`}>
+                                {dev.companyName}
+                              </p>
+                              <p className="text-[8px] md:text-[9px] text-slate-500">Est. {dev.establishedYear}</p>
                             </div>
                           </div>
                         </td>
-                        <td className="px-8 py-8">
+
+                        {/* Contact Info */}
+                        <td className="px-4 md:px-6 py-4">
                           <div className="space-y-1">
-                            <span className="text-[10px] font-bold text-slate-500 flex items-center gap-2">
-                              <Award size={12} style={{ color: brandGold }} /> RERA: {dev.reraRegistrationNumber}
-                            </span>
-                            <span className="text-[10px] font-bold text-slate-400 flex items-center gap-2">
-                              <ShieldCheck size={12} /> LIC: {dev.tradeLicenseNumber}
-                            </span>
+                            {dev.officialEmail && (
+                              <div className="flex items-center gap-1.5 text-[9px] md:text-[10px]">
+                                <Mail size={10} className="text-amber-500 flex-shrink-0" />
+                                <span className={`truncate max-w-[120px] md:max-w-none ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+                                  {dev.officialEmail}
+                                </span>
+                              </div>
+                            )}
+                            {dev.contactNumber && (
+                              <div className="flex items-center gap-1.5 text-[9px] md:text-[10px]">
+                                <Phone size={10} className="text-amber-500 flex-shrink-0" />
+                                <span className={isDark ? "text-slate-300" : "text-slate-600"}>{dev.contactNumber}</span>
+                              </div>
+                            )}
                           </div>
                         </td>
-                        <td className="px-8 py-8">
-                           <div className="flex flex-col">
-                             <span className="text-[10px] font-black text-[#C5A059]">{dev.totalProjects}+ Projects</span>
-                             <span className="text-[8px] font-bold text-slate-500 uppercase">{dev.developerType}</span>
-                           </div>
+
+                        {/* Legal Info */}
+                        <td className="px-4 md:px-6 py-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5">
+                              <Award size={10} className="text-amber-500 flex-shrink-0" />
+                              <span className="text-[8px] md:text-[9px] font-mono text-slate-500 truncate max-w-[100px] md:max-w-none">
+                                {dev.reraRegistrationNumber || "N/A"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <ShieldCheck size={10} className="text-amber-500 flex-shrink-0" />
+                              <span className="text-[8px] md:text-[9px] font-mono text-slate-500 truncate max-w-[100px] md:max-w-none">
+                                {dev.tradeLicenseNumber || "N/A"}
+                              </span>
+                            </div>
+                          </div>
                         </td>
-                        <td className="px-8 py-8">
-                          <span className={`text-[9px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full border ${
-                            dev.status === "Active" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-rose-500/10 text-rose-500 border-rose-500/20"
-                          }`}>
-                            {dev.status}
+
+                        {/* Portfolio */}
+                        <td className="px-4 md:px-6 py-4">
+                          <div className="flex flex-col">
+                            <p className="text-sm font-bold text-amber-500">{dev.totalProjects || 0}+ Projects</p>
+                            <p className="text-[8px] md:text-[9px] text-slate-500">{dev.developerType || "Private"}</p>
+                          </div>
+                        </td>
+
+                        {/* Status */}
+                        <td className="px-4 md:px-6 py-4">
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[7px] md:text-[8px] font-bold uppercase border ${getStatusColor(dev.status)}`}>
+                            <div className={`w-1.5 h-1.5 rounded-full ${dev.status === "Active" ? "bg-emerald-500" : "bg-rose-500"}`} />
+                            {dev.status || "Active"}
                           </span>
                         </td>
-                        <td className="px-8 py-8 text-right">
-                          <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
-                            <Link to={`/updatedeveloper/${dev._id}`} className="p-3 rounded-xl bg-slate-500/5 text-slate-500 hover:text-[#C5A059] transition-all"><Pencil size={16} /></Link>
-                            <button onClick={() => handleDelete(dev._id)} className="p-3 rounded-xl bg-slate-500/5 text-slate-500 hover:text-rose-500 transition-all"><Trash2 size={16} /></button>
+
+                        {/* Actions */}
+                        <td className="px-4 md:px-6 py-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <Link 
+                              to={`/updatedeveloper/${dev._id}`} 
+                              className={`p-1.5 md:p-2 rounded-lg transition-all ${isDark ? "hover:bg-white/10" : "hover:bg-slate-100"}`}
+                              title="Edit"
+                            >
+                              <Pencil size={14} className="text-slate-500 hover:text-amber-500" />
+                            </Link>
+                            <button 
+                              onClick={() => handleDelete(dev._id)} 
+                              className={`p-1.5 md:p-2 rounded-lg transition-all ${isDark ? "hover:bg-white/10" : "hover:bg-slate-100"}`}
+                              title="Delete"
+                            >
+                              <Trash2 size={14} className="text-slate-500 hover:text-rose-500" />
+                            </button>
                           </div>
                         </td>
                       </motion.tr>
@@ -183,15 +306,43 @@ const ViewAllDeveloperList = () => {
                   </AnimatePresence>
                 </tbody>
               </table>
-              {filteredData.length === 0 && !loading && (
-                <div className="py-32 text-center text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">
-                  No records found in registry
-                </div>
-              )}
+
+            </div>
+          )}
+          
+          {filteredData.length === 0 && !loading && (
+            <div className="py-16 md:py-20 text-center">
+              <div className={`inline-flex p-4 rounded-full ${isDark ? "bg-white/5" : "bg-slate-100"} mb-4`}>
+                <Building2 size={32} className="text-slate-400" />
+              </div>
+              <p className={`text-sm font-bold ${isDark ? "text-white" : "text-slate-800"}`}>No developers found</p>
+              <p className="text-[9px] md:text-[10px] text-slate-500 mt-1">Try adjusting your search or filters</p>
             </div>
           )}
         </motion.div>
       </div>
+    </div>
+  );
+};
+
+// Stat Card Component
+const StatCard = ({ title, value, icon, color, isDark }) => {
+  const colorClasses = {
+    amber: "bg-amber-500/10 text-amber-500",
+    emerald: "bg-emerald-500/10 text-emerald-500",
+    blue: "bg-blue-500/10 text-blue-500",
+    purple: "bg-purple-500/10 text-purple-500",
+  };
+
+  return (
+    <div className={`p-3 md:p-4 rounded-xl border ${isDark ? "bg-[#11141B] border-white/10" : "bg-white border-slate-200"} shadow-sm`}>
+      <div className="flex items-center justify-between mb-2">
+        <div className={`p-1.5 md:p-2 rounded-lg ${colorClasses[color]}`}>
+          {icon}
+        </div>
+      </div>
+      <p className={`text-[9px] md:text-[10px] font-bold uppercase tracking-wider ${isDark ? "text-slate-400" : "text-slate-500"}`}>{title}</p>
+      <p className="text-lg md:text-xl font-bold mt-0.5">{value}</p>
     </div>
   );
 };
