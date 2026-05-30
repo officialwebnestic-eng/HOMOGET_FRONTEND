@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowUpRight,
   Phone,
@@ -96,6 +96,8 @@ const Agentfilter = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [currentSort, setCurrentSort] = useState("newest");
+  const [viewMode, setViewMode] = useState("grid");
 
   const [filters, setFilters] = useState({
     state: "",
@@ -113,12 +115,43 @@ const Agentfilter = () => {
   const { theme } = useTheme();
   const colors = themeColors[theme];
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Parse URL params on mount
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const search = params.get("search");
+    const city = params.get("city");
+    const propertytype = params.get("propertytype");
+    const minPrice = params.get("minPrice");
+    const maxPrice = params.get("maxPrice");
+    const bedroom = params.get("bedroom");
+
+    if (search) setSearchQuery(search);
+    if (city) setFilters(prev => ({ ...prev, city }));
+    if (propertytype) setFilters(prev => ({ ...prev, propertytype }));
+    if (minPrice) setFilters(prev => ({ ...prev, minPrice }));
+    if (maxPrice) setFilters(prev => ({ ...prev, maxPrice }));
+    if (bedroom) setFilters(prev => ({ ...prev, bedroom }));
+  }, [location.search]);
+
+  // Build active filters for API call
+  const activeFilters = useMemo(() => {
+    const active = { ...filters };
+    
+    // Add search query to filters
+    if (searchQuery) {
+      active.search = searchQuery;
+    }
+    
+    return active;
+  }, [filters, searchQuery]);
 
   // Fetching property data with active filters
-  const { propertyList = [], loading } = useGetAllProperty(
+  const { propertyList = [], loading, total } = useGetAllProperty(
     currentPage,
     20,
-    useMemo(() => filters, [filters]),
+    activeFilters
   );
 
   const handlePropertyClick = useCallback(
@@ -135,10 +168,21 @@ const Agentfilter = () => {
     setShowSuggestions(false);
     const mainLocation = locationName.split(" ")[0];
     setFilters((prev) => ({ ...prev, city: mainLocation }));
+    setCurrentPage(1);
   };
 
   const handleSearchButtonClick = () => {
-    navigate("/properties", { state: { initialSearch: searchQuery } });
+    // Build query params
+    const params = new URLSearchParams();
+    if (searchQuery) params.append("search", searchQuery);
+    if (filters.city) params.append("city", filters.city);
+    if (filters.propertytype) params.append("propertytype", filters.propertytype);
+    if (filters.bedroom) params.append("bedroom", filters.bedroom);
+    if (filters.bathroom) params.append("bathroom", filters.bathroom);
+    if (filters.minPrice) params.append("minPrice", filters.minPrice);
+    if (filters.maxPrice) params.append("maxPrice", filters.maxPrice);
+    
+    navigate(`/properties?${params.toString()}`);
   };
 
   // Handle filter change
@@ -148,9 +192,51 @@ const Agentfilter = () => {
     setCurrentPage(1);
   };
 
+  // Handle apply filters
+  const handleApplyFilters = () => {
+    setShowFilters(false);
+    // Build query params with all filters
+    const params = new URLSearchParams();
+    if (searchQuery) params.append("search", searchQuery);
+    if (filters.city) params.append("city", filters.city);
+    if (filters.propertytype) params.append("propertytype", filters.propertytype);
+    if (filters.bedroom) params.append("bedroom", filters.bedroom);
+    if (filters.bathroom) params.append("bathroom", filters.bathroom);
+    if (filters.minPrice) params.append("minPrice", filters.minPrice);
+    if (filters.maxPrice) params.append("maxPrice", filters.maxPrice);
+    
+    navigate(`/properties?${params.toString()}`);
+  };
+
+  // Handle clear filters
+  const handleClearFilters = () => {
+    setFilters({
+      state: "",
+      listingtype: "",
+      propertytype: "",
+      price: "",
+      squarefoot: "",
+      bedroom: "",
+      bathroom: "",
+      floor: "",
+      city: "",
+      aminities: "",
+    });
+    setSearchQuery("");
+    setCurrentPage(1);
+    navigate("/properties");
+  };
+
   // Get unique values for filter dropdowns
   const getUniqueValues = (data, key) => {
+    if (!data || data.length === 0) return [];
     return [...new Set(data.flatMap((item) => item[key]).filter(Boolean))].sort();
+  };
+
+  // Handle sort change
+  const handleSortChange = (sortValue) => {
+    setCurrentSort(sortValue);
+    setCurrentPage(1);
   };
 
   // Updated handleWhatsApp to send two sequential messages
@@ -162,7 +248,6 @@ const Agentfilter = () => {
     const location = property.community || property.city;
     const propertyId = property._id;
 
-    // First message to management
     const managementNumber = "971585852283";
     const managementMsg = encodeURIComponent(
       `*New Client Interest Alert!*\n\n` +
@@ -174,7 +259,6 @@ const Agentfilter = () => {
         `Offering: ${property.offeringType || 'Sale'}`
     );
 
-    // Second message to agent
     const agentNumber = property.agentId?.phone || property.agentPhone || "971500000000";
     const agentMsg = encodeURIComponent(
       `Hello! I am interested in viewing your listing: *${propertyName}*.\n\n` +
@@ -219,6 +303,8 @@ const Agentfilter = () => {
         setShowSuggestions={setShowSuggestions}
         onSuggestionClick={handleSuggestionClick}
         onSearchButtonClick={handleSearchButtonClick}
+        onApplyFilters={handleApplyFilters}
+        onClearFilters={handleClearFilters}
         propertyList={propertyList}
         filters={filters}
         handleFilterChange={handleFilterChange}
@@ -226,6 +312,11 @@ const Agentfilter = () => {
         getUniqueValues={getUniqueValues}
         setShowFilters={setShowFilters}
         showFilters={showFilters}
+        currentSort={currentSort}
+        onSortChange={handleSortChange}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        totalResults={total || propertyList.length}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-20">
@@ -245,296 +336,283 @@ const Agentfilter = () => {
           </button>
         </div>
 
-        {/* PROPERTY GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {eliteProperties.map((property) => {
-            const statusBadge = getStatusBadge(property);
-            const isOffPlanProperty = isOffPlan(property);
-            const isCommercialProperty = isCommercial(property);
-            const propertyTitle = property.propertyTitleEn || property.propertyname;
-            const propertyType = property.propertytype || (isCommercialProperty ? "Commercial Space" : "Residential");
-            const location = property.community || property.city || "Dubai";
-            const agentName = property.agentId?.name || "Property Consultant";
-            const agentImage = property.agentId?.profilePhoto || property.name;
-            const agentRating = property.agentId?.rating || 4.8;
-
-            return (
-              <motion.div
-                key={property._id}
-                whileHover={{ y: -10 }}
-                className={`rounded-[2.5rem] overflow-hidden ${colors.card} ${colors.shadow} border ${colors.border} group cursor-pointer flex flex-col transition-all duration-300`}
-                onClick={() => handlePropertyClick(property)}
+        {/* Active Filters Display */}
+        {(searchQuery || filters.city || filters.propertytype || filters.bedroom) && (
+          <div className="flex flex-wrap items-center gap-2 mb-6 pb-4 border-b border-slate-200 dark:border-white/10">
+            <span className="text-xs text-slate-500">Active Filters:</span>
+            {searchQuery && (
+              <span className="px-2 py-1 bg-amber-500/10 text-amber-500 rounded-lg text-[10px] font-bold flex items-center gap-1">
+                🔍 {searchQuery}
+                <button onClick={() => setSearchQuery("")} className="hover:text-white">×</button>
+              </span>
+            )}
+            {filters.city && (
+              <span className="px-2 py-1 bg-blue-500/10 text-blue-500 rounded-lg text-[10px] font-bold flex items-center gap-1">
+                📍 {filters.city}
+                <button onClick={() => setFilters(prev => ({ ...prev, city: "" }))} className="hover:text-white">×</button>
+              </span>
+            )}
+            {filters.propertytype && (
+              <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded-lg text-[10px] font-bold flex items-center gap-1">
+                🏷️ {filters.propertytype}
+                <button onClick={() => setFilters(prev => ({ ...prev, propertytype: "" }))} className="hover:text-white">×</button>
+              </span>
+            )}
+            {filters.bedroom && (
+              <span className="px-2 py-1 bg-purple-500/10 text-purple-500 rounded-lg text-[10px] font-bold flex items-center gap-1">
+                🛏️ {filters.bedroom} Beds
+                <button onClick={() => setFilters(prev => ({ ...prev, bedroom: "" }))} className="hover:text-white">×</button>
+              </span>
+            )}
+            <button
+              onClick={handleClearFilters}
+                className="px-2 py-1 bg-red-500/10 text-red-500 rounded-lg text-[9px] font-bold"
               >
-                {/* Image Container */}
-                <div className="relative h-72 w-full overflow-hidden">
-                  <img
-                    src={property.image?.[0] || "https://images.pexels.com/photos/2587054/pexels-photo-2587054.jpeg"}
-                    alt={propertyTitle}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-
-                  {/* Property Type Badge - Top Left */}
-                  <div className="absolute top-4 left-4 flex gap-2">
-                    <span className={`px-3 py-1.5 backdrop-blur-md text-white text-[9px] font-black uppercase rounded-lg tracking-wider flex items-center gap-1.5 ${getBadgeStyle(property)}`}>
-                      {getPropertyTypeIcon(property)}
-                      {propertyType}
-                    </span>
-                  </div>
-
-                  {/* Status Badge - Top Right */}
-                  <div className="absolute top-4 right-4">
-                    <span className={`px-3 py-1.5 backdrop-blur-md text-[9px] font-black uppercase rounded-lg border flex items-center gap-1.5 ${statusBadge.color}`}>
-                      {statusBadge.icon}
-                      {statusBadge.text}
-                    </span>
-                  </div>
-
-                  {/* Off-Plan Progress Bar */}
-                  {isOffPlanProperty && property.completionPercentage && (
-                    <div className="absolute bottom-16 left-0 right-0 px-4">
-                      <div className="bg-black/50 backdrop-blur-sm rounded-full p-1">
-                        <div className="flex items-center justify-between text-[8px] font-black uppercase text-white px-2 mb-1">
-                          <span>Construction Progress</span>
-                          <span>{property.completionPercentage}%</span>
-                        </div>
-                        <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
-                            style={{ width: `${property.completionPercentage || 0}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Location Badge */}
-                  <div className="absolute bottom-4 left-4 flex items-center gap-1.5 text-white bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                    <MapPin size={12} className="text-amber-400" />
-                    <span className="text-[10px] font-bold truncate max-w-[150px]">
-                      {location}, UAE
-                    </span>
-                  </div>
-                </div>
-
-                {/* Content Body */}
-                <div className="p-7 flex-1">
-                  <h3 className={`text-xl font-bold mb-2 truncate ${colors.text}`}>
-                    {propertyTitle}
-                  </h3>
-
-                  {/* PRICE + PROPERTY TYPE */}
-                  <div className="flex items-center justify-between gap-3 mb-3 mt-3 md:mt-5 flex-wrap">
-                    {/* PRICE SECTION */}
-                    <div>
-                      <p className="text-amber-500 text-lg font-black leading-tight">
-                        AED {Number(property.price).toLocaleString()}
-                        {isRent(property) && property.rentedPeriod && (
-                          <span className="text-xs text-gray-400 font-normal ml-1">
-                            / {property.rentedPeriod?.toLowerCase().replace("per ", "") || "year"}
-                          </span>
-                        )}
-                      </p>
-                      {isOffPlanProperty && property.paymentPlan && (
-                        <p className="text-xs text-gray-400 font-normal mt-1">
-                          {property.paymentPlan || "Flexible Payment Plan"}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* PROPERTY TYPE */}
-                    <div className="px-3 py-1 rounded-full bg-black/5 dark:bg-white/10">
-                      <p className="text-black dark:text-white text-xs font-bold uppercase tracking-wide">
-                        {property.category}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Specifications - Conditional based on property type */}
-                  {isCommercialProperty ? (
-                    <div className="flex items-center gap-6 py-4 border-t border-gray-100 dark:border-white/5">
-                      <div className="flex items-center gap-2 text-gray-500">
-                        <Building size={16} className="text-blue-500" />
-                        <span className="text-[11px] font-bold uppercase">{propertyType}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-500">
-                        <Square size={14} className="text-blue-500" />
-                        <span className="text-[11px] font-bold uppercase">{property.squarefoot?.toLocaleString() || 0} Sq.Ft</span>
-                      </div>
-                    </div>
-                  ) : isOffPlanProperty ? (
-                    <div className="flex items-center gap-6 py-4 border-t border-gray-100 dark:border-white/5">
-                      <div className="flex items-center gap-2 text-gray-500">
-                        <Calendar size={16} className="text-purple-500" />
-                        <span className="text-[11px] font-bold uppercase">Handover: {property.deliveryDate || "Q4 2026"}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-500">
-                        <Building size={14} className="text-purple-500" />
-                        <span className="text-[11px] font-bold uppercase">{property.developerId?.companyName || "Premium Developer"}</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-6 py-4 border-t border-gray-100 dark:border-white/5">
-                      <div className="flex items-center gap-2 text-gray-500">
-                        <BedDouble size={16} className="text-amber-500" />
-                        <span className="text-[11px] font-bold uppercase">{property.bedroom || 2} Beds</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-500">
-                        <Square size={14} className="text-amber-500" />
-                        <span className="text-[11px] font-bold uppercase">{property.squarefoot?.toLocaleString() || 0} Sq.Ft</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Agent Info Bar */}
-                  <div className="flex items-center gap-3 py-3 mt-2 border-t border-gray-100 dark:border-white/5">
-                    <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 flex-shrink-0">
-                      {agentImage ? (
-                        <img src={agentImage} alt={agentName} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
-                          {agentName.charAt(0)}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">Listed by</p>
-                      <p className={`text-xs font-bold truncate ${colors.text}`}>{agentName}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Star size={12} className="text-amber-500 fill-amber-500" />
-                      <span className="text-[10px] font-bold">{agentRating}</span>
-                    </div>
-                  </div>
-
-                  {/* Footer Action Bar */}
-                  <div className="flex items-center justify-between pt-4 mt-auto border-t border-gray-100 dark:border-white/5">
-                    <div className="flex gap-4">
-                      <button
-                        onClick={(e) => handleWhatsApp(e, property)}
-                        className="text-green-500 hover:scale-110 transition-transform"
-                        title="WhatsApp Agent"
-                      >
-                        <FaWhatsapp size={25} />
-                      </button>
-                      <button
-                        onClick={(e) => handleCall(e, property.agentId?.phone || property.agentPhone)}
-                        className="text-blue-500 hover:scale-110 transition-transform"
-                        title="Call Agent"
-                      >
-                        <Phone size={25} />
-                      </button>
-                      <button
-                        onClick={(e) => handleEmail(e, property)}
-                        className="text-amber-500 hover:scale-110 transition-transform"
-                        title="Email Agent"
-                      >
-                        <Mail size={25} />
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <Share2
-                        size={18}
-                        className="text-gray-400 hover:text-amber-500 transition-colors cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigator.share?.({
-                            title: propertyTitle,
-                            text: `Check out this property: ${propertyTitle}`,
-                            url: window.location.href,
-                          });
-                        }}
-                      />
-                      <Heart
-                        size={18}
-                        className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* MARKET INSIGHTS - SECONDARY LISTINGS */}
-        {insightProperties.length > 0 && (
-          <div className="mt-24 mb-20">
-            <div className="flex items-center gap-3 mb-10">
-              <div className="h-0.5 w-8 bg-amber-500" />
-              <h2 className={`text-2xl font-serif ${colors.text}`}>
-                Market <span className="text-amber-500 italic">Insights</span>
-              </h2>
+                Clear All
+              </button>
             </div>
+          )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {insightProperties.map((property) => {
-                const isOffPlanProperty = isOffPlan(property);
-                const statusBadge = getStatusBadge(property);
-                const propertyTitle = property.propertyTitleEn || property.propertyname;
-                const location = property.community || property.city || "Dubai";
-
-                return (
-                  <motion.div
-                    key={property._id}
-                    onClick={() => handlePropertyClick(property)}
-                    whileHover={{ scale: 1.02 }}
-                    className={`group p-4 rounded-3xl ${colors.card} border ${colors.border} flex items-center gap-5 cursor-pointer shadow-sm hover:shadow-md transition-all`}
-                  >
-                    <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 bg-slate-100 relative">
-                      <img
-                        src={property.image?.[0]}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        alt={propertyTitle}
-                      />
-                      {isOffPlanProperty && (
-                        <div className="absolute top-0 right-0 w-6 h-6 bg-purple-500 flex items-center justify-center rounded-bl-xl">
-                          <Crown size={10} className="text-white" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className={`font-bold text-sm truncate ${colors.text}`}>
-                          {propertyTitle}
-                        </h4>
-                        <span className={`text-[7px] px-1.5 py-0.5 rounded ${statusBadge.color}`}>
-                          {statusBadge.text}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <MapPin className="w-3 h-3 text-amber-500" />
-                        <span className={`text-[9px] font-bold uppercase ${colors.textSecondary} truncate`}>
-                          {location}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <p className="text-amber-500 font-bold text-xs">
-                          AED {Number(property.price).toLocaleString()}
-                        </p>
-                        <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-amber-500 transition-colors" />
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {loading && (
+        {/* PROPERTY GRID */}
+        {loading ? (
           <div className="flex justify-center py-20">
             <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
-        )}
-
-        {!loading && propertyList.length === 0 && (
+        ) : propertyList.length === 0 ? (
           <div className="text-center py-20">
             <Building size={48} className="mx-auto text-gray-400 mb-4" />
             <h3 className={`text-xl font-serif ${colors.text} mb-2`}>No Properties Found</h3>
             <p className={colors.textSecondary}>Try adjusting your filters or search criteria</p>
+            <button
+              onClick={handleClearFilters}
+              className="mt-4 px-6 py-2 bg-amber-500 text-white rounded-full text-xs font-bold"
+            >
+              Clear All Filters
+            </button>
+          </div>
+        ) : (
+          <div className={`grid ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" : "space-y-4"}`}>
+            {(viewMode === "grid" ? eliteProperties : propertyList).map((property) => {
+              const statusBadge = getStatusBadge(property);
+              const isOffPlanProperty = isOffPlan(property);
+              const isCommercialProperty = isCommercial(property);
+              const propertyTitle = property.propertyTitleEn || property.propertyname;
+              const propertyType = property.propertytype || (isCommercialProperty ? "Commercial Space" : "Residential");
+              const location = property.community || property.city || "Dubai";
+              const agentName = property.agentId?.name || "Property Consultant";
+              const agentImage = property.agentId?.profilePhoto || property.name;
+              const agentRating = property.agentId?.rating || 4.8;
+
+              if (viewMode === "list") {
+                return (
+                  <div
+                    key={property._id}
+                    onClick={() => handlePropertyClick(property)}
+                    className={`flex flex-col md:flex-row gap-4 p-4 rounded-2xl ${colors.card} ${colors.shadow} border ${colors.border} cursor-pointer hover:shadow-lg transition-all`}
+                  >
+                    <div className="md:w-48 h-32 rounded-xl overflow-hidden shrink-0">
+                      <img
+                        src={property.image?.[0] || "https://images.pexels.com/photos/2587054/pexels-photo-2587054.jpeg"}
+                        alt={propertyTitle}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+                        <h3 className={`text-lg font-bold ${colors.text}`}>{propertyTitle}</h3>
+                        <span className={`px-2 py-1 rounded-lg text-[8px] font-bold ${statusBadge.color}`}>
+                          {statusBadge.text}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-slate-500 mb-2">
+                        <MapPin size={14} />
+                        <span>{location}, UAE</span>
+                      </div>
+                      <div className="flex items-center gap-4 mb-3">
+                        <div className="flex items-center gap-1"><BedDouble size={14} /> {property.bedroom || 0}</div>
+                        <div className="flex items-center gap-1"><Square size={14} /> {property.squarefoot?.toLocaleString()} sqft</div>
+                      </div>
+                      <p className="text-amber-500 font-bold text-lg">AED {Number(property.price).toLocaleString()}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button onClick={(e) => handleWhatsApp(e, property)} className="p-2 text-green-500 hover:scale-110 transition">
+                        <FaWhatsapp size={20} />
+                      </button>
+                      <button onClick={(e) => handleCall(e, property.agentId?.phone)} className="p-2 text-blue-500 hover:scale-110 transition">
+                        <Phone size={20} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <motion.div
+                  key={property._id}
+                  whileHover={{ y: -10 }}
+                  className={`rounded-[2.5rem] overflow-hidden ${colors.card} ${colors.shadow} border ${colors.border} group cursor-pointer flex flex-col transition-all duration-300`}
+                  onClick={() => handlePropertyClick(property)}
+                >
+                  {/* Image Container */}
+                  <div className="relative h-72 w-full overflow-hidden">
+                    <img
+                      src={property.image?.[0] || "https://images.pexels.com/photos/2587054/pexels-photo-2587054.jpeg"}
+                      alt={propertyTitle}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+
+                    {/* Property Type Badge */}
+                    <div className="absolute top-4 left-4 flex gap-2">
+                      <span className={`px-3 py-1.5 backdrop-blur-md text-white text-[9px] font-black uppercase rounded-lg tracking-wider flex items-center gap-1.5 ${getBadgeStyle(property)}`}>
+                        {getPropertyTypeIcon(property)}
+                        {propertyType}
+                      </span>
+                    </div>
+
+                    {/* Status Badge */}
+                    <div className="absolute top-4 right-4">
+                      <span className={`px-3 py-1.5 backdrop-blur-md text-[9px] font-black uppercase rounded-lg border flex items-center gap-1.5 ${statusBadge.color}`}>
+                        {statusBadge.icon}
+                        {statusBadge.text}
+                      </span>
+                    </div>
+
+                    {/* Location Badge */}
+                    <div className="absolute bottom-4 left-4 flex items-center gap-1.5 text-white bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                      <MapPin size={12} className="text-amber-400" />
+                      <span className="text-[10px] font-bold truncate max-w-[150px]">
+                        {location}, UAE
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Content Body */}
+                  <div className="p-7 flex-1">
+                    <h3 className={`text-xl font-bold mb-2 truncate ${colors.text}`}>
+                      {propertyTitle}
+                    </h3>
+
+                    <div className="flex items-center justify-between gap-3 mb-3 mt-3 md:mt-5 flex-wrap">
+                      <div>
+                        <p className="text-amber-500 text-lg font-black leading-tight">
+                          AED {Number(property.price).toLocaleString()}
+                          {isRent(property) && property.rentedPeriod && (
+                            <span className="text-xs text-gray-400 font-normal ml-1">
+                              / {property.rentedPeriod?.toLowerCase().replace("per ", "") || "year"}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="px-3 py-1 rounded-full bg-black/5 dark:bg-white/10">
+                        <p className="text-black dark:text-white text-xs font-bold uppercase tracking-wide">
+                          {property.category}
+                        </p>
+                      </div>
+                    </div>
+
+                    {isCommercialProperty ? (
+                      <div className="flex items-center gap-6 py-4 border-t border-gray-100 dark:border-white/5">
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <Building size={16} className="text-blue-500" />
+                          <span className="text-[11px] font-bold uppercase">{propertyType}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <Square size={14} className="text-blue-500" />
+                          <span className="text-[11px] font-bold uppercase">{property.squarefoot?.toLocaleString() || 0} Sq.Ft</span>
+                        </div>
+                      </div>
+                    ) : isOffPlanProperty ? (
+                      <div className="flex items-center gap-6 py-4 border-t border-gray-100 dark:border-white/5">
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <Calendar size={16} className="text-purple-500" />
+                          <span className="text-[11px] font-bold uppercase">Handover: {property.deliveryDate || "Q4 2026"}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-6 py-4 border-t border-gray-100 dark:border-white/5">
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <BedDouble size={16} className="text-amber-500" />
+                          <span className="text-[11px] font-bold uppercase">{property.bedroom || 0} Beds</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <Square size={14} className="text-amber-500" />
+                          <span className="text-[11px] font-bold uppercase">{property.squarefoot?.toLocaleString() || 0} Sq.Ft</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Agent Info Bar */}
+                    <div className="flex items-center gap-3 py-3 mt-2 border-t border-gray-100 dark:border-white/5">
+                      <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 flex-shrink-0">
+                        {agentImage ? (
+                          <img src={agentImage} alt={agentName} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
+                            {agentName.charAt(0)}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">Listed by</p>
+                        <p className={`text-xs font-bold truncate ${colors.text}`}>{agentName}</p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Star size={12} className="text-amber-500 fill-amber-500" />
+                        <span className="text-[10px] font-bold">{agentRating}</span>
+                      </div>
+                    </div>
+
+                    {/* Footer Action Bar */}
+                    <div className="flex items-center justify-between pt-4 mt-auto border-t border-gray-100 dark:border-white/5">
+                      <div className="flex gap-4">
+                        <button
+                          onClick={(e) => handleWhatsApp(e, property)}
+                          className="text-green-500 hover:scale-110 transition-transform"
+                          title="WhatsApp Agent"
+                        >
+                          <FaWhatsapp size={25} />
+                        </button>
+                        <button
+                          onClick={(e) => handleCall(e, property.agentId?.phone || property.agentPhone)}
+                          className="text-blue-500 hover:scale-110 transition-transform"
+                          title="Call Agent"
+                        >
+                          <Phone size={25} />
+                        </button>
+                        <button
+                          onClick={(e) => handleEmail(e, property)}
+                          className="text-amber-500 hover:scale-110 transition-transform"
+                          title="Email Agent"
+                        >
+                          <Mail size={25} />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Share2
+                          size={18}
+                          className="text-gray-400 hover:text-amber-500 transition-colors cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.share?.({
+                              title: propertyTitle,
+                              text: `Check out this property: ${propertyTitle}`,
+                              url: window.location.href,
+                            });
+                          }}
+                        />
+                        <Heart
+                          size={18}
+                          className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>

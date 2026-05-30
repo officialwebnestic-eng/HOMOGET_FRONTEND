@@ -26,11 +26,10 @@ import {
   DollarSign,
 } from "lucide-react";
 import { useToast } from "../../../model/SuccessToasNotification";
-import { AMENITIES } from "../../../helpers/AddPropertyHelpers"; 
+import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
+import LocationSearch from "./LocationSearch";
 
-
- import LocationSearch from "./LocationSearch";
- const AddPropertyByAgent = () => {
+const AddPropertyByAgent = () => {
   const { theme } = useTheme();
   const { addToast } = useToast();
   const { user } = useContext(AuthContext);
@@ -80,6 +79,15 @@ import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
       publishingStatus: "Published",
       trakheesiNumber: "",
       refrenceNo: generateReferenceNumber(),
+      locationName: "",
+      locationAddress: "",
+      locationPlaceId: "",
+      locationLat: "",
+      locationLng: "",
+      locationType: "",
+      displayAddress: "",
+      address: "",
+      coordinates: {},
       nearByLocations: [{ locationName: "", distance: "", transportType: "Drive" }],
     },
   });
@@ -133,20 +141,46 @@ import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
   const handleLocationSelect = (location) => {
     if (location) {
       setSelectedLocationData(location);
+      
+      // Set ALL location fields
       setValue("locationId", location.id || location.location_id);
       setValue("locationPath", location.path || `${location.id}`);
-      // Use the correct property names from your API response
+      setValue("locationName", location.name);
+      setValue("locationAddress", location.title);
+      setValue("locationPlaceId", location.location_id);
+      setValue("locationLat", location.coordinates?.lat);
+      setValue("locationLng", location.coordinates?.lon);
+      setValue("locationType", location.type);
+      
+      // Display fields
       const displayAddr = location.title || location.subtitle || `${location.name}, Dubai`;
       setValue("displayAddress", displayAddr);
       setValue("address", displayAddr);
+      
       if (location.coordinates) {
         setValue("coordinates", location.coordinates);
       }
+      
+      console.log("Location selected:", {
+        name: location.name,
+        address: location.title,
+        placeId: location.location_id,
+        lat: location.coordinates?.lat,
+        lng: location.coordinates?.lon,
+        type: location.type
+      });
+      
       addToast(`Location selected: ${location.name || location.title}`, "success");
     } else {
       setSelectedLocationData(null);
       setValue("locationId", "");
       setValue("locationPath", "");
+      setValue("locationName", "");
+      setValue("locationAddress", "");
+      setValue("locationPlaceId", "");
+      setValue("locationLat", "");
+      setValue("locationLng", "");
+      setValue("locationType", "");
       setValue("displayAddress", "");
       setValue("address", "");
       setValue("coordinates", "");
@@ -168,7 +202,7 @@ import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
     { id: "location", label: "Location", icon: <MapPin size={14} /> },
     { id: "media", label: "Media", icon: <Camera size={14} /> },
     { id: "amenities", label: "Amenities", icon: <Sparkles size={14} /> },
-    { id: "pricing", label: "Pricing"},
+    { id: "pricing", label: "Pricing", icon: <DollarSign size={14} /> },
   ];
 
   const onSubmit = async (data) => {
@@ -177,7 +211,8 @@ import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
       return;
     }
     
-    if (!data.locationId) {
+    // Check for location data using the new field
+    if (!data.locationName && !data.displayAddress) {
       addToast("Please select a valid location from the search", "error");
       return;
     }
@@ -192,6 +227,7 @@ import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
       const formData = new FormData();
       
       const payload = {
+        // Basic Info
         propertyTitleEn: data.propertyTitleEn,
         propertyTitleAr: data.propertyTitleAr || "",
         price: Number(data.price),
@@ -201,12 +237,17 @@ import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
         offeringType: data.offeringType,
         rentedPeriod: data.rentedPeriod || "",
         cheques: data.cheques ? Number(data.cheques) : undefined,
+        
+        // Compliance
         developerId: data.developerId || null,
         agentId: user.id,
         permitType: data.permitType,
         trakheesiNumber: data.trakheesiNumber || "",
         reraORN: data.reraORN || "",
         brnNumber: data.brnNumber || "",
+        ownerName: data.ownerName || "",
+        
+        // Specifications
         bedroom: Number(data.bedroom) || 0,
         bathroom: Number(data.bathroom) || 0,
         totalFloor: data.totalFloor ? Number(data.totalFloor) : undefined,
@@ -215,15 +256,24 @@ import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
         parkingSlots: Number(data.parkingSlots) || 0,
         furnishingType: data.furnishingType || "Unfurnished",
         propertyAge: data.propertyAge || "Brand New",
-        ownerName: data.ownerName || "",
         availability: data.availability || "Immediately",
+        
+        // Description
         descriptionEn: data.descriptionEn,
         descriptionAr: data.descriptionAr || "",
-        address: data.address,
-        displayAddress: data.displayAddress,
-        locationId: data.locationId,
-        locationPath: data.locationPath || "",
+        
+        // LOCATION FIELDS (Google Places data)
+        locationName: data.locationName || "",
+        locationAddress: data.locationAddress || data.displayAddress || "",
+        locationPlaceId: data.locationPlaceId || "",
+        locationLat: data.locationLat ? Number(data.locationLat) : null,
+        locationLng: data.locationLng ? Number(data.locationLng) : null,
+        locationType: data.locationType || "",
+        displayAddress: data.displayAddress || "",
+        address: data.address || data.displayAddress || "",
         coordinates: data.coordinates || {},
+        
+        // Other fields
         amenities: data.amenities || [],
         nearByLocations: data.nearByLocations || [],
         videos: data.videos || "",
@@ -275,141 +325,119 @@ import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
   return (
     <div className={`min-h-screen pb-20 ${isDark ? "bg-gradient-to-br from-[#0F1219] via-[#0F1219] to-[#1a1f2e]" : "bg-gradient-to-br from-[#F8FAFC] via-[#F8FAFC] to-[#f1f5f9]"}`}>
       {/* Header */}
-     <header className={`sticky top-0 z-[100] border-b backdrop-blur-xl transition-all duration-300 ${isDark ? "bg-[#0F1219]/95 border-white/5 shadow-lg shadow-black/10" : "bg-white/95 border-slate-200 shadow-sm"}`}>
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 lg:py-0 lg:h-20 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-0">
-    
-    {/* --- BRANDING & REFERENCE SUB-GRID --- */}
-    <div className="flex items-center justify-between lg:justify-start gap-4 w-full lg:w-auto">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20 shrink-0">
-          <Building2 className="text-white" size={20} />
+      <header className={`sticky top-0 z-[100] border-b backdrop-blur-xl transition-all duration-300 ${isDark ? "bg-[#0F1219]/95 border-white/5 shadow-lg shadow-black/10" : "bg-white/95 border-slate-200 shadow-sm"}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 lg:py-0 lg:h-20 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-0">
+          
+          {/* BRANDING & REFERENCE SUB-GRID */}
+          <div className="flex items-center justify-between lg:justify-start gap-4 w-full lg:w-auto">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20 shrink-0">
+                <Building2 className="text-white" size={20} />
+              </div>
+              <div>
+                <h1 className={`text-base sm:text-lg font-black uppercase italic leading-none ${isDark ? "text-white" : "text-slate-900"}`}>
+                  Homoget <span className="text-amber-500">Dubai</span>
+                </h1>
+                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1 whitespace-nowrap">
+                  Agent Portal • Add Property
+                </p>
+              </div>
+            </div>
+            
+            {/* Reference Number Badge */}
+            <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg ml-2 shrink-0 ${
+              isDark ? "bg-amber-500/10 border border-amber-500/20" : "bg-amber-50 border border-amber-200"
+            }`}>
+              <Hash size={13} className="text-amber-500" />
+              <div>
+                <p className="text-[8px] uppercase font-bold text-slate-500 leading-none mb-0.5">Reference No</p>
+                <p className="text-xs font-mono font-bold text-amber-500 max-w-[120px] truncate">{watch("refrenceNo") || "PENDING"}</p>
+              </div>
+            </div>
+
+            {/* Mobile Publishing Status */}
+            <div className="sm:hidden shrink-0">
+              <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider ${
+                watch("publishingStatus") === "Published" 
+                  ? "bg-green-500/10 text-green-500 border border-green-500/20" 
+                  : "bg-slate-500/10 text-slate-500 border border-slate-500/20"
+              }`}>
+                {watch("publishingStatus") === "Published" ? "Live" : "Draft"}
+              </span>
+            </div>
+          </div>
+
+          {/* ACTION CLUSTER */}
+          <div className="flex items-center justify-between lg:justify-end gap-3 w-full lg:w-auto pt-2 lg:pt-0 border-t border-slate-200/40 dark:border-white/5 lg:border-none">
+            
+            {/* Mobile Reference Indicator */}
+            <div className="sm:hidden flex items-center gap-1.5">
+              <Hash size={12} className="text-amber-500" />
+              <span className="text-[10px] font-mono font-bold text-amber-500 truncate max-w-[140px]">
+                {watch("refrenceNo") || "REF-PENDING"}
+              </span>
+            </div>
+
+            {/* Desktop Publishing Status */}
+            <div className={`hidden sm:block px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider shrink-0 ${
+              watch("publishingStatus") === "Published" 
+                ? "bg-green-500/10 text-green-500 border border-green-500/20" 
+                : "bg-slate-500/10 text-slate-500 border border-slate-500/20"
+            }`}>
+              {watch("publishingStatus")}
+            </div>
+
+            {/* Submit Button */}
+            <button
+              onClick={handleSubmit(onSubmit)}
+              disabled={isSubmitting}
+              className="flex-1 sm:flex-initial px-5 sm:px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-black rounded-xl font-black text-[10px] uppercase tracking-widest shadow-md shadow-amber-500/10 hover:from-amber-400 hover:to-amber-500 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {isSubmitting ? <Loader2 className="animate-spin" size={13} /> : <Sparkles size={13} />}
+              <span className="whitespace-nowrap">{isSubmitting ? "Syncing..." : "Launch Asset"}</span>
+            </button>
+          </div>
         </div>
-        <div>
-          <h1 className={`text-base sm:text-lg font-black uppercase italic leading-none ${isDark ? "text-white" : "text-slate-900"}`}>
-            Homoget <span className="text-amber-500">Dubai</span>
-          </h1>
-          <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1 whitespace-nowrap">
-            Agent Portal • Add Property
-          </p>
-        </div>
-      </div>
-      
-      {/* Reference Number Badge (Hidden on small mobile, visible on tablet & desktop) */}
-      <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg ml-2 shrink-0 ${
-        isDark ? "bg-amber-500/10 border border-amber-500/20" : "bg-amber-50 border border-amber-200"
-      }`}>
-        <Hash size={13} className="text-amber-500" />
-        <div>
-          <p className="text-[8px] uppercase font-bold text-slate-500 leading-none mb-0.5">Reference No</p>
-          <p className="text-xs font-mono font-bold text-amber-500 max-w-[120px] truncate">{watch("refrenceNo") || "PENDING"}</p>
-        </div>
-      </div>
-
-      {/* Mobile Publishing Status Action (Only visible on small viewports) */}
-      <div className="sm:hidden shrink-0">
-        <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider ${
-          watch("publishingStatus") === "Published" 
-            ? "bg-green-500/10 text-green-500 border border-green-500/20" 
-            : "bg-slate-500/10 text-slate-500 border border-slate-500/20"
-        }`}>
-          {watch("publishingStatus") === "Published" ? "Live" : "Draft"}
-        </span>
-      </div>
-    </div>
-
-    {/* --- SECONDARY MOBILE BAR & ACTION CLUSTER --- */}
-    <div className="flex items-center justify-between lg:justify-end gap-3 w-full lg:w-auto pt-2 lg:pt-0 border-t border-slate-200/40 dark:border-white/5 lg:border-none">
-      
-      {/* Mobile-Only Inline Reference Indicator */}
-      <div className="sm:hidden flex items-center gap-1.5">
-        <Hash size={12} className="text-amber-500" />
-        <span className="text-[10px] font-mono font-bold text-amber-500 truncate max-w-[140px]">
-          {watch("refrenceNo") || "REF-PENDING"}
-        </span>
-      </div>
-
-      {/* Desktop-Only Publishing Status Badge */}
-      <div className={`hidden sm:block px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider shrink-0 ${
-        watch("publishingStatus") === "Published" 
-          ? "bg-green-500/10 text-green-500 border border-green-500/20" 
-          : "bg-slate-500/10 text-slate-500 border border-slate-500/20"
-      }`}>
-        {watch("publishingStatus")}
-      </div>
-
-      {/* Main Submission Trigger Button */}
-      <button
-        onClick={handleSubmit(onSubmit)}
-        disabled={isSubmitting}
-        className="flex-1 sm:flex-initial px-5 sm:px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-black rounded-xl font-black text-[10px] uppercase tracking-widest shadow-md shadow-amber-500/10 hover:from-amber-400 hover:to-amber-500 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-      >
-        {isSubmitting ? <Loader2 className="animate-spin" size={13} /> : <Sparkles size={13} />}
-        <span className="whitespace-nowrap">{isSubmitting ? "Syncing..." : "Launch Asset"}</span>
-      </button>
-    </div>
-
-  </div>
-</header>
+      </header>
 
       <main className="max-w-6xl mx-auto px-6 mt-10 space-y-8">
         {/* Section Navigation */}
-        <div 
-  className={`sticky top-20 z-50 w-full backdrop-blur-md transition-all duration-300 py-3 border-b ${
-    isDark 
-      ? "bg-[#0f111a]/80 border-white/5 shadow-xl shadow-black/10" 
-      : "bg-slate-50/80 border-slate-200/60 shadow-sm shadow-slate-100/50"
-  }`}
->
-  <div 
-    className="w-full flex flex-row items-center gap-[1vw] overflow-x-auto scrollbar-none snap-x snap-mandatory px-4 max-w-7xl mx-auto"
-    style={{
-      scrollbarWidth: 'none', /* Firefox */
-      msOverflowStyle: 'none', /* IE/Edge */
-    }}
-  >
-    {/* Webkit Specific Scrollbar Hider fallback */}
-    <style>{`
-      .scrollbar-none::-webkit-scrollbar {
-        display: none;
-      }
-    `}</style>
-
-    {sections.map((section, idx) => {
-      const isActive = activeSection === section.id;
-      return (
-        <button
-          key={section.id}
-          onClick={() => {
-            const el = document.getElementById(`section-${section.id}`);
-            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-            setActiveSection(section.id);
-          }}
-          className={`flex items-center gap-[0.75vw] shrink-0 snap-align-start px-[4.5vw] md:px-5 py-3 md:py-2.5 rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-wider transition-all border ${
-            isActive
-              ? "bg-amber-500 text-black border-amber-500 shadow-md shadow-amber-500/20 scale-[1.02]"
-              : isDark
-                ? "bg-[#161b26] border-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
-                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800 shadow-sm"
-          }`}
-        >
-          {/* AED Currency/Metric Identifier Badge */}
-          <span className={`px-1.5 py-0.5 rounded text-[8px] font-black tracking-tighter ${
-            isActive 
-              ? "bg-black text-amber-500" 
-              : isDark ? "bg-white/10 text-slate-400" : "bg-slate-100 text-slate-500 border border-slate-200"
-          }`}>
-            AED
-          </span>
-
-          <span className="flex items-center gap-1.5">
-            {section.icon && React.cloneElement(section.icon, { size: 14, className: "shrink-0" })}
-            <span className="whitespace-nowrap">{section.label}</span>
-          </span>
-        </button>
-      );
-    })}
-  </div>
-</div>
+        <div className={`sticky top-20 z-50 w-full backdrop-blur-md transition-all duration-300 py-3 border-b ${
+          isDark ? "bg-[#0f111a]/80 border-white/5 shadow-xl shadow-black/10" : "bg-slate-50/80 border-slate-200/60 shadow-sm shadow-slate-100/50"
+        }`}>
+          <div className="w-full flex flex-row items-center gap-[1vw] overflow-x-auto scrollbar-none snap-x snap-mandatory px-4 max-w-7xl mx-auto">
+            {sections.map((section, idx) => {
+              const isActive = activeSection === section.id;
+              return (
+                <button
+                  key={section.id}
+                  onClick={() => {
+                    const el = document.getElementById(`section-${section.id}`);
+                    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                    setActiveSection(section.id);
+                  }}
+                  className={`flex items-center gap-[0.75vw] shrink-0 snap-align-start px-[4.5vw] md:px-5 py-3 md:py-2.5 rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-wider transition-all border ${
+                    isActive
+                      ? "bg-amber-500 text-black border-amber-500 shadow-md shadow-amber-500/20 scale-[1.02]"
+                      : isDark
+                        ? "bg-[#161b26] border-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
+                        : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800 shadow-sm"
+                  }`}
+                >
+                  <span className={`px-1.5 py-0.5 rounded text-[8px] font-black tracking-tighter ${
+                    isActive ? "bg-black text-amber-500" : isDark ? "bg-white/10 text-slate-400" : "bg-slate-100 text-slate-500 border border-slate-200"
+                  }`}>
+                    AED
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    {section.icon && React.cloneElement(section.icon, { size: 14, className: "shrink-0" })}
+                    <span className="whitespace-nowrap">{section.label}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         {/* SECTION 1: BASIC INFO */}
         <div id="section-basic" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
@@ -423,19 +451,11 @@ import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
               </div>
               <div className="flex-1">
                 <label className={labelClass}>Reference Number {requiredStar}</label>
-                <input 
-                  {...register("refrenceNo", { required: true })} 
-                  className={`${inputClass} font-mono`} 
-                  placeholder="Auto-generated reference number"
-                />
+                <input {...register("refrenceNo", { required: true })} className={`${inputClass} font-mono`} placeholder="Auto-generated reference number" />
                 <p className="text-[8px] text-slate-400 mt-1">Unique property identifier (auto-generated, editable)</p>
               </div>
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setValue("refrenceNo", generateReferenceNumber())}
-                  className="p-2 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-all"
-                >
+                <button type="button" onClick={() => setValue("refrenceNo", generateReferenceNumber())} className="p-2 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-all">
                   <span className="text-[10px] font-bold">⟳</span>
                 </button>
                 <select {...register("publishingStatus")} className={`${inputClass} w-32`}>
@@ -468,9 +488,7 @@ import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
               <label className={labelClass}>Property Type {requiredStar}</label>
               <select {...register("propertytype", { required: true })} className={inputClass}>
                 <option value="">Select Type</option>
-                {getPropertyTypes().map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
+                {getPropertyTypes().map((t) => (<option key={t} value={t}>{t}</option>))}
               </select>
               {errors.propertytype && <p className="text-red-500 text-[9px] mt-1">Required</p>}
             </div>
@@ -531,9 +549,7 @@ import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
                 <label className={`${labelClass} text-amber-500`}>Developer Partner</label>
                 <select {...register("developerId")} className={inputClass}>
                   <option value="">{loadingDevs ? "Fetching..." : "Select Developer..."}</option>
-                  {developers.map((dev) => (
-                    <option key={dev._id} value={dev._id}>{dev.companyName}</option>
-                  ))}
+                  {developers.map((dev) => (<option key={dev._id} value={dev._id}>{dev.companyName}</option>))}
                 </select>
               </div>
             )}
@@ -547,17 +563,13 @@ import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
             <div>
               <label className={labelClass}><Bed size={12} className="inline mr-1" /> Bedrooms</label>
               <select {...register("bedroom")} className={inputClass}>
-                {[...Array(21).keys()].map((i) => (
-                  <option key={i} value={i}>{i === 0 ? "Studio" : i}</option>
-                ))}
+                {[...Array(21).keys()].map((i) => (<option key={i} value={i}>{i === 0 ? "Studio" : i}</option>))}
               </select>
             </div>
             <div>
               <label className={labelClass}><Bath size={12} className="inline mr-1" /> Bathrooms</label>
               <select {...register("bathroom")} className={inputClass}>
-                {[...Array(11).keys()].map((i) => (
-                  <option key={i} value={i}>{i}</option>
-                ))}
+                {[...Array(11).keys()].map((i) => (<option key={i} value={i}>{i}</option>))}
               </select>
             </div>
             <div>
@@ -607,19 +619,26 @@ import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
           </div>
         </div>
 
-        {/* SECTION 4: LOCATION - Using LocationSearch Component */}
+        {/* SECTION 4: LOCATION */}
         <div id="section-location" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
           <SectionHeader icon={<MapPin />} title="Location" />
           
+          {/* Hidden fields for location data */}
           <input type="hidden" {...register("locationId")} />
           <input type="hidden" {...register("locationPath")} />
+          <input type="hidden" {...register("locationName")} />
+          <input type="hidden" {...register("locationAddress")} />
+          <input type="hidden" {...register("locationPlaceId")} />
+          <input type="hidden" {...register("locationLat")} />
+          <input type="hidden" {...register("locationLng")} />
+          <input type="hidden" {...register("locationType")} />
           <input type="hidden" {...register("coordinates")} />
           
           <LocationSearch 
             onLocationSelect={handleLocationSelect}
             initialValue=""
             isDark={isDark}
-            error={errors.locationId?.message}
+            error={errors.locationName?.message}
             required={true}
           />
           
@@ -776,8 +795,10 @@ import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
         </div>
       </main>
 
-      {/* Custom Scrollbar Styles */}
       <style jsx>{`
+        .scrollbar-none::-webkit-scrollbar {
+          display: none;
+        }
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
         }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef,useCallback  } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   MapPin,
@@ -28,7 +28,10 @@ import {
   Heart,
   Share2,
   PlayCircle,
-  Video
+  Video,
+  Filter,
+  Grid3x3,
+  LayoutList 
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { useTheme } from "../../../context/ThemeContext";
@@ -44,6 +47,9 @@ import "swiper/css/pagination";
 import "swiper/css/navigation";
 import GeospatialMap from "../../../helpers/GeospatialMap.jsx";
 import RelatedAssets from "../RelatedAssets .jsx";
+import FilterSidebar from "../../common/FilterSidebar.jsx"
+ import SortBar from "../homecommon/SortBar .jsx"
+  import LocationSearch from "../../../components/admin/Property/LocationSearch.jsx"
 
 // Helper functions for property type detection
 const isOffPlan = (property) => {
@@ -64,6 +70,21 @@ const PropertyDetailsPage = () => {
   const location = useLocation();
   const { theme } = useTheme();
   const lastIdRef = useRef(null);
+   const [relatedProperties, setRelatedProperties] = useState([]);
+  const [relatedLoading, setRelatedLoading] = useState(false);
+    // Filter states for related properties
+    const [showFilters, setShowFilters] = useState(false);
+    const [viewMode, setViewMode] = useState("grid");
+    const [sortBy, setSortBy] = useState("newest");
+    const [selectedLocation, setSelectedLocation] = useState(null);
+    const [filters, setFilters] = useState({
+      category: "",
+      offeringType: "",
+      propertytype: "",
+      minPrice: "",
+      maxPrice: "",
+    });
+  
 
   const [property, setProperty] = useState(
     location.state?.propertyData || null,
@@ -87,6 +108,7 @@ const PropertyDetailsPage = () => {
         if (response.data.success) {
           setProperty(response.data.data);
         }
+
       } catch (error) {
         toast.error("Error synchronizing asset data");
       } finally {
@@ -103,6 +125,44 @@ const PropertyDetailsPage = () => {
     }
   }, [id]);
 
+
+
+
+  const fetchRelatedProperties = useCallback(async () => {
+    if (!property) return;
+    
+    setRelatedLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.append("category", property.category);
+      params.append("offeringType", property.offeringType);
+      params.append("limit", 6);
+      params.append("excludeId", property._id);
+      
+      if (filters.propertytype) params.append("propertytype", filters.propertytype);
+      if (filters.minPrice) params.append("minPrice", filters.minPrice);
+      if (filters.maxPrice) params.append("maxPrice", filters.maxPrice);
+      if (sortBy === "price_low") params.append("sort", "price_asc");
+      if (sortBy === "price_high") params.append("sort", "price_desc");
+      if (sortBy === "newest") params.append("sort", "newest");
+      if (selectedLocation?.name) params.append("locationName", selectedLocation.name);
+      
+      const response = await http.get(`/related?${params.toString()}`);
+      if (response.data.success) {
+        setRelatedProperties(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching related properties:", error);
+    } finally {
+      setRelatedLoading(false);
+    }
+  }, [property, filters, sortBy, selectedLocation]);
+
+  useEffect(() => {
+    if (property) {
+      fetchRelatedProperties();
+    }
+  }, [property, fetchRelatedProperties]);
   // Format price function
   const formatPrice = (price, unit) => {
     const num = Number(price);
@@ -131,14 +191,12 @@ const PropertyDetailsPage = () => {
       }
     }, 1000);
   };
-
   // Handle Call
   const handleCall = () => {
     if (property?.agentId?.phone) {
       window.location.href = `tel:${property.agentId.phone}`;
     }
   };
-
   // Handle Email
   const handleEmail = () => {
     const subject = encodeURIComponent(`Inquiry: ${property?.propertyTitleEn || property?.propertyname}`);
@@ -153,6 +211,9 @@ const PropertyDetailsPage = () => {
     );
   }
 
+
+  
+
   if (!property) return null;
 
   const propertyTitle = property.propertyTitleEn || property.propertyname;
@@ -166,6 +227,13 @@ const PropertyDetailsPage = () => {
   const isCommercialProperty = isCommercial(property);
   const isRentalProperty = isRent(property);
   const isDark = theme === "dark";
+
+
+   // Handle location select for filtering
+  const handleLocationSelect = (location) => {
+    setSelectedLocation(location);
+    setFilters(prev => ({ ...prev, locationName: location.name }));
+  };
 
   // Get status badge
   const getStatusBadge = () => {
@@ -543,11 +611,96 @@ const PropertyDetailsPage = () => {
       </main>
 
       <GeospatialMap property={property} isDark={true} />
-      <RelatedAssets 
-  currentProperty={property} 
-  isDark={isDark} 
-  limit={3} 
-/>
+    {/* RELATED PROPERTIES SECTION with Filters */}
+        <section className={`py-16 px-6 md:px-12 ${isDark ? "bg-black/40" : "bg-gray-50"}`}>
+          <div className="max-w-7xl mx-auto">
+            {/* Header with Filters */}
+            <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
+              <div>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-600 flex items-center gap-2">
+                  <div className="w-1 h-8 bg-amber-500"></div>
+                  Similar Properties You Might Like
+                </h3>
+                <p className="text-sm opacity-60 mt-2">
+                  {relatedProperties.length} properties available
+                </p>
+              </div>
+              
+              {/* Location Search */}
+              <div className="w-full md:w-80">
+                <LocationSearch
+                  onLocationSelect={handleLocationSelect}
+                  initialValue=""
+                  isDark={isDark}
+                  required={false}
+                />
+              </div>
+              
+              {/* Sort and View Options */}
+              <div className="flex items-center gap-3">
+                <SortBar sortBy={sortBy} setSortBy={setSortBy} isDark={isDark} />
+                
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`p-2 rounded-xl transition-all ${showFilters ? "bg-amber-500 text-black" : isDark ? "bg-white/10 text-white" : "bg-gray-200 text-black"}`}
+                >
+                  <Filter size={18} />
+                </button>
+                
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`p-2 rounded-xl transition-all ${viewMode === "grid" ? "bg-amber-500 text-black" : isDark ? "bg-white/10 text-white" : "bg-gray-200 text-black"}`}
+                >
+                  <Grid3x3 size={18} />
+                </button>
+                
+                <button
+                  onClick={() => setViewMode("list")}
+                  className={`p-2 rounded-xl transition-all ${viewMode === "list" ? "bg-amber-500 text-black" : isDark ? "bg-white/10 text-white" : "bg-gray-200 text-black"}`}
+                >
+                  <LayoutList size={18} />
+                </button>
+              </div>
+            </div>
+  
+            {/* Filter Sidebar */}
+            <FilterSidebar
+              isOpen={showFilters}
+              onClose={() => setShowFilters(false)}
+              filters={filters}
+              onFilterChange={setFilters}
+              isDark={isDark}
+            />
+  
+            {/* Related Properties Grid */}
+            {relatedLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="animate-spin text-amber-500" size={40} />
+              </div>
+            ) : relatedProperties.length > 0 ? (
+              <div className={viewMode === "grid" 
+                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                : "space-y-4"
+              }>
+                {relatedProperties.map((prop) => (
+                  <PropertyCard
+                    key={prop._id}
+                    property={prop}
+                    onClick={() => navigateToProperty(prop._id)}
+                    viewMode={viewMode}
+                    isDark={isDark}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className={`text-center py-12 rounded-2xl ${isDark ? "bg-white/5" : "bg-gray-100"}`}>
+                <Building size={48} className="mx-auto mb-4 opacity-30" />
+                <p className="text-lg font-medium">No similar properties found</p>
+                <p className="text-sm opacity-60 mt-1">Try adjusting your filters</p>
+              </div>
+            )}
+          </div>
+        </section>
     </div>
 
     

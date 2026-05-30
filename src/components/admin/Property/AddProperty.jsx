@@ -63,6 +63,16 @@ const AddProperty = () => {
       publishingStatus: "Published",
       trakheesiNumber: "",
       refrenceNo: generateReferenceNumber(),
+      // Location fields
+      locationName: "",
+      locationAddress: "",
+      locationPlaceId: "",
+      locationLat: "",
+      locationLng: "",
+      locationType: "",
+      displayAddress: "",
+      address: "",
+      coordinates: {},
       nearByLocations: [{ locationName: "", distance: "", transportType: "Drive" }],
       nearByProjects: [],
     },
@@ -101,20 +111,37 @@ const AddProperty = () => {
   const handleLocationSelect = (location) => {
     if (location) {
       setSelectedLocationData(location);
+      
+      // Set ALL location fields
       setValue("locationId", location.id || location.location_id);
       setValue("locationPath", location.path || `${location.id}`);
-      // Use the correct property names from your API response
+      setValue("locationName", location.name);
+      setValue("locationAddress", location.title);
+      setValue("locationPlaceId", location.location_id);
+      setValue("locationLat", location.coordinates?.lat);
+      setValue("locationLng", location.coordinates?.lon);
+      setValue("locationType", location.type);
+      
+      // Display fields
       const displayAddr = location.title || location.subtitle || `${location.name}, Dubai`;
       setValue("displayAddress", displayAddr);
       setValue("address", displayAddr);
+      
       if (location.coordinates) {
         setValue("coordinates", location.coordinates);
       }
+      
       addToast(`Location selected: ${location.name || location.title}`, "success");
     } else {
       setSelectedLocationData(null);
       setValue("locationId", "");
       setValue("locationPath", "");
+      setValue("locationName", "");
+      setValue("locationAddress", "");
+      setValue("locationPlaceId", "");
+      setValue("locationLat", "");
+      setValue("locationLng", "");
+      setValue("locationType", "");
       setValue("displayAddress", "");
       setValue("address", "");
       setValue("coordinates", "");
@@ -174,7 +201,8 @@ const AddProperty = () => {
       return;
     }
     
-    if (!data.locationId) {
+    // Check for location data using the new field
+    if (!data.locationName && !data.displayAddress) {
       addToast("Please select a valid location from the search", "error");
       return;
     }
@@ -185,6 +213,7 @@ const AddProperty = () => {
       const formData = new FormData();
       
       const payload = {
+        // Basic Info
         propertyTitleEn: data.propertyTitleEn,
         propertyTitleAr: data.propertyTitleAr || "",
         price: Number(data.price),
@@ -194,12 +223,17 @@ const AddProperty = () => {
         offeringType: data.offeringType,
         rentedPeriod: data.rentedPeriod || "",
         cheques: data.cheques ? Number(data.cheques) : undefined,
+        
+        // Compliance
         developerId: data.developerId || null,
         agentId: data.agentId,
         permitType: data.permitType,
         trakheesiNumber: data.trakheesiNumber || "",
         reraORN: data.reraORN || "",
         brnNumber: data.brnNumber || "",
+        ownerName: data.ownerName || "",
+        
+        // Specifications
         bedroom: Number(data.bedroom) || 0,
         bathroom: Number(data.bathroom) || 0,
         totalFloor: data.totalFloor ? Number(data.totalFloor) : undefined,
@@ -208,15 +242,24 @@ const AddProperty = () => {
         parkingSlots: Number(data.parkingSlots) || 0,
         furnishingType: data.furnishingType || "Unfurnished",
         propertyAge: data.propertyAge || "Brand New",
-        ownerName: data.ownerName || "",
         availability: data.availability || "Immediately",
+        
+        // Description
         descriptionEn: data.descriptionEn,
         descriptionAr: data.descriptionAr || "",
-        address: data.address,
-        displayAddress: data.displayAddress,
-        locationId: data.locationId,
-        locationPath: data.locationPath || "",
+        
+        // LOCATION FIELDS (Google Places data)
+        locationName: data.locationName || "",
+        locationAddress: data.locationAddress || data.displayAddress || "",
+        locationPlaceId: data.locationPlaceId || "",
+        locationLat: data.locationLat ? Number(data.locationLat) : null,
+        locationLng: data.locationLng ? Number(data.locationLng) : null,
+        locationType: data.locationType || "",
+        displayAddress: data.displayAddress || "",
+        address: data.address || data.displayAddress || "",
         coordinates: data.coordinates || {},
+        
+        // Other fields
         amenities: data.amenities || [],
         nearByLocations: data.nearByLocations || [],
         nearByProjects: data.nearByProjects || [],
@@ -253,7 +296,6 @@ const AddProperty = () => {
         setFiles([]);
         setSelectedAgent(null);
         setSelectedLocationData(null);
-        setLocationSearchQuery("");
         setValue("refrenceNo", generateReferenceNumber());
       }
     } catch (e) {
@@ -264,9 +306,6 @@ const AddProperty = () => {
     }
   };
 
-  // Add state for LocationSearch clear
-  const [locationSearchQuery, setLocationSearchQuery] = useState("");
-
   const inputClass = `w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all text-sm font-medium ${
     isDark ? "bg-[#1A1F2B] border-white/10 text-white" : "bg-white border-slate-200 text-slate-900 shadow-sm"
   }`;
@@ -276,233 +315,195 @@ const AddProperty = () => {
   return (
     <div className={`min-h-screen pb-20 ${isDark ? "bg-gradient-to-br from-[#0F1219] via-[#0F1219] to-[#1a1f2e]" : "bg-gradient-to-br from-[#F8FAFC] via-[#F8FAFC] to-[#f1f5f9]"}`}>
       {/* Header */}
-<header className={`sticky top-0 z-[100] border-b backdrop-blur-xl transition-all duration-300 ${isDark ? "bg-[#0F1219]/95 border-white/5" : "bg-white/95 border-slate-200"}`}>
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="flex flex-wrap items-center justify-between py-3 md:py-0 md:h-20">
-      
-      {/* Logo with Premium Styling */}
-      <div className="flex items-center gap-3 group">
-        <div className="relative">
-          <div className="absolute inset-0 bg-amber-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
-          <div className="relative w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center shadow-lg">
-            <Building2 className="text-white w-4 h-4 md:w-5 md:h-5" />
+      <header className={`sticky top-0 z-[100] border-b backdrop-blur-xl transition-all duration-300 ${isDark ? "bg-[#0F1219]/95 border-white/5" : "bg-white/95 border-slate-200"}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-center justify-between py-3 md:py-0 md:h-20">
+            
+            {/* Logo */}
+            <div className="flex items-center gap-3 group">
+              <div className="relative">
+                <div className="absolute inset-0 bg-amber-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                <div className="relative w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <Building2 className="text-white w-4 h-4 md:w-5 md:h-5" />
+                </div>
+              </div>
+              <div>
+                <h1 className="text-sm md:text-lg font-black uppercase italic leading-none tracking-tight">
+                  Homoget <span className="text-amber-500">Dubai</span>
+                </h1>
+                <p className="hidden sm:block text-[7px] md:text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-0.5">
+                  Real Estate Management
+                </p>
+              </div>
+            </div>
+
+            {/* Reference Number - Desktop */}
+            <div className={`hidden lg:flex items-center gap-3 px-4 py-2 rounded-xl ${isDark ? "bg-amber-500/5 border border-amber-500/20" : "bg-amber-50 border border-amber-200"}`}>
+              <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                <Hash size={14} className="text-amber-500" />
+              </div>
+              <div>
+                <p className="text-[8px] uppercase font-bold text-slate-500 tracking-wider">Reference Number</p>
+                <p className="text-sm font-mono font-bold text-amber-500">{watch("refrenceNo") || "Auto-generated"}</p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3">
+              <div className={`hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider ${
+                watch("publishingStatus") === "Published" 
+                  ? "bg-green-500/10 text-green-500 border border-green-500/20" 
+                  : "bg-slate-500/10 text-slate-500 border border-slate-500/20"
+              }`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${watch("publishingStatus") === "Published" ? "bg-green-500" : "bg-slate-500"}`}></div>
+                {watch("publishingStatus") || "Draft"}
+              </div>
+
+              <button
+                onClick={handleSubmit(onSubmit)}
+                disabled={isSubmitting}
+                className="group relative px-4 md:px-6 lg:px-8 py-2 md:py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-black rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-wider shadow-lg hover:shadow-xl transition-all flex items-center gap-2 disabled:opacity-50 overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                {isSubmitting ? <Loader2 className="animate-spin w-3 h-3 md:w-4 md:h-4" /> : <Sparkles className="w-3 h-3 md:w-4 md:h-4" />}
+                <span className="hidden xs:inline">{isSubmitting ? "Syncing..." : "Launch Asset"}</span>
+                <span className="xs:hidden">{isSubmitting ? "Sync" : "Launch"}</span>
+              </button>
+            </div>
+
+            {/* Mobile Reference Line */}
+            <div className="flex lg:hidden items-center justify-between w-full mt-3 pt-3 border-t border-slate-200 dark:border-white/10">
+              <div className="flex items-center gap-2">
+                <Hash size={12} className="text-amber-500" />
+                <p className="text-[8px] uppercase font-bold text-slate-500">Reference:</p>
+                <p className="text-[10px] font-mono font-bold text-amber-500 truncate max-w-[200px]">
+                  {watch("refrenceNo") || "Auto-generated"}
+                </p>
+              </div>
+              <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[7px] font-black uppercase tracking-wider sm:hidden ${
+                watch("publishingStatus") === "Published" 
+                  ? "bg-green-500/10 text-green-500" 
+                  : "bg-slate-500/10 text-slate-500"
+              }`}>
+                <div className={`w-1 h-1 rounded-full ${watch("publishingStatus") === "Published" ? "bg-green-500" : "bg-slate-500"}`}></div>
+                {watch("publishingStatus") === "Published" ? "Pub" : "Draft"}
+              </div>
+            </div>
           </div>
         </div>
-        <div>
-          <h1 className="text-sm md:text-lg font-black uppercase italic leading-none tracking-tight">
-            Homoget <span className="text-amber-500">Dubai</span>
-          </h1>
-          <p className="hidden sm:block text-[7px] md:text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-0.5">
-            Real Estate Management
-          </p>
-        </div>
-      </div>
-
-      {/* Reference Number - Desktop */}
-      <div className={`hidden lg:flex items-center gap-3 px-4 py-2 rounded-xl ${isDark ? "bg-amber-500/5 border border-amber-500/20" : "bg-amber-50 border border-amber-200"}`}>
-        <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
-          <Hash size={14} className="text-amber-500" />
-        </div>
-        <div>
-          <p className="text-[8px] uppercase font-bold text-slate-500 tracking-wider">Reference Number</p>
-          <p className="text-sm font-mono font-bold text-amber-500">{watch("refrenceNo") || "Auto-generated"}</p>
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-3">
-        {/* Status Badge with Icon */}
-        <div className={`hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider ${
-          watch("publishingStatus") === "Published" 
-            ? "bg-green-500/10 text-green-500 border border-green-500/20" 
-            : "bg-slate-500/10 text-slate-500 border border-slate-500/20"
-        }`}>
-          <div className={`w-1.5 h-1.5 rounded-full ${watch("publishingStatus") === "Published" ? "bg-green-500" : "bg-slate-500"}`}></div>
-          {watch("publishingStatus") || "Draft"}
-        </div>
-
-        {/* Launch Button */}
-        <button
-          onClick={handleSubmit(onSubmit)}
-          disabled={isSubmitting}
-          className="group relative px-4 md:px-6 lg:px-8 py-2 md:py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-black rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-wider shadow-lg hover:shadow-xl transition-all flex items-center gap-2 disabled:opacity-50 overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-          {isSubmitting ? <Loader2 className="animate-spin w-3 h-3 md:w-4 md:h-4" /> : <Sparkles className="w-3 h-3 md:w-4 md:h-4" />}
-          <span className="hidden xs:inline">{isSubmitting ? "Syncing..." : "Launch Asset"}</span>
-          <span className="xs:hidden">{isSubmitting ? "Sync" : "Launch"}</span>
-        </button>
-      </div>
-
-      {/* Mobile Reference Line */}
-      <div className="flex lg:hidden items-center justify-between w-full mt-3 pt-3 border-t border-slate-200 dark:border-white/10">
-        <div className="flex items-center gap-2">
-          <Hash size={12} className="text-amber-500" />
-          <p className="text-[8px] uppercase font-bold text-slate-500">Reference:</p>
-          <p className="text-[10px] font-mono font-bold text-amber-500 truncate max-w-[200px]">
-            {watch("refrenceNo") || "Auto-generated"}
-          </p>
-        </div>
-        {/* Mobile Status Badge */}
-        <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[7px] font-black uppercase tracking-wider sm:hidden ${
-          watch("publishingStatus") === "Published" 
-            ? "bg-green-500/10 text-green-500" 
-            : "bg-slate-500/10 text-slate-500"
-        }`}>
-          <div className={`w-1 h-1 rounded-full ${watch("publishingStatus") === "Published" ? "bg-green-500" : "bg-slate-500"}`}></div>
-          {watch("publishingStatus") === "Published" ? "Pub" : "Draft"}
-        </div>
-      </div>
-    </div>
-  </div>
-</header>
+      </header>
 
       <main className="max-w-6xl mx-auto px-6 mt-10 space-y-8">
-     {/* Section Navigation - With Custom Scrollbar */}
-<div className="sticky top-20 z-50 bg-inherit py-3">
-  <style jsx>{`
-    .section-scrollbar::-webkit-scrollbar {
-      height: 3px;
-    }
-    .section-scrollbar::-webkit-scrollbar-track {
-      background: ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'};
-      border-radius: 10px;
-    }
-    .section-scrollbar::-webkit-scrollbar-thumb {
-      background: ${isDark ? '#f59e0b' : '#d97706'};
-      border-radius: 10px;
-    }
-    .section-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: ${isDark ? '#fbbf24' : '#f59e0b'};
-    }
-  `}</style>
-  
-  <div className="overflow-x-auto section-scrollbar pb-2">
-    <div className="flex gap-2 min-w-max px-1">
-      {sections.map((section, idx) => (
-        <button
-          key={section.id}
-          onClick={() => {
-            const el = document.getElementById(`section-${section.id}`);
-            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-            setActiveSection(section.id);
-          }}
-          className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl text-[8px] md:text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
-            activeSection === section.id
-              ? "bg-amber-500 text-black shadow-lg"
-              : isDark
-                ? "bg-white/5 text-slate-400 hover:bg-white/10"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-          }`}
-        >
-          <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${
-            activeSection === section.id 
-              ? "bg-black text-amber-500" 
-              : isDark ? "bg-white/20 text-slate-300" : "bg-slate-300 text-slate-700"
-          }`}>
-            {idx + 1}
-          </span>
-          <span className="hidden xs:inline">{section.icon}</span>
-          <span className="text-[9px] md:text-[8px]">{section.label}</span>
-        </button>
-      ))}
-    </div>
-  </div>
-</div>
+        {/* Section Navigation */}
+        <div className="sticky top-20 z-50 bg-inherit py-3">
+          <div className="overflow-x-auto section-scrollbar pb-2">
+            <div className="flex gap-2 min-w-max px-1">
+              {sections.map((section, idx) => (
+                <button
+                  key={section.id}
+                  onClick={() => {
+                    const el = document.getElementById(`section-${section.id}`);
+                    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                    setActiveSection(section.id);
+                  }}
+                  className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl text-[8px] md:text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
+                    activeSection === section.id
+                      ? "bg-amber-500 text-black shadow-lg"
+                      : isDark
+                        ? "bg-white/5 text-slate-400 hover:bg-white/10"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                    activeSection === section.id 
+                      ? "bg-black text-amber-500" 
+                      : isDark ? "bg-white/20 text-slate-300" : "bg-slate-300 text-slate-700"
+                  }`}>
+                    {idx + 1}
+                  </span>
+                  <span className="hidden xs:inline">{section.icon}</span>
+                  <span className="text-[9px] md:text-[8px]">{section.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
 
-      {/* SECTION 1: BASIC INFO */}
-<div id="section-basic" className={`p-6 md:p-8 rounded-[2rem] border scroll-mt-24 transition-all duration-300 ${isDark ? "bg-[#161B26] border-white/5 shadow-xl shadow-black/20" : "bg-white border-slate-100 shadow-xl shadow-slate-100/50"}`}>
-  <SectionHeader icon={<Home className="text-amber-500" />} title="Basic Information" />
-  
-  {/* Modernized Reference & Status Layout */}
-  <div className="mb-8 grid grid-cols-1 lg:grid-cols-4 gap-4 items-end p-5 rounded-2xl bg-gradient-to-br from-amber-500/[0.03] to-transparent border border-amber-500/10">
-    <div className="lg:col-span-3">
-      <label className={`${labelClass} flex items-center gap-1.5 mb-2`}>
-        <Hash size={14} className="text-amber-500" />
-        Reference Number {requiredStar}
-      </label>
-      <div className="relative">
-        <input 
-          {...register("refrenceNo", { required: true })} 
-          placeholder="e.g., DXB-APT-2026-001"
-          className={`${inputClass} w-full font-mono tracking-wider pl-4 pr-4 py-3 border focus:ring-2 focus:ring-amber-500/40`} 
-        />
-      </div>
-      {errors.refrenceNo && <p className="text-red-500 text-[9px] mt-1">Reference number is required</p>}
-    </div>
-
-    <div className="lg:col-span-1">
-      <label className={`${labelClass} mb-2 block`}>Publishing Status</label>
-      <select 
-        {...register("publishingStatus")} 
-        className={`${inputClass} w-full py-3 px-3 cursor-pointer bg-no-repeat`}
-      >
-        <option value="Published">✅ Published</option>
-        <option value="unpublished">📄 Unpublished</option>
-      </select>
-    </div>
-  </div>
-  
-  {/* Main Information Form Grid */}
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div className="md:col-span-2">
-      <label className={labelClass}>Property Title (English) {requiredStar}</label>
-      <input {...register("propertyTitleEn", { required: true })} className={inputClass} />
-      {errors.propertyTitleEn && <p className="text-red-500 text-[9px] mt-1">Required</p>}
-    </div>
-    
-    <div className="md:col-span-2">
-      <label className={labelClass}>Property Title (Arabic)</label>
-      <input {...register("propertyTitleAr")} className={`${inputClass} text-right font-arabic`} dir="rtl" />
-    </div>
-    
-    <div>
-      <label className={labelClass}>Category {requiredStar}</label>
-      <select {...register("category", { required: true })} className={inputClass}>
-        <option value="Residential">🏠 Residential</option>
-        <option value="Commercial">🏢 Commercial</option>
-        <option value="Off-Plan">📐 Off-Plan</option>
-      </select>
-    </div>
-    
-    <div>
-      <label className={labelClass}>Property Type {requiredStar}</label>
-      <select {...register("propertytype", { required: true })} className={inputClass}>
-        <option value="">Select Type</option>
-        {getPropertyTypes().map((t) => (<option key={t} value={t}>{t}</option>))}
-      </select>
-      {errors.propertytype && <p className="text-red-500 text-[9px] mt-1">Required</p>}
-    </div>
-    
-    <div>
-      <label className={labelClass}>Offering Type {requiredStar}</label>
-      <select {...register("offeringType", { required: true })} className={inputClass}>
-        <option value="Sale">💰 For Sale</option>
-        <option value="Rent">📋 For Rent</option>
-      </select>
-    </div>
-    
-    {watchOffering === "Rent" && (
-      <div>
-        <label className={labelClass}>Rented Period {requiredStar}</label>
-        <select {...register("rentedPeriod", { required: watchOffering === "Rent" })} className={inputClass}>
-          <option value="Per Year">Per Year</option>
-          <option value="Per Month">Per Month</option>
-          <option value="Per Week">Per Week</option>
-          <option value="Per Day">Per Day</option>
-        </select>
-      </div>
-    )}
-    
-    <div>
-      <label className={labelClass}>Status</label>
-      <select {...register("status")} className={inputClass}>
-        <option value="Active">✅ Active</option>
-        <option value="Inactive">⭕ Inactive</option>
-      </select>
-    </div>
-  </div>
-</div>
+        {/* SECTION 1: BASIC INFO */}
+        <div id="section-basic" className={`p-6 md:p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
+          <SectionHeader icon={<Home />} title="Basic Information" />
+          
+          <div className="mb-8 grid grid-cols-1 lg:grid-cols-4 gap-4 items-end p-5 rounded-2xl bg-gradient-to-br from-amber-500/[0.03] to-transparent border border-amber-500/10">
+            <div className="lg:col-span-3">
+              <label className={`${labelClass} flex items-center gap-1.5 mb-2`}>
+                <Hash size={14} className="text-amber-500" />
+                Reference Number {requiredStar}
+              </label>
+              <input {...register("refrenceNo", { required: true })} className={`${inputClass} w-full font-mono tracking-wider`} />
+              {errors.refrenceNo && <p className="text-red-500 text-[9px] mt-1">Reference number is required</p>}
+            </div>
+            <div className="lg:col-span-1">
+              <label className={`${labelClass} mb-2 block`}>Publishing Status</label>
+              <select {...register("publishingStatus")} className={`${inputClass} w-full py-3 px-3 cursor-pointer`}>
+                <option value="Published">✅ Published</option>
+                <option value="unpublished">📄 Unpublished</option>
+              </select>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <label className={labelClass}>Property Title (English) {requiredStar}</label>
+              <input {...register("propertyTitleEn", { required: true })} className={inputClass} />
+              {errors.propertyTitleEn && <p className="text-red-500 text-[9px] mt-1">Required</p>}
+            </div>
+            <div className="md:col-span-2">
+              <label className={labelClass}>Property Title (Arabic)</label>
+              <input {...register("propertyTitleAr")} className={`${inputClass} text-right font-arabic`} dir="rtl" />
+            </div>
+            <div>
+              <label className={labelClass}>Category {requiredStar}</label>
+              <select {...register("category", { required: true })} className={inputClass}>
+                <option value="Residential">🏠 Residential</option>
+                <option value="Commercial">🏢 Commercial</option>
+                <option value="Off-Plan">📐 Off-Plan</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Property Type {requiredStar}</label>
+              <select {...register("propertytype", { required: true })} className={inputClass}>
+                <option value="">Select Type</option>
+                {getPropertyTypes().map((t) => (<option key={t} value={t}>{t}</option>))}
+              </select>
+              {errors.propertytype && <p className="text-red-500 text-[9px] mt-1">Required</p>}
+            </div>
+            <div>
+              <label className={labelClass}>Offering Type {requiredStar}</label>
+              <select {...register("offeringType", { required: true })} className={inputClass}>
+                <option value="Sale">💰 For Sale</option>
+                <option value="Rent">📋 For Rent</option>
+              </select>
+            </div>
+            {watchOffering === "Rent" && (
+              <div>
+                <label className={labelClass}>Rented Period {requiredStar}</label>
+                <select {...register("rentedPeriod", { required: watchOffering === "Rent" })} className={inputClass}>
+                  <option value="Per Year">Per Year</option>
+                  <option value="Per Month">Per Month</option>
+                  <option value="Per Week">Per Week</option>
+                  <option value="Per Day">Per Day</option>
+                </select>
+              </div>
+            )}
+            <div>
+              <label className={labelClass}>Status</label>
+              <select {...register("status")} className={inputClass}>
+                <option value="Active">✅ Active</option>
+                <option value="Inactive">⭕ Inactive</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
         {/* SECTION 2: COMPLIANCE */}
         <div id="section-compliance" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
@@ -623,15 +624,22 @@ const AddProperty = () => {
         <div id="section-location" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
           <SectionHeader icon={<MapPin />} title="Location" />
           
+          {/* Hidden fields for location data */}
           <input type="hidden" {...register("locationId")} />
           <input type="hidden" {...register("locationPath")} />
+          <input type="hidden" {...register("locationName")} />
+          <input type="hidden" {...register("locationAddress")} />
+          <input type="hidden" {...register("locationPlaceId")} />
+          <input type="hidden" {...register("locationLat")} />
+          <input type="hidden" {...register("locationLng")} />
+          <input type="hidden" {...register("locationType")} />
           <input type="hidden" {...register("coordinates")} />
           
           <LocationSearch 
             onLocationSelect={handleLocationSelect}
             initialValue=""
             isDark={isDark}
-            error={errors.locationId?.message}
+            error={errors.locationName?.message}
             required={true}
           />
           
@@ -788,8 +796,18 @@ const AddProperty = () => {
         </div>
       </main>
       
-      {/* Custom Scrollbar Styles */}
       <style jsx>{`
+        .section-scrollbar::-webkit-scrollbar {
+          height: 3px;
+        }
+        .section-scrollbar::-webkit-scrollbar-track {
+          background: ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'};
+          border-radius: 10px;
+        }
+        .section-scrollbar::-webkit-scrollbar-thumb {
+          background: ${isDark ? '#f59e0b' : '#d97706'};
+          border-radius: 10px;
+        }
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
         }

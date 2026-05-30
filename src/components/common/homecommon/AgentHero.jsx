@@ -24,8 +24,10 @@ import {
   List
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { http } from "../../../axios/axios";
 import FilterSidebar from "../FilterSidebar";
- import SortBar from "./SortBar ";
+import SortBar from "./SortBar ";
+
 const AgentHero = ({
   propertyList = [],
   filters,
@@ -49,18 +51,17 @@ const AgentHero = ({
   const navigate = useNavigate();
   const [internalSearchQuery, setInternalSearchQuery] = useState(externalSearchQuery || "");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [apiSuggestions, setApiSuggestions] = useState([]);
+  const [locationSuggestions, setLocationSuggestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [aiMode, setAiMode] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const [userImpact, setUserImpact] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef(null);
   const suggestionRef = useRef(null);
-  const sidebarRef = useRef(null); // Ref for sidebar to detect outside clicks
+  const sidebarRef = useRef(null);
+  const debounceTimerRef = useRef(null);
 
-  const TOMTOM_API_KEY = "YDlNOyLlX4RImV4fciotLz74L5JXykXG";
-  
   // ========== GOOGLE GEMINI API ==========
   const GEMINI_API_KEY = "AIzaSyCZ7WFdsYoZrT79QaJsXT5wu5yA5yT8IDQ";
   const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
@@ -68,18 +69,15 @@ const AgentHero = ({
   // Handle click outside to close sidebar
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Check if sidebar is open and click is outside sidebar
       if (showFilters && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
         setShowFilters(false);
       }
     };
     
-    // Add event listener when sidebar is open
     if (showFilters) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     
-    // Cleanup
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -192,16 +190,6 @@ const AgentHero = ({
     return recommendations;
   };
 
-  // Get user impact insights
-  const getUserImpactInsights = () => {
-    return {
-      totalViews: propertyList.reduce((sum, p) => sum + (p.views || 0), 0),
-      avgPrice: propertyList.reduce((sum, p) => sum + (p.price || 0), 0) / (propertyList.length || 1),
-      marketSentiment: "Bullish",
-      topAreas: ["Dubai Marina", "Downtown", "Palm Jumeirah", "Business Bay"]
-    };
-  };
-
   // Fetch AI suggestions
   useEffect(() => {
     const fetchAiSuggestions = async () => {
@@ -233,102 +221,138 @@ const AgentHero = ({
     }
   }, [externalSearchQuery]);
 
-  // Fetch locations from TomTom API
-  useEffect(() => {
-    const fetchLocations = async () => {
-      if (!internalSearchQuery || internalSearchQuery.length < 2) {
-        setApiSuggestions([]);
-        return;
-      }
-
-      setIsLoading(true);
-
-      try {
-        const response = await fetch(
-          `https://api.tomtom.com/search/2/search/${encodeURIComponent(
-            internalSearchQuery
-          )}.json?key=${TOMTOM_API_KEY}&countrySet=AE&limit=6&typeahead=true&lat=25.2048&lon=55.2708&radius=50000`
-        );
-
-        const data = await response.json();
-
-        if (data.results) {
-          const formatted = data.results.map((item) => ({
-            id: item.id,
-            name: item.poi?.name ||
-              item.address?.municipalitySubdivision ||
-              item.address?.municipality ||
-              item.address?.freeformAddress,
-            address: item.address?.freeformAddress,
-            lat: item.position?.lat,
-            lng: item.position?.lon,
-            type: item.type || (item.poi ? "POI" : "Geography"),
-            category: item.poi?.category || "area",
-          }));
-          setApiSuggestions(formatted);
-        }
-      } catch (err) {
-        console.error("TomTom API error:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    const debounce = setTimeout(fetchLocations, 400);
-    return () => clearTimeout(debounce);
-  }, [internalSearchQuery]);
-
-  // Handle click outside to close suggestions
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (suggestionRef.current && !suggestionRef.current.contains(event.target) &&
-          inputRef.current && !inputRef.current.contains(event.target)) {
+  // ========== LOCATION SEARCH USING YOUR BACKEND API ==========
+  const searchLocations = async (query) => {
+    if (query.trim().length < 2) {
+      setLocationSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const response = await http.get(`/locations/search?query=${encodeURIComponent(query)}`);
+      const result = response.data;
+      
+      if (result && result.success && result.data) {
+        setLocationSuggestions(result.data);
+        setShowSuggestions(true);
+      } else {
+        setLocationSuggestions([]);
         setShowSuggestions(false);
       }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Get user impact data
-  useEffect(() => {
-    if (propertyList.length > 0) {
-      setUserImpact(getUserImpactInsights());
+    } catch (err) {
+      console.error("Location search error:", err);
+      setLocationSuggestions([]);
+      setShowSuggestions(false);
+    } finally {
+      setIsLoading(false);
     }
-  }, [propertyList]);
+  };
 
-  const getLocationIcon = (type, category) => {
-    if (type === "POI" || category === "building") {
-      return <Building2 className="w-4 h-4" />;
-    } else if (type === "Geography" || category === "area") {
-      return <Landmark className="w-4 h-4" />;
+  // Handle input change with debounce
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setInternalSearchQuery(value);
+    setSelectedIndex(-1);
+    
+    if (externalSetSearchQuery) {
+      externalSetSearchQuery(value);
     }
-    return <HomeIcon className="w-4 h-4" />;
+    
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    debounceTimerRef.current = setTimeout(() => {
+      searchLocations(value);
+    }, 400);
+  };
+
+  // Handle keyboard navigation
+  const handleKeyDown = (e) => {
+    if (!showSuggestions || locationSuggestions.length === 0) return;
+    
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex(prev =>
+          prev < locationSuggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex(prev => prev > 0 ? prev - 1 : -1);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedIndex >= 0 && locationSuggestions[selectedIndex]) {
+          handleLocationSelect(locationSuggestions[selectedIndex]);
+        }
+        break;
+      case 'Escape':
+        setShowSuggestions(false);
+        break;
+      default:
+        break;
+    }
   };
 
   const handleLocationSelect = (location) => {
     setInternalSearchQuery(location.name);
+    setShowSuggestions(false);
+    setSelectedIndex(-1);
+    
     if (externalSetSearchQuery) {
       externalSetSearchQuery(location.name);
     }
     if (externalOnSuggestionClick) {
       externalOnSuggestionClick(location.name);
     }
-    setShowSuggestions(false);
+    
+    setLocationSuggestions([]);
   };
 
-  // MAIN SEARCH HANDLER - Redirects to properties page with filters
+  // Get icon based on location type
+  const getLocationIcon = (type) => {
+    switch (type) {
+      case 'COMMUNITY': return <HomeIcon size={14} />;
+      case 'SUBCOMMUNITY': return <MapPin size={14} />;
+      case 'TOWER': return <Building2 size={14} />;
+      case 'BUILDING': return <Building2 size={14} />;
+      case 'LANDMARK': return <Landmark size={14} />;
+      default: return <MapPin size={14} />;
+    }
+  };
+
+  // Get badge info for location type
+  const getBadgeInfo = (type) => {
+    switch (type) {
+      case 'COMMUNITY':
+        return { color: "bg-emerald-500/20 text-emerald-500", text: "Community" };
+      case 'SUBCOMMUNITY':
+        return { color: "bg-blue-500/20 text-blue-500", text: "Area" };
+      case 'TOWER':
+        return { color: "bg-amber-500/20 text-amber-500", text: "Tower" };
+      case 'BUILDING':
+        return { color: "bg-purple-500/20 text-purple-500", text: "Building" };
+      case 'LANDMARK':
+        return { color: "bg-rose-500/20 text-rose-500", text: "Landmark" };
+      default:
+        return { color: "bg-slate-500/20 text-slate-400", text: "Location" };
+    }
+  };
+
+  // MAIN SEARCH HANDLER
   const handleSearch = () => {
     const searchTerm = internalSearchQuery.trim();
     
-    // Build query params with search term and filters
     const queryParams = new URLSearchParams();
     
     if (searchTerm) {
       queryParams.append('search', searchTerm);
     }
     
-    // Add all active filters to query params
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value && value !== "" && value !== "all") {
@@ -341,44 +365,26 @@ const AgentHero = ({
       });
     }
     
-    // Call external callback
     if (externalOnSearchButtonClick) {
       externalOnSearchButtonClick();
     } else if (externalOnSuggestionClick) {
       externalOnSuggestionClick(searchTerm);
     }
     
-    // Navigate to properties page with filters
     const queryString = queryParams.toString();
     navigate(`/properties${queryString ? `?${queryString}` : ''}`);
     
     setShowSuggestions(false);
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSearch();
-    }
-  };
-
   const handleClearSearch = () => {
     setInternalSearchQuery("");
+    setLocationSuggestions([]);
+    setSelectedIndex(-1);
     if (externalSetSearchQuery) {
       externalSetSearchQuery("");
     }
-    setApiSuggestions([]);
-    setAiSuggestions([]);
     inputRef.current?.focus();
-  };
-
-  const getBadgeInfo = (type, category) => {
-    if (type === "POI" || category === "building") {
-      return { color: "bg-amber-500/20 text-amber-500", text: "Landmark" };
-    } else if (type === "Geography" || category === "area") {
-      return { color: "bg-blue-500/20 text-blue-500", text: "Community" };
-    }
-    return { color: "bg-slate-500/20 text-slate-400", text: "Area" };
   };
 
   const activeFiltersCount = () => {
@@ -400,7 +406,6 @@ const AgentHero = ({
       onApplyFilters();
     }
     setShowFilters(false);
-    // Navigate with filters
     const queryParams = new URLSearchParams();
     if (internalSearchQuery) {
       queryParams.append('search', internalSearchQuery);
@@ -442,7 +447,7 @@ const AgentHero = ({
       <div className="relative z-10 w-full max-w-5xl mx-auto px-4">
         {/* TITLE */}
         <div className="text-center mb-8 md:mb-10">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-white mb-2 tracking-tight">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-white mb-2 tracking-tight">
             Homoget<span className="text-amber-500">.</span>
           </h1>
           <p className="text-white/70 uppercase tracking-[0.3em] text-[8px] md:text-[9px] lg:text-[10px] mt-2 font-medium">
@@ -466,10 +471,14 @@ const AgentHero = ({
                 ref={inputRef}
                 type="text"
                 value={internalSearchQuery}
-                onFocus={() => setShowSuggestions(true)}
-                onChange={(e) => setInternalSearchQuery(e.target.value)}
+                onFocus={() => {
+                  if (locationSuggestions.length > 0 && internalSearchQuery.length >= 2) {
+                    setShowSuggestions(true);
+                  }
+                }}
+                onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Search by community, tower or area..."
+                placeholder="Search by community, tower, or area..."
                 className="flex-1 min-w-[150px] bg-transparent pl-11 pr-2 py-3.5 text-slate-800 dark:text-white outline-none text-sm md:text-base placeholder:text-slate-600 placeholder:text-xs md:placeholder:text-sm"
               />
 
@@ -488,7 +497,7 @@ const AgentHero = ({
                   <span className="text-[10px] font-medium hidden sm:inline">AI</span>
                 </button>
 
-                {/* Filter Button - Opens FilterSidebar */}
+                {/* Filter Button */}
                 <button
                   onClick={() => setShowFilters(true)}
                   className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all ${
@@ -516,7 +525,7 @@ const AgentHero = ({
                   </button>
                 )}
 
-                {/* Search Button - Redirects to Properties Page */}
+                {/* Search Button */}
                 <button
                   onClick={handleSearch}
                   className="ml-1 px-4 md:px-5 py-1.5 rounded-full bg-amber-500 text-black font-semibold text-[10px] md:text-[11px] tracking-wide hover:bg-black hover:text-white transition-all shadow-sm whitespace-nowrap"
@@ -577,7 +586,7 @@ const AgentHero = ({
               </div>
             )}
 
-            {/* LOCATION SUGGESTIONS */}
+            {/* LOCATION SUGGESTIONS DROPDOWN - ORIGINAL DESIGN */}
             <AnimatePresence>
               {showSuggestions && !aiMode && (
                 <motion.div
@@ -587,35 +596,48 @@ const AgentHero = ({
                   className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-xl shadow-xl border overflow-hidden z-[999]"
                 >
                   <div className="px-4 py-2 border-b bg-slate-50 dark:bg-slate-800/50">
-                    <p className="text-[8px] font-bold uppercase text-amber-500">Popular Locations</p>
+                    <p className="text-[8px] font-bold uppercase text-amber-500">Popular Locations in Dubai</p>
                   </div>
 
                   {isLoading ? (
                     <div className="py-8 text-center">
                       <Loader2 className="w-4 h-4 animate-spin mx-auto text-amber-500" />
                     </div>
-                  ) : apiSuggestions.length > 0 ? (
+                  ) : locationSuggestions.length > 0 ? (
                     <div className="max-h-[320px] overflow-y-auto">
-                      {apiSuggestions.map((location, index) => {
-                        const badge = getBadgeInfo(location.type, location.category);
+                      {locationSuggestions.map((location, index) => {
+                        const badge = getBadgeInfo(location.type);
                         return (
                           <button
-                            key={index}
+                            key={location.id || index}
                             onClick={() => handleLocationSelect(location)}
-                            className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors border-b last:border-0 group"
+                            className={`w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors border-b last:border-0 group ${
+                              selectedIndex === index ? 'bg-amber-500/10' : ''
+                            }`}
                           >
-                            <div className="flex items-center gap-3">
-                              <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center group-hover:text-amber-500">
-                                {getLocationIcon(location.type, location.category)}
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center group-hover:text-amber-500">
+                                {getLocationIcon(location.type)}
                               </div>
-                              <div>
+                              <div className="flex-1">
                                 <p className="font-medium text-sm group-hover:text-amber-500">
                                   {location.name}
                                 </p>
-                                <span className={`text-[7px] px-1.5 py-0.5 rounded-full ${badge.color}`}>
-                                  {badge.text}
-                                </span>
+                                <p className="text-[10px] text-slate-500 mt-0.5">
+                                  {location.path_name || location.title}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className={`text-[7px] px-1.5 py-0.5 rounded-full ${badge.color}`}>
+                                    {badge.text}
+                                  </span>
+                                  {location.type && (
+                                    <span className="text-[7px] text-slate-400 uppercase">
+                                      {location.type}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
+                              <ChevronDown className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-all" />
                             </div>
                           </button>
                         );
@@ -628,9 +650,9 @@ const AgentHero = ({
           </div>
         </div>
 
-     
 
-        {/* FILTER SIDEBAR COMPONENT with outside click detection */}
+
+        {/* FILTER SIDEBAR COMPONENT */}
         <div ref={sidebarRef}>
           <FilterSidebar
             isOpen={showFilters}
