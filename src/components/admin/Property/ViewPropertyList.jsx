@@ -403,7 +403,7 @@ const ViewPropertyList = ({ mode = "all" }) => {
                           <Pencil size={13} /> Edit
                         </button>
                         <button
-                          onClick={(e) => {
+                          onClick={(e) => { 
                             e.stopPropagation();
                             if (window.confirm('Delete this listing out of the active database schema?')) deletePropertyById(property._id);
                           }}

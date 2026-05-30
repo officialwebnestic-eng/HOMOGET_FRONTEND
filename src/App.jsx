@@ -91,11 +91,8 @@ function App() {
           </Route>
 
         </Route>
-
         {/* Website Routes */}
-
         <Route path="/*" element={<AllRoutes />} />
-
       </Routes>
 
       <GlobalWhatsAppChat />

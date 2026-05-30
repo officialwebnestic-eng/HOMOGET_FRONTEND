@@ -431,7 +431,7 @@ export const PublicRoutes = () => {
              <Route path="/explore" element={<Explore />} />
              <Route path="/properties-for-rent" element={<Rent />} />
              <Route path="/properties-for-buy" element={<Buy />} />
-             <Route path="/properties-for-offplan" element={<OffPlan />} />
+             <Route path="/offplan-projects" element={<OffPlan />} />
              <Route path="/rera-compliance" element={<ReraCompliance />} />
              <Route path="/about-founder" element={<AboutFounder />} />
 
