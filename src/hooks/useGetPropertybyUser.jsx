@@ -34,7 +34,7 @@ const userGetPropertyByUser = (page = 1, limit = 10, filters = {}) => {
       });
 
       // 🔁 Replace with your actual backend endpoint
-      const endpoint = `/getpropertybyuserid?${queryParams}`;
+      const endpoint = `/getpropertybyuser?${queryParams}`;
 
       const response = await http.get(endpoint, { withCredentials: true });
 

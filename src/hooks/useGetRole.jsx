@@ -19,10 +19,11 @@ const useGetRole = (page, limit, filters) => {
       const res = await http.post("/createrolesroute", data, { withCredentials: true });
 
 
-       console.log(res.data, "this is success")
+      console.log(res.data, "this is success")
       if (res.data.success === true) {
-        await fetchRole(); // ✅ works now
+
         addToast(res.data.message || "Role created successfully", "success");
+        await fetchRole(); // ✅ works now
       }
     } catch (error) {
       addToast(error.message || "Error creating role", "error");
