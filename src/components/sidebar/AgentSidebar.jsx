@@ -147,6 +147,24 @@ export default function AgentSidebar() {
                       />
                     )}
 
+   {/* Bookings */}
+                  {hasAnyPermission([
+                    { permission: { action: "view", module: "Blog Management" } },
+                    { permission: { action: "create", module: "Blog Management" } }
+                  ]) && (
+                      <DropdownMenu
+                        icon={<ShoppingCart size={20} />}
+                        label="Bookings"
+                        menuKey="Bookings"
+                        openDropdown={openDropdown}
+                        toggleDropdown={toggleDropdown}
+                        isDark={isDark}
+                        items={[
+                          { to: "/viewbloglist", label: "All Blogs", permission: { action: "view", module: "Blog Management" } },
+                          { to: "/createblog", label: "Create Blog", permission: { action: "create", module: "Blog Management" } },
+                        ]}
+                      />
+                    )}
                   {/* Property */}
                   {hasAnyPermission([
                     { permission: { action: "create", module: "Property Management" } },
