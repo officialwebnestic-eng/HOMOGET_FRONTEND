@@ -41,7 +41,7 @@ import { http } from "../../../axios/axios";
 import { toast } from "react-toastify";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation as SwiperNav } from "swiper/modules";
-
+import PropertyCard from "../../../components/admin/Property/PropertyCard.jsx";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
