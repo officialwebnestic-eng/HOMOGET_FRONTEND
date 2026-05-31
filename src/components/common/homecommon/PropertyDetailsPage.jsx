@@ -136,7 +136,7 @@ const PropertyDetailsPage = () => {
       const params = new URLSearchParams();
       params.append("category", property.category);
       params.append("offeringType", property.offeringType);
-      params.append("limit", 6);
+      params.append("limit", 20);
       params.append("excludeId", property._id);
       
       if (filters.propertytype) params.append("propertytype", filters.propertytype);
@@ -349,45 +349,44 @@ const PropertyDetailsPage = () => {
 
 
       {/* ===== SECTION 2: GALLERY SECTION (THUMBNAILS BELOW) ===== */}
-      {mediaItems.length > 1 && (
-        <section className="py-16 px-6 md:px-12 border-b border-gray-200 dark:border-gray-800">
-          <div className="max-w-7xl mx-auto">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-600 mb-6 md:mb-10 flex items-center gap-2">
-              <div className="w-1 h-8 bg-amber-500"></div>
-              Gallery
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-5">
-              {mediaItems.slice(1, 9).map((item, idx) => (
-                <div
-                  key={idx}
-                  className="relative aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer group"
-                  onClick={() => setActiveImageIndex(idx + 1)}
-                >
-                  {item.type === 'image' ? (
-                    <img
-                      src={item.url}
-                      alt={`Gallery ${idx + 2}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : item.type === 'video' ? (
-                    <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center">
-                      <PlayCircle size={48} className="text-amber-500 mb-2" />
-                      <span className="text-xs text-white">Video Tour</span>
-                    </div>
-                  ) : (
-                    <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center">
-                      <Video size={48} className="text-amber-500 mb-2" />
-                      <span className="text-xs text-white">360 Tour</span>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
-                </div>
-              ))}
-            </div>
+     {mediaItems.length > 1 && (
+  <section className="py-16 px-6 md:px-12 border-b border-gray-200 dark:border-gray-800">
+    <div className="max-w-7xl mx-auto">
+      <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-600 mb-6 md:mb-10 flex items-center gap-2">
+        <div className="w-1 h-8 bg-amber-500"></div>
+        Gallery
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-5">
+        {mediaItems.map((item, idx) => (
+          <div
+            key={idx}
+            className="relative aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer group"
+            onClick={() => setActiveImageIndex(idx)}
+          >
+            {item.type === 'image' ? (
+              <img
+                src={item.url}
+                alt={`Gallery ${idx + 1}`}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+            ) : item.type === 'video' ? (
+              <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center">
+                <PlayCircle size={48} className="text-amber-500 mb-2" />
+                <span className="text-xs text-white">Video Tour</span>
+              </div>
+            ) : (
+              <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center">
+                <Video size={48} className="text-amber-500 mb-2" />
+                <span className="text-xs text-white">360 Tour</span>
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
           </div>
-        </section>
-      )}
-
+        ))}
+      </div>
+    </div>
+  </section>
+)}
 
       {/* 3. CORE CONTENT GRID */}
       <main className="max-w-[1440px] mx-auto px-6 md:px-10 py-10 md:py-16 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
