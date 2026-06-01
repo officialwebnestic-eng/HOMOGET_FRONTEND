@@ -88,6 +88,7 @@ import SelectAdminAppointmentProperty from "../components/admin/Appoinment/Selec
 import AddPropertyByAgent from "../components/admin/Property/AddPropertyByAgent.jsx";
 import ReraCompliance from "../ReraCompliance.jsx";
 import AboutFounder from "../components/common/AboutFounder .jsx";
+import BlogDetails from "../components/common/homecommon/BlogDetails.jsx";
 
 
 export const AdminRoutes = () => {
@@ -102,7 +103,6 @@ export const AdminRoutes = () => {
                 <Route path="/createadminappointment" element={<CreateAdminAppointment />} />
                 <Route path="/selectadminappoinmentproperty" element={<SelectAdminAppointmentProperty/>}/>
                 <Route path="/addagent" element={<AddAgent />} />
-                <Route path="/user-profile" element={<UserProfile />} />
                 <Route path="/viewallagentlist" element={<ViewAllAgentList />} />
                 <Route path="/agentdetails/:id" element={<AgentDetails />} />
                 <Route path="/updateagent/:id" element={<UpdateAgent />} />
@@ -118,6 +118,7 @@ export const AdminRoutes = () => {
                 <Route path="/updateblog/:id" element={<UpdateBlog />} />
                 <Route path="/updatepropertydetails/:id" element={<UpdateProperty />} />
                 <Route path="/gettourbooking" element={<TourList />} />
+           
                 <Route path="/viewallbookings" element={<ViewAllBookings />} />
                 <Route path="/createappoinment" element={<CreateAppoinment />} />
                 <Route path="/getappoinment" element={<GetAppoinment />} />
@@ -183,6 +184,7 @@ export const AgentRoutes = () => {
                     <Route path="/viewallagentlist" element={<ViewAllAgentList />} />
                     <Route path="/agentdetails/:id" element={<AgentDetails />} />
                     <Route path="/updateagent/:id" element={<UpdateAgent />} />
+                     
 
                 </Route>
             </Route>
@@ -196,12 +198,13 @@ export const ProfileRoutes = () => {
         <Route element={<PrivateRoutes />}>
             <Route element={<ProtectRoutes action="view" module="Profile Management" />}>
                 <Route element={<BaseLayout />}>
-                    <Route path="/user-profile" element={<UserProfile />} />
+                    <Route path="/updateagent/:id" element={<UpdateAgent />} />
                 </Route>
             </Route>
         </Route>
     )
 }
+
 export const PropertyRoutes = () => {
     return (
 
@@ -434,6 +437,7 @@ export const PublicRoutes = () => {
              <Route path="/offplan-projects" element={<OffPlan />} />
              <Route path="/rera-compliance" element={<ReraCompliance />} />
              <Route path="/about-founder" element={<AboutFounder />} />
+              <Route path="/blog/:id" element={<BlogDetails />} />
 
             <Route path="/property/:id" element={<PropertyDetailsPage />} />
              </Route>

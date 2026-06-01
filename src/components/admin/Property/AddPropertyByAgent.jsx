@@ -24,6 +24,11 @@ import {
   CheckCircle2,
   Hash,
   DollarSign,
+  File,
+  FileCheck,
+  FileWarning,
+  UserCheck,
+  FileSignature,
 } from "lucide-react";
 import { useToast } from "../../../model/SuccessToasNotification";
 import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
@@ -37,6 +42,8 @@ const AddPropertyByAgent = () => {
 
   // --- States ---
   const [files, setFiles] = useState([]);
+  const [offPlanDocuments, setOffPlanDocuments] = useState([]);
+  const [ownerDocuments, setOwnerDocuments] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [langTab, setLangTab] = useState("en");
   const [developers, setDevelopers] = useState([]);
@@ -89,6 +96,17 @@ const AddPropertyByAgent = () => {
       address: "",
       coordinates: {},
       nearByLocations: [{ locationName: "", distance: "", transportType: "Drive" }],
+      // Off-Plan specific fields
+      deliveryDate: "",
+      completionPercentage: "",
+      paymentPlan: "",
+      offPlanNocNumber: "",
+      offPlanPermitNumber: "",
+      // Owner documents fields
+      ownerIdNumber: "",
+      ownerEmiratesId: "",
+      ownerPassportNumber: "",
+      ownerVisaCopy: "",
     },
   });
 
@@ -102,6 +120,7 @@ const AddPropertyByAgent = () => {
   const watchOffering = watch("offeringType");
   const watchPermit = watch("permitType");
   const watchAmenities = watch("amenities") || [];
+  const isOffPlan = watchCategory === "Off-Plan";
 
   // --- Dynamic Enums ---
   const resTypes = [
@@ -142,7 +161,6 @@ const AddPropertyByAgent = () => {
     if (location) {
       setSelectedLocationData(location);
       
-      // Set ALL location fields
       setValue("locationId", location.id || location.location_id);
       setValue("locationPath", location.path || `${location.id}`);
       setValue("locationName", location.name);
@@ -152,7 +170,6 @@ const AddPropertyByAgent = () => {
       setValue("locationLng", location.coordinates?.lon);
       setValue("locationType", location.type);
       
-      // Display fields
       const displayAddr = location.title || location.subtitle || `${location.name}, Dubai`;
       setValue("displayAddress", displayAddr);
       setValue("address", displayAddr);
@@ -160,15 +177,6 @@ const AddPropertyByAgent = () => {
       if (location.coordinates) {
         setValue("coordinates", location.coordinates);
       }
-      
-      console.log("Location selected:", {
-        name: location.name,
-        address: location.title,
-        placeId: location.location_id,
-        lat: location.coordinates?.lat,
-        lng: location.coordinates?.lon,
-        type: location.type
-      });
       
       addToast(`Location selected: ${location.name || location.title}`, "success");
     } else {
@@ -187,6 +195,25 @@ const AddPropertyByAgent = () => {
     }
   };
 
+  // Handle document uploads
+  const handleOffPlanDocumentUpload = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    setOffPlanDocuments(prev => [...prev, ...selectedFiles]);
+  };
+
+  const handleOwnerDocumentUpload = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    setOwnerDocuments(prev => [...prev, ...selectedFiles]);
+  };
+
+  const removeOffPlanDocument = (index) => {
+    setOffPlanDocuments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeOwnerDocument = (index) => {
+    setOwnerDocuments(prev => prev.filter((_, i) => i !== index));
+  };
+
   const toggleAmenity = (amenity) => {
     const current = watchAmenities;
     setValue(
@@ -200,6 +227,7 @@ const AddPropertyByAgent = () => {
     { id: "compliance", label: "Compliance", icon: <ShieldCheck size={14} /> },
     { id: "specs", label: "Specifications", icon: <Layers size={14} /> },
     { id: "location", label: "Location", icon: <MapPin size={14} /> },
+    { id: "documents", label: "Documents", icon: <FileText size={14} /> },
     { id: "media", label: "Media", icon: <Camera size={14} /> },
     { id: "amenities", label: "Amenities", icon: <Sparkles size={14} /> },
     { id: "pricing", label: "Pricing", icon: <DollarSign size={14} /> },
@@ -211,7 +239,6 @@ const AddPropertyByAgent = () => {
       return;
     }
     
-    // Check for location data using the new field
     if (!data.locationName && !data.displayAddress) {
       addToast("Please select a valid location from the search", "error");
       return;
@@ -227,7 +254,6 @@ const AddPropertyByAgent = () => {
       const formData = new FormData();
       
       const payload = {
-        // Basic Info
         propertyTitleEn: data.propertyTitleEn,
         propertyTitleAr: data.propertyTitleAr || "",
         price: Number(data.price),
@@ -237,8 +263,6 @@ const AddPropertyByAgent = () => {
         offeringType: data.offeringType,
         rentedPeriod: data.rentedPeriod || "",
         cheques: data.cheques ? Number(data.cheques) : undefined,
-        
-        // Compliance
         developerId: data.developerId || null,
         agentId: user.id,
         permitType: data.permitType,
@@ -246,8 +270,6 @@ const AddPropertyByAgent = () => {
         reraORN: data.reraORN || "",
         brnNumber: data.brnNumber || "",
         ownerName: data.ownerName || "",
-        
-        // Specifications
         bedroom: Number(data.bedroom) || 0,
         bathroom: Number(data.bathroom) || 0,
         totalFloor: data.totalFloor ? Number(data.totalFloor) : undefined,
@@ -257,12 +279,8 @@ const AddPropertyByAgent = () => {
         furnishingType: data.furnishingType || "Unfurnished",
         propertyAge: data.propertyAge || "Brand New",
         availability: data.availability || "Immediately",
-        
-        // Description
         descriptionEn: data.descriptionEn,
         descriptionAr: data.descriptionAr || "",
-        
-        // LOCATION FIELDS (Google Places data)
         locationName: data.locationName || "",
         locationAddress: data.locationAddress || data.displayAddress || "",
         locationPlaceId: data.locationPlaceId || "",
@@ -272,8 +290,6 @@ const AddPropertyByAgent = () => {
         displayAddress: data.displayAddress || "",
         address: data.address || data.displayAddress || "",
         coordinates: data.coordinates || {},
-        
-        // Other fields
         amenities: data.amenities || [],
         nearByLocations: data.nearByLocations || [],
         videos: data.videos || "",
@@ -282,13 +298,23 @@ const AddPropertyByAgent = () => {
         status: data.status || "Active",
         publishingStatus: data.publishingStatus || "Published",
         refrenceNo: data.refrenceNo,
-        userType: "agent"
+        userType: "agent",
+        // Off-Plan fields
+        deliveryDate: data.deliveryDate || "",
+        completionPercentage: data.completionPercentage ? Number(data.completionPercentage) : null,
+        paymentPlan: data.paymentPlan || "",
+        offPlanNocNumber: data.offPlanNocNumber || "",
+        offPlanPermitNumber: data.offPlanPermitNumber || "",
+        // Owner document fields
+        ownerIdNumber: data.ownerIdNumber || "",
+        ownerEmiratesId: data.ownerEmiratesId || "",
+        ownerPassportNumber: data.ownerPassportNumber || "",
+        ownerVisaCopy: data.ownerVisaCopy || "",
       };
       
-      // Append all payload fields to FormData
       Object.keys(payload).forEach((key) => {
         if (payload[key] !== undefined && payload[key] !== null && payload[key] !== "") {
-          if (typeof payload[key] === "object" && !(payload[key] instanceof File)) {
+          if (typeof payload[key] === "object") {
             formData.append(key, JSON.stringify(payload[key]));
           } else {
             formData.append(key, payload[key]);
@@ -296,8 +322,13 @@ const AddPropertyByAgent = () => {
         }
       });
       
-      // Append images
       files.forEach((file) => formData.append("image", file));
+      
+      // Append Off-Plan documents
+      offPlanDocuments.forEach((doc) => formData.append("offPlanDocuments", doc));
+      
+      // Append Owner documents
+      ownerDocuments.forEach((doc) => formData.append("ownerDocuments", doc));
       
       const res = await http.post("/addproperty", formData, { withCredentials: true });
       
@@ -305,6 +336,8 @@ const AddPropertyByAgent = () => {
         addToast("Property Added Successfully", "success");
         reset();
         setFiles([]);
+        setOffPlanDocuments([]);
+        setOwnerDocuments([]);
         setSelectedLocationData(null);
         setValue("refrenceNo", generateReferenceNumber());
       }
@@ -328,7 +361,6 @@ const AddPropertyByAgent = () => {
       <header className={`sticky top-0 z-[100] border-b backdrop-blur-xl transition-all duration-300 ${isDark ? "bg-[#0F1219]/95 border-white/5 shadow-lg shadow-black/10" : "bg-white/95 border-slate-200 shadow-sm"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 lg:py-0 lg:h-20 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-0">
           
-          {/* BRANDING & REFERENCE SUB-GRID */}
           <div className="flex items-center justify-between lg:justify-start gap-4 w-full lg:w-auto">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20 shrink-0">
@@ -344,7 +376,6 @@ const AddPropertyByAgent = () => {
               </div>
             </div>
             
-            {/* Reference Number Badge */}
             <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg ml-2 shrink-0 ${
               isDark ? "bg-amber-500/10 border border-amber-500/20" : "bg-amber-50 border border-amber-200"
             }`}>
@@ -355,7 +386,6 @@ const AddPropertyByAgent = () => {
               </div>
             </div>
 
-            {/* Mobile Publishing Status */}
             <div className="sm:hidden shrink-0">
               <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider ${
                 watch("publishingStatus") === "Published" 
@@ -367,10 +397,7 @@ const AddPropertyByAgent = () => {
             </div>
           </div>
 
-          {/* ACTION CLUSTER */}
           <div className="flex items-center justify-between lg:justify-end gap-3 w-full lg:w-auto pt-2 lg:pt-0 border-t border-slate-200/40 dark:border-white/5 lg:border-none">
-            
-            {/* Mobile Reference Indicator */}
             <div className="sm:hidden flex items-center gap-1.5">
               <Hash size={12} className="text-amber-500" />
               <span className="text-[10px] font-mono font-bold text-amber-500 truncate max-w-[140px]">
@@ -378,7 +405,6 @@ const AddPropertyByAgent = () => {
               </span>
             </div>
 
-            {/* Desktop Publishing Status */}
             <div className={`hidden sm:block px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider shrink-0 ${
               watch("publishingStatus") === "Published" 
                 ? "bg-green-500/10 text-green-500 border border-green-500/20" 
@@ -387,7 +413,6 @@ const AddPropertyByAgent = () => {
               {watch("publishingStatus")}
             </div>
 
-            {/* Submit Button */}
             <button
               onClick={handleSubmit(onSubmit)}
               disabled={isSubmitting}
@@ -443,7 +468,6 @@ const AddPropertyByAgent = () => {
         <div id="section-basic" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
           <SectionHeader icon={<Home />} title="Basic Information" />
           
-          {/* Reference Number Field */}
           <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-500/5 to-transparent border border-amber-500/20">
             <div className="flex items-center gap-4">
               <div className="p-2 bg-amber-500/10 rounded-lg">
@@ -451,7 +475,7 @@ const AddPropertyByAgent = () => {
               </div>
               <div className="flex-1">
                 <label className={labelClass}>Reference Number {requiredStar}</label>
-                <input {...register("refrenceNo", { required: true })} className={`${inputClass} font-mono`} placeholder="Auto-generated reference number" />
+                <input {...register("refrenceNo", { required: true })} className={`${inputClass} font-mono`} />
                 <p className="text-[8px] text-slate-400 mt-1">Unique property identifier (auto-generated, editable)</p>
               </div>
               <div className="flex items-center gap-2">
@@ -469,12 +493,12 @@ const AddPropertyByAgent = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
               <label className={labelClass}>Property Title (English) {requiredStar}</label>
-              <input {...register("propertyTitleEn", { required: true })} className={inputClass} placeholder="e.g., Luxury Penthouse with Burj View" />
+              <input {...register("propertyTitleEn", { required: true })} className={inputClass} />
               {errors.propertyTitleEn && <p className="text-red-500 text-[9px] mt-1">Required</p>}
             </div>
             <div className="md:col-span-2">
               <label className={labelClass}>Property Title (Arabic)</label>
-              <input {...register("propertyTitleAr")} className={`${inputClass} text-right font-arabic`} placeholder="عنوان العقار بالعربية" />
+              <input {...register("propertyTitleAr")} className={`${inputClass} text-right font-arabic`} dir="rtl" />
             </div>
             <div>
               <label className={labelClass}>Category {requiredStar}</label>
@@ -537,12 +561,12 @@ const AddPropertyByAgent = () => {
             {watchPermit === "RERA" && (
               <div>
                 <label className={labelClass}>Trakheesi Number</label>
-                <input {...register("trakheesiNumber")} className={inputClass} placeholder="Permit ID" />
+                <input {...register("trakheesiNumber")} className={inputClass} />
               </div>
             )}
             <div>
               <label className={labelClass}>Owner Name</label>
-              <input {...register("ownerName")} className={inputClass} placeholder="Full Name" />
+              <input {...register("ownerName")} className={inputClass} />
             </div>
             {watchCategory === "Off-Plan" && (
               <div className="border border-dashed border-amber-500/20 p-3 rounded-xl bg-amber-500/5">
@@ -561,29 +585,29 @@ const AddPropertyByAgent = () => {
           <SectionHeader icon={<Layers />} title="Physical Specifications" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div>
-              <label className={labelClass}><Bed size={12} className="inline mr-1" /> Bedrooms</label>
+              <label className={labelClass}>Bedrooms</label>
               <select {...register("bedroom")} className={inputClass}>
                 {[...Array(21).keys()].map((i) => (<option key={i} value={i}>{i === 0 ? "Studio" : i}</option>))}
               </select>
             </div>
             <div>
-              <label className={labelClass}><Bath size={12} className="inline mr-1" /> Bathrooms</label>
+              <label className={labelClass}>Bathrooms</label>
               <select {...register("bathroom")} className={inputClass}>
                 {[...Array(11).keys()].map((i) => (<option key={i} value={i}>{i}</option>))}
               </select>
             </div>
             <div>
               <label className={labelClass}>Total Floors</label>
-              <input type="number" {...register("totalFloor")} className={inputClass} placeholder="Floors" />
+              <input type="number" {...register("totalFloor")} className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>Area (sqft) {requiredStar}</label>
-              <input type="number" {...register("squarefoot", { required: true })} className={inputClass} placeholder="Size in sqft" />
+              <input type="number" {...register("squarefoot", { required: true })} className={inputClass} />
               {errors.squarefoot && <p className="text-red-500 text-[9px] mt-1">Required</p>}
             </div>
             <div>
               <label className={labelClass}>Unit/Suite No</label>
-              <input {...register("unitNo")} className={inputClass} placeholder="e.g., 1201" />
+              <input {...register("unitNo")} className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>Parking Slots</label>
@@ -623,7 +647,6 @@ const AddPropertyByAgent = () => {
         <div id="section-location" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
           <SectionHeader icon={<MapPin />} title="Location" />
           
-          {/* Hidden fields for location data */}
           <input type="hidden" {...register("locationId")} />
           <input type="hidden" {...register("locationPath")} />
           <input type="hidden" {...register("locationName")} />
@@ -645,33 +668,32 @@ const AddPropertyByAgent = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <div className="md:col-span-2">
               <label className={labelClass}>Display Address {requiredStar}</label>
-              <input {...register("displayAddress", { required: true })} className={inputClass} placeholder="Complete Address" />
+              <input {...register("displayAddress", { required: true })} className={inputClass} />
             </div>
             <div className="md:col-span-2">
               <label className={labelClass}>Full Address {requiredStar}</label>
-              <input {...register("address", { required: true })} className={inputClass} placeholder="Complete Address" />
+              <input {...register("address", { required: true })} className={inputClass} />
             </div>
           </div>
 
-          {/* Nearby Locations */}
           <div className="space-y-4 mt-6">
             <label className={labelClass}>Nearby Locations</label>
             {fields.map((item, index) => (
               <div key={item.id} className="grid grid-cols-1 md:grid-cols-5 gap-4 bg-black/5 dark:bg-white/5 p-4 rounded-xl items-end">
                 <div className="md:col-span-2">
-                  <input {...register(`nearByLocations.${index}.locationName`, { required: true })} placeholder="Landmark Name" className={inputClass} />
+                  <input {...register(`nearByLocations.${index}.locationName`)} placeholder="Landmark Name" className={inputClass} />
                 </div>
                 <div>
-                  <input {...register(`nearByLocations.${index}.distance`, { required: true })} placeholder="Distance (e.g., 5 min)" className={inputClass} />
+                  <input {...register(`nearByLocations.${index}.distance`)} placeholder="Distance (e.g., 5 min)" className={inputClass} />
                 </div>
                 <div>
-                  <select {...register(`nearByLocations.${index}.transportType`)} className={inputClass} defaultValue="Drive">
+                  <select {...register(`nearByLocations.${index}.transportType`)} className={inputClass}>
                     <option value="Drive">🚗 Drive</option>
                     <option value="Walk">🚶 Walk</option>
                     <option value="Metro">🚇 Metro</option>
                   </select>
                 </div>
-                <button type="button" onClick={() => remove(index)} className="h-14 px-4 flex items-center justify-center text-red-500 hover:bg-red-500/10 rounded-xl transition-all">
+                <button type="button" onClick={() => remove(index)} className="h-14 px-4 flex items-center justify-center text-red-500 hover:bg-red-500/10 rounded-xl">
                   <Trash2 size={18} />
                 </button>
               </div>
@@ -682,7 +704,173 @@ const AddPropertyByAgent = () => {
           </div>
         </div>
 
-        {/* SECTION 5: DESCRIPTION */}
+        {/* SECTION 5: DOCUMENTS (Off-Plan & Owner Documents) */}
+        <div id="section-documents" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
+          <SectionHeader icon={<FileText />} title="Documents & Compliance" />
+          
+          {/* Off-Plan Documents Section */}
+          <div className={`mb-8 p-6 rounded-xl ${isDark ? 'bg-purple-500/5 border border-purple-500/20' : 'bg-purple-50 border border-purple-200'}`}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`p-2 rounded-lg ${isDark ? 'bg-purple-500/20' : 'bg-purple-500/10'}`}>
+                <FileCheck size={18} className="text-purple-500" />
+              </div>
+              <div>
+                <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Off-Plan Documents</h3>
+                <p className="text-[9px] text-slate-500">NOC, Permit, and other project documents</p>
+              </div>
+            </div>
+
+            {/* Off-Plan Document Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className={labelClass}>NOC Number / DLD Approval</label>
+                <input {...register("offPlanNocNumber")} className={inputClass} placeholder="e.g., DLD-NOC-2024-00123" />
+              </div>
+              <div>
+                <label className={labelClass}>Off-Plan Permit Number</label>
+                <input {...register("offPlanPermitNumber")} className={inputClass} placeholder="e.g., RERA-OPP-2024-456" />
+              </div>
+            </div>
+
+            {/* Off-Plan Document Upload */}
+            <div className="mt-4">
+              <label className={labelClass}>Upload Documents (NOC, Permit, Escrow, etc.)</label>
+              <div
+                className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
+                  offPlanDocuments.length > 0
+                    ? "border-purple-400 bg-purple-50 dark:bg-purple-950"
+                    : "border-gray-300 dark:border-gray-600 hover:border-purple-400"
+                }`}
+                onClick={() => document.getElementById("offPlanDocsInput")?.click()}
+              >
+                <input
+                  id="offPlanDocsInput"
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.jpg,.png"
+                  className="hidden"
+                  onChange={handleOffPlanDocumentUpload}
+                />
+                <Upload size={32} className="mx-auto mb-2 text-gray-400" />
+                <p className="text-xs font-medium">Click to upload Off-Plan documents</p>
+                <p className="text-[9px] text-gray-500 mt-1">PDF, DOC, JPG, PNG (Max 10 files)</p>
+              </div>
+              
+              {offPlanDocuments.length > 0 && (
+                <div className="mt-3 space-y-2 max-h-40 overflow-y-auto">
+                  {offPlanDocuments.map((doc, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
+                      <div className="flex items-center gap-2">
+                        <FileWarning size={14} className="text-purple-500" />
+                        <span className="text-xs truncate max-w-[200px]">{doc.name}</span>
+                      </div>
+                      <button onClick={() => removeOffPlanDocument(index)} className="text-red-500 hover:text-red-600">
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Off-Plan Additional Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-purple-500/20">
+              <div>
+                <label className={labelClass}>Delivery Date / Handover</label>
+                <input type="date" {...register("deliveryDate")} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Completion Percentage</label>
+                <input type="number" {...register("completionPercentage")} className={inputClass} placeholder="e.g., 65" step="5" />
+              </div>
+              <div>
+                <label className={labelClass}>Payment Plan</label>
+                <select {...register("paymentPlan")} className={inputClass}>
+                  <option value="">Select Payment Plan</option>
+                  <option value="50/50">50/50 Post Handover</option>
+                  <option value="60/40">60/40 Post Handover</option>
+                  <option value="70/30">70/30 Post Handover</option>
+                  <option value="80/20">80/20 Post Handover</option>
+                  <option value="Flexible">Flexible Payment Plan</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Owner Documents Section */}
+          <div className={`p-6 rounded-xl ${isDark ? 'bg-blue-500/5 border border-blue-500/20' : 'bg-blue-50 border border-blue-200'}`}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`p-2 rounded-lg ${isDark ? 'bg-blue-500/20' : 'bg-blue-500/10'}`}>
+                <UserCheck size={18} className="text-blue-500" />
+              </div>
+              <div>
+                <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Owner Documents</h3>
+                <p className="text-[9px] text-slate-500">Emirates ID, Passport, Visa, etc.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className={labelClass}>Owner ID Number / Civil ID</label>
+                <input {...register("ownerIdNumber")} className={inputClass} placeholder="e.g., 784-2024-1234567" />
+              </div>
+              <div>
+                <label className={labelClass}>Emirates ID Number</label>
+                <input {...register("ownerEmiratesId")} className={inputClass} placeholder="e.g., 784-2024-1234567-1" />
+              </div>
+              <div>
+                <label className={labelClass}>Passport Number</label>
+                <input {...register("ownerPassportNumber")} className={inputClass} placeholder="e.g., A12345678" />
+              </div>
+              <div>
+                <label className={labelClass}>Visa Copy Number</label>
+                <input {...register("ownerVisaCopy")} className={inputClass} placeholder="e.g., 1234567890" />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <label className={labelClass}>Upload Owner Documents (Emirates ID, Passport, Visa)</label>
+              <div
+                className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
+                  ownerDocuments.length > 0
+                    ? "border-blue-400 bg-blue-50 dark:bg-blue-950"
+                    : "border-gray-300 dark:border-gray-600 hover:border-blue-400"
+                }`}
+                onClick={() => document.getElementById("ownerDocsInput")?.click()}
+              >
+                <input
+                  id="ownerDocsInput"
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.jpg,.png"
+                  className="hidden"
+                  onChange={handleOwnerDocumentUpload}
+                />
+                <Upload size={32} className="mx-auto mb-2 text-gray-400" />
+                <p className="text-xs font-medium">Click to upload Owner documents</p>
+                <p className="text-[9px] text-gray-500 mt-1">PDF, DOC, JPG, PNG (Max 10 files)</p>
+              </div>
+              
+              {ownerDocuments.length > 0 && (
+                <div className="mt-3 space-y-2 max-h-40 overflow-y-auto">
+                  {ownerDocuments.map((doc, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
+                      <div className="flex items-center gap-2">
+                        <File size={14} className="text-blue-500" />
+                        <span className="text-xs truncate max-w-[200px]">{doc.name}</span>
+                      </div>
+                      <button onClick={() => removeOwnerDocument(index)} className="text-red-500 hover:text-red-600">
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 6: DESCRIPTION */}
         <div className={`p-8 rounded-[2rem] border ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
           <div className="flex justify-between items-center mb-6">
             <SectionHeader icon={<FileText />} title="Description" />
@@ -701,33 +889,6 @@ const AddPropertyByAgent = () => {
           </AnimatePresence>
         </div>
 
-        {/* SECTION 6: PRICING */}
-        <div id="section-pricing" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-          <SectionHeader icon={<Wallet />} title="Pricing" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className={labelClass}>Price {requiredStar}</label>
-              <input type="number" {...register("price", { required: true })} className={`${inputClass} text-xl font-black text-amber-500`} placeholder="0.00" />
-              {errors.price && <p className="text-red-500 text-[9px] mt-1">Required</p>}
-            </div>
-            <div>
-              <label className={labelClass}>Currency {requiredStar}</label>
-              <select {...register("currency")} className={inputClass}>
-                {CURRENCIES.map((c) => (<option key={c} value={c}>{c}</option>))}
-              </select>
-            </div>
-            {watchOffering === "Rent" && (
-              <div>
-                <label className={labelClass}>Number of Cheques</label>
-                <select {...register("cheques")} className={inputClass}>
-                  <option value="">Select</option>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12].map((c) => (<option key={c} value={c}>{c} Cheques</option>))}
-                </select>
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* SECTION 7: MEDIA */}
         <div id="section-media" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
           <SectionHeader icon={<Camera />} title="Media" />
@@ -743,7 +904,7 @@ const AddPropertyByAgent = () => {
                 {files.map((f, i) => (
                   <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden group border border-white/10">
                     <img src={URL.createObjectURL(f)} className="w-full h-full object-cover" alt="" />
-                    <button type="button" onClick={() => setFiles(files.filter((_, idx) => idx !== i))} className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                    <button type="button" onClick={() => setFiles(files.filter((_, idx) => idx !== i))} className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center">
                       <X className="text-white" size={14} />
                     </button>
                   </div>
@@ -791,6 +952,33 @@ const AddPropertyByAgent = () => {
                 );
               })}
             </div>
+          </div>
+        </div>
+
+        {/* SECTION 9: PRICING */}
+        <div id="section-pricing" className={`p-8 rounded-[2rem] border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
+          <SectionHeader icon={<Wallet />} title="Pricing" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className={labelClass}>Price {requiredStar}</label>
+              <input type="number" {...register("price", { required: true })} className={`${inputClass} text-xl font-black text-amber-500`} />
+              {errors.price && <p className="text-red-500 text-[9px] mt-1">Required</p>}
+            </div>
+            <div>
+              <label className={labelClass}>Currency {requiredStar}</label>
+              <select {...register("currency")} className={inputClass}>
+                {CURRENCIES.map((c) => (<option key={c} value={c}>{c}</option>))}
+              </select>
+            </div>
+            {watchOffering === "Rent" && (
+              <div>
+                <label className={labelClass}>Number of Cheques</label>
+                <select {...register("cheques")} className={inputClass}>
+                  <option value="">Select</option>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12].map((c) => (<option key={c} value={c}>{c} Cheques</option>))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
       </main>

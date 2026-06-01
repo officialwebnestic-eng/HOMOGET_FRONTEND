@@ -180,21 +180,7 @@ const AdminDashboard = () => {
           </h1>
           <p className={`text-xs ${colors.subText} mt-1`}>Here's what's happening with your business today.</p>
         </div>
-        
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => window.location.reload()}
-            className={`p-2.5 rounded-xl border ${colors.card} hover:bg-amber-500/10 transition-all`}
-          >
-            <RefreshCw size={16} className="text-amber-500" />
-          </button>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="px-5 py-2.5 rounded-xl bg-amber-500 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-amber-600 transition-all flex items-center gap-2"
-          >
-            <Plus size={14} /> Create Session
-          </button>
-        </div>
+    
       </div>
 
       {/* STATS GRID - 4 Cards */}

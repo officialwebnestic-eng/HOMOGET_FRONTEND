@@ -77,10 +77,13 @@ const GlobalWhatsAppChat = () => {
 
   const handleCategorySelect = (category) => {
     setActiveCategory(category);
-    setShowForm(true);
+    // Only show form layout directly for careers and complaints
+    if (activeSection === "careers" || activeSection === "complaints") {
+      setShowForm(true);
+    } else {
+      setShowForm(false); // Inquiries display property sub-types first
+    }
   };
-
-
 
   const handleFormChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -222,7 +225,7 @@ const GlobalWhatsAppChat = () => {
                 value={formData.name}
                 onChange={handleFormChange}
                 placeholder="John Doe"
-                className="w-full px-3 py-2 rounded-lg text-[11px] border focus:ring-2 focus:ring-amber-500 outline-none"
+                className={inputClass}
               />
             </div>
             <div>
@@ -233,7 +236,7 @@ const GlobalWhatsAppChat = () => {
                 value={formData.phone}
                 onChange={handleFormChange}
                 placeholder="+971 XX XXX XXXX"
-                className="w-full px-3 py-2 rounded-lg text-[11px] border focus:ring-2 focus:ring-amber-500 outline-none"
+                className={inputClass}
               />
             </div>
             <div>
@@ -244,7 +247,7 @@ const GlobalWhatsAppChat = () => {
                 value={formData.email}
                 onChange={handleFormChange}
                 placeholder="john@example.com"
-                className="w-full px-3 py-2 rounded-lg text-[11px] border focus:ring-2 focus:ring-amber-500 outline-none"
+                className={inputClass}
               />
             </div>
             <div>
@@ -255,7 +258,7 @@ const GlobalWhatsAppChat = () => {
                 value={formData.experience}
                 onChange={handleFormChange}
                 placeholder="e.g., 3+ years in Real Estate"
-                className="w-full px-3 py-2 rounded-lg text-[11px] border focus:ring-2 focus:ring-amber-500 outline-none"
+                className={inputClass}
               />
             </div>
             <div>
@@ -277,8 +280,8 @@ const GlobalWhatsAppChat = () => {
                 value={formData.message}
                 onChange={handleFormChange}
                 rows="3"
-                placeholder="Tell us about your experience, skills, preferred job role, or anything you would like our HR team to know..."
-                className="w-full px-3 py-2 rounded-lg text-[11px] border focus:ring-2 focus:ring-amber-500 outline-none resize-none"
+                placeholder="Tell us about your experience, skills, preferred job role..."
+                className="w-full px-3 py-2 rounded-lg text-[11px] border focus:ring-2 focus:ring-amber-500 outline-none resize-none bg-transparent"
               />
             </div>
           </div>
@@ -309,8 +312,8 @@ const GlobalWhatsAppChat = () => {
                 name="referenceId"
                 value={formData.referenceId}
                 onChange={handleFormChange}
-                placeholder="e.g., HMG-2025-00123 or Property Name"
-                className="w-full px-3 py-2 rounded-lg text-[11px] border focus:ring-2 focus:ring-amber-500 outline-none"
+                placeholder="e.g., HMG-2025-00123"
+                className={inputClass}
               />
             </div>
             <div>
@@ -332,8 +335,8 @@ const GlobalWhatsAppChat = () => {
                 value={formData.message}
                 onChange={handleFormChange}
                 rows="4"
-                placeholder="Please explain your issue, complaint, feedback, or request in detail..."
-                className="w-full px-3 py-2 rounded-lg text-[11px] border focus:ring-2 focus:ring-amber-500 outline-none resize-none"
+                placeholder="Please explain your issue in detail..."
+                className="w-full px-3 py-2 rounded-lg text-[11px] border focus:ring-2 focus:ring-amber-500 outline-none resize-none bg-transparent"
               />
             </div>
           </div>
@@ -365,8 +368,9 @@ const GlobalWhatsAppChat = () => {
     return [];
   };
 
-  const inputClass = `w-full px-3 py-2 rounded-lg text-[11px] border focus:ring-2 focus:ring-amber-500 outline-none ${isDark ? "bg-[#1A1F2B] border-white/10 text-white" : "bg-white border-slate-200 text-slate-900"
-    }`;
+  const inputClass = `w-full px-3 py-2 rounded-lg text-[11px] border focus:ring-2 focus:ring-amber-500 outline-none ${
+    isDark ? "bg-[#1A1F2B] border-white/10 text-white" : "bg-white border-slate-200 text-slate-900"
+  }`;
 
   return (
     <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end">
@@ -378,8 +382,9 @@ const GlobalWhatsAppChat = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            className={`mb-3 px-4 py-2 rounded-xl shadow-lg border text-[9px] font-bold uppercase tracking-wider ${isDark ? "bg-neutral-900 text-amber-500 border-white/10" : "bg-white text-amber-600 border-slate-200"
-              }`}
+            className={`mb-3 px-4 py-2 rounded-xl shadow-lg border text-[9px] font-bold uppercase tracking-wider ${
+              isDark ? "bg-neutral-900 text-amber-500 border-white/10" : "bg-white text-amber-600 border-slate-200"
+            }`}
           >
             Need help? Ask our team 👋
           </motion.div>
@@ -393,7 +398,9 @@ const GlobalWhatsAppChat = () => {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="mb-4 w-[350px] md:w-[420px] rounded-2xl overflow-hidden shadow-2xl border"
+            className={`mb-4 w-[350px] md:w-[420px] rounded-2xl overflow-hidden shadow-2xl border ${
+              isDark ? "bg-neutral-950 border-white/10 text-white" : "bg-white border-slate-200 text-slate-900"
+            }`}
             style={{ maxHeight: "calc(100vh - 120px)" }}
           >
             {/* Header */}
@@ -419,20 +426,21 @@ const GlobalWhatsAppChat = () => {
             {/* Body */}
             <div className={`p-4 space-y-3 overflow-y-auto ${isDark ? "bg-black/40" : "bg-slate-50"}`} style={{ maxHeight: "calc(100vh - 200px)" }}>
 
-              {/* Back button */}
+              {/* Fixed Back button routing logic */}
               {(activeSection || activeCategory) && (
                 <button
-                  onClick={activeCategory ? handleBackToCategories : handleBackToMain}
+                  onClick={activeSection === "inquiry" && activeCategory ? handleBackToCategories : handleBackToMain}
                   className="flex items-center gap-2 text-amber-500 hover:text-amber-600 text-[9px] font-bold uppercase tracking-wider transition-colors mb-1"
                 >
-                  <FiArrowLeft size={14} /> Back to {activeCategory ? "categories" : "main menu"}
+                  <FiArrowLeft size={14} /> Back to {activeSection === "inquiry" && activeCategory ? "categories" : "main menu"}
                 </button>
               )}
 
               {/* Compliance Highlights */}
               {!activeSection && (
-                <div className={`p-3 rounded-xl rounded-tl-none text-[10px] font-medium leading-relaxed ${isDark ? "bg-white/5 text-slate-300" : "bg-white text-slate-600 shadow-sm"
-                  }`}>
+                <div className={`p-3 rounded-xl rounded-tl-none text-[10px] font-medium leading-relaxed ${
+                  isDark ? "bg-white/5 text-slate-300" : "bg-white text-slate-600 shadow-sm"
+                }`}>
                   We provide verified Dubai listings with:
                   <ul className="mt-1 space-y-0.5">
                     <li className="flex items-center gap-1.5 text-[9px]"><FiCheckCircle className="text-amber-500" size={12} /> DLD / RERA Registered</li>
@@ -451,7 +459,9 @@ const GlobalWhatsAppChat = () => {
                       <button
                         key={opt.value}
                         onClick={() => handleSectionSelect(opt.value)}
-                        className="flex items-center justify-between py-3 px-4 rounded-xl text-[10px] font-bold uppercase tracking-wider border transition-all hover:bg-amber-500 hover:text-black group"
+                        className={`flex items-center justify-between py-3 px-4 rounded-xl text-[10px] font-bold uppercase tracking-wider border transition-all hover:bg-amber-500 hover:text-black group ${
+                          isDark ? "border-white/10 text-white" : "border-slate-200 text-slate-700"
+                        }`}
                       >
                         <span className="flex items-center gap-2">
                           {opt.icon}
@@ -476,16 +486,18 @@ const GlobalWhatsAppChat = () => {
                       <button
                         key={typeof opt === 'object' ? opt.value : opt}
                         onClick={() => handleCategorySelect(typeof opt === 'object' ? opt.value : opt)}
-                        className="py-2.5 px-3 rounded-lg text-[8px] font-bold uppercase tracking-wider border transition-all hover:bg-amber-500 hover:text-black text-center"
+                        className={`py-2.5 px-3 rounded-lg text-[8px] font-bold uppercase tracking-wider border transition-all hover:bg-amber-500 hover:text-black text-center ${
+                          isDark ? "border-white/10 text-white" : "border-slate-200 text-slate-700"
+                        }`}
                       >
-                        {typeof opt === 'object' ? opt.label : opt}
+                        ={typeof opt === 'object' ? opt.label : opt}
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Property Type Selection (for inquiry) */}
+              {/* Property Type Sub-Options Menu List */}
               {activeSection === "inquiry" && activeCategory && !showForm && (
                 <div className="space-y-2">
                   <p className="text-[8px] font-black text-slate-500 uppercase tracking-wider ml-1">
@@ -496,7 +508,9 @@ const GlobalWhatsAppChat = () => {
                       <button
                         key={type}
                         onClick={() => handleInquirySubmit(activeCategory, type)}
-                        className="py-2 px-3 rounded-lg text-[8px] font-medium uppercase tracking-wide border transition-all hover:bg-amber-500 hover:text-black text-center"
+                        className={`py-2 px-3 rounded-lg text-[8px] font-medium uppercase tracking-wide border transition-all hover:bg-amber-500 hover:text-black text-center ${
+                          isDark ? "border-white/10 text-white" : "border-slate-200 text-slate-700"
+                        }`}
                       >
                         {type}
                       </button>
@@ -505,7 +519,7 @@ const GlobalWhatsAppChat = () => {
                 </div>
               )}
 
-              {/* Forms (Careers or Complaints) */}
+              {/* Forms Layout Container */}
               {showForm && getFormFields()}
 
             </div>
@@ -530,8 +544,9 @@ const GlobalWhatsAppChat = () => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => { setIsOpen(!isOpen); setShowPrompt(false); }}
-        className={`w-14 h-14 rounded-xl flex items-center justify-center shadow-2xl relative transition-all ${isOpen ? (isDark ? "bg-white text-black" : "bg-black text-white") : "bg-amber-500 text-black"
-          }`}
+        className={`w-14 h-14 rounded-xl flex items-center justify-center shadow-2xl relative transition-all ${
+          isOpen ? (isDark ? "bg-white text-black" : "bg-black text-white") : "bg-amber-500 text-black"
+        }`}
       >
         {isOpen ? <FiX size={24} /> : <FaWhatsapp size={28} />}
         {!isOpen && (

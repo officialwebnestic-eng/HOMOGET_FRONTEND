@@ -55,7 +55,7 @@ export default function Navbar() {
 
   const getNavItems = () => {
     if (!isAuthenticated || user?.role === "user") {
-      return ["Home", "About Us", "Buy", "Rent", "Off-Plan", "Resources", "Careers", "Contact Us"];
+      return ["Home", "About Us", "Buy", "Rent", "Off-Plan", "Resources", "Blogs", "Contact Us"];
     }
      return  []
   
@@ -230,12 +230,12 @@ export default function Navbar() {
                     );
                   }
                   
-                  if (item === "Careers") {
+                  if (item === "Blogs") {
                     return (
-                      <Link key={item} to="/careers" className={navLinkClass}>
-                        {item}
-                        <span className="bg-amber-500 text-black text-[6px] px-1.5 py-0.5 rounded-full font-bold ml-1">HIRING</span>
-                      </Link>
+                      <Link key={item} to="/blog" className={navLinkClass}>
+        {item}
+        <span className="bg-amber-500 text-black text-[6px] px-1.5 py-0.5 rounded-full font-bold ml-1">NEW</span>
+      </Link>
                     );
                   }
                   
@@ -382,74 +382,90 @@ export default function Navbar() {
             </div>
 
             {/* Right Section */}
-            <div className="flex items-center gap-2 lg:gap-2 flex-shrink-0">
-              <button onClick={toggleTheme} className={`p-1.5 rounded-full transition-all ${isDark ? "text-amber-400 bg-white/5" : "text-slate-600 bg-slate-100"}`}>
-                {isDark ? <SunIcon size={14} /> : <MoonIcon size={14} />}
-              </button>
+           {/* Right Section - Fixed Profile Dropdown Z-Index */}
+<div className="flex items-center gap-2 lg:gap-2 flex-shrink-0">
+  <button onClick={toggleTheme} className={`p-1.5 rounded-full transition-all ${isDark ? "text-amber-400 bg-white/5" : "text-slate-600 bg-slate-100"}`}>
+    {isDark ? <SunIcon size={14} /> : <MoonIcon size={14} />}
+  </button>
 
-              {!isAuthenticated ? (
-                <Link to="/login" className="px-4 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-full bg-amber-500 text-white shadow-md hover:bg-amber-600 transition-all">
-                  Login
-                </Link>
-              ) : (
-                <div className="relative" ref={profileDropdownRef}>
-                  <button onClick={() => setIsProfileOpen(!isProfileOpen)} className="h-7 w-7 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 border-2 border-white/20 flex items-center justify-center text-white font-bold text-[11px] hover:scale-105 transition-all">
-                    {user?.firstname?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
-                  </button>
-                  <AnimatePresence>
-                    {isProfileOpen && (
-                      <motion.div initial={{ opacity: 0, scale: 0.95, y: -10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -10 }} className="absolute right-0 mt-2 w-56 rounded-xl border overflow-hidden z-50 bg-white dark:bg-[#161B26] border-slate-200 dark:border-white/10 shadow-2xl">
-                        <div className="p-3 border-b border-slate-100 dark:border-white/10">
-                          <div className="flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-[11px]">
-                              {user?.firstname?.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-[11px] font-bold truncate">{user?.firstname} {user?.lastname}</p>
-                              <p className="text-[8px] text-slate-500 truncate">{user?.email}</p>
-                            </div>
-                          </div>
-                          <span className="inline-block mt-1.5 px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[6px] font-bold uppercase tracking-wider">
-                            {user?.role || "USER"}
-                          </span>
-                        </div>
-                        <div className="p-1">
-                          {user?.role === "user" && (
-                            <>
-                              <Link to="/user-profile" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
-                                <User size={12} className="text-amber-500" /> Profile
-                              </Link>
-                              <Link to="/my-properties" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
-                                <Home size={12} className="text-amber-500" /> My Properties
-                              </Link>
-                              <Link to="/wishlist" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
-                                <Heart size={12} className="text-amber-500" /> Wishlist
-                              </Link>
-                            </>
-                          )}
-                          {user?.role !== "user" && (
-                            <Link to={`/${user?.role?.toLowerCase()}-dashboard`} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
-                              <Home size={12} className="text-amber-500" /> Dashboard
-                            </Link>
-                          )}
-                          <Link to="/settings" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
-                            <Settings size={12} className="text-amber-500" /> Settings
-                          </Link>
-                          <div className="border-t my-1 border-slate-100 dark:border-white/10" />
-                          <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold text-red-500 hover:bg-red-500/10 transition-all">
-                            <LogOut size={12} /> Sign Out
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+  {!isAuthenticated ? (
+    <Link to="/login" className="px-4 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-full bg-amber-500 text-white shadow-md hover:bg-amber-600 transition-all">
+      Login
+    </Link>
+  ) : (
+    <div className="relative" ref={profileDropdownRef}>
+      <button 
+        onClick={() => setIsProfileOpen(!isProfileOpen)} 
+        className="h-7 w-7 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 border-2 border-white/20 flex items-center justify-center text-white font-bold text-[11px] hover:scale-105 transition-all"
+      >
+        {user?.firstname?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
+      </button>
+      
+      <AnimatePresence>
+        {isProfileOpen && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute right-0 mt-2 w-56 rounded-xl border overflow-hidden shadow-2xl bg-white dark:bg-[#161B26] border-slate-200 dark:border-white/10"
+            style={{ zIndex: 9999 }}
+          >
+            <div className="p-3 border-b border-slate-100 dark:border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-[11px]">
+                  {user?.firstname?.charAt(0).toUpperCase()}
                 </div>
+                <div className="flex-1">
+                  <p className="text-[11px] font-bold truncate">{user?.firstname} {user?.lastname}</p>
+                  <p className="text-[8px] text-slate-500 truncate">{user?.email}</p>
+                </div>
+              </div>
+              <span className="inline-block mt-1.5 px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[6px] font-bold uppercase tracking-wider">
+                {user?.role || "USER"}
+              </span>
+            </div>
+            
+            <div className="p-1">
+              {user?.role === "user" && (
+                <>
+                  <Link to="/user-profile" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+                    <User size={12} className="text-amber-500" /> Profile
+                  </Link>
+                  <Link to="/my-properties" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+                    <Home size={12} className="text-amber-500" /> My Properties
+                  </Link>
+                  <Link to="/wishlist" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+                    <Heart size={12} className="text-amber-500" /> Wishlist
+                  </Link>
+                </>
               )}
 
-              <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-1.5 text-current">
-                <Bars3Icon className="h-6 w-6" />
+              {user?.role !== "user" && (
+                <Link to={`/${user?.role?.toLowerCase()}-dashboard`} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+                  <Home size={12} className="text-amber-500" /> Dashboard
+                </Link>
+              )}
+
+              <Link to="/settings" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+                <Settings size={12} className="text-amber-500" /> Settings
+              </Link>
+              
+              <div className="border-t my-1 border-slate-100 dark:border-white/10" />
+              <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold text-red-500 hover:bg-red-500/10 transition-all">
+                <LogOut size={12} /> Sign Out
               </button>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )}
+
+  <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-1.5 text-current">
+    <Bars3Icon className="h-6 w-6" />
+  </button>
+</div>
           </div>
         </div>
       </nav>
@@ -631,8 +647,26 @@ export default function Navbar() {
         </Link>
       </div>
     </motion.div>
+
+
   )}
 </AnimatePresence>
+
+
+<style jsx>{`
+  .relative {
+    position: relative;
+  }
+  
+  .absolute {
+    position: absolute;
+  }
+  
+  /* Ensure dropdown appears above all content */
+  [style*="zIndex: 9999"] {
+    z-index: 9999 !important;
+  }
+`}</style>
     </>
   );
 }

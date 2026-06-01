@@ -146,20 +146,22 @@ export default function Sidebar() {
             ]}
           />
 
-          {/* Appointments Dropdown */}
           <DropdownMenu
             icon={<Calendar size={20} />}
-            label="Appointments"
+            label="Blog Management" 
             menuKey="Appt"
             openDropdown={openDropdown}
             toggleDropdown={toggleDropdown}
             ct={ct}
             isOpen={isOpen}
             items={[
-              { to: "/getappoinment", label: "Calendar View", icon: <Calendar size={14} /> },
-              { to: "/selectadminappoinmentproperty", label: "New Viewing", icon: <Clock size={14} /> }
+              { to: "/createblog", label: "Create Blog", icon: <Calendar size={14} /> },
+              { to: "/viewbloglist", label: "View List", icon: <Clock size={14} /> }
             ]}
           />
+          
+          
+
 
           {/* Section: Operations */}
           <SectionLabel label="Operations" isOpen={isOpen} />
@@ -200,7 +202,6 @@ export default function Sidebar() {
               ]}
             />
 
-            <NavItem to="/settings" icon={<Settings size={20} />} label="Settings" ct={ct} isOpen={isOpen} />
           </div>
         </nav>
 

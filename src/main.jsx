@@ -13,7 +13,7 @@ import "slick-carousel/slick/slick-theme.css";
 
 import { AuthProvider } from "./context/AuthContext.jsx";
 
-import ToastProvider from "./model/SuccessToasNotification.jsx";
+import { ToastProvider } from "./model/SuccessToasNotification.jsx"; // ✅ Changed to named import
 
 import { PermissionProvider } from "./context/PermessionContenx.jsx";
 
@@ -23,36 +23,20 @@ import { BrowserRouter } from "react-router-dom";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-
     <HelmetProvider>
-
       <BrowserRouter>
-
         <ToastProvider>
-
           <ThemeProvider>
-
             <SidebarProvider>
-
               <AuthProvider>
-
                 <PermissionProvider>
-
                   <App />
-
                 </PermissionProvider>
-
               </AuthProvider>
-
             </SidebarProvider>
-
           </ThemeProvider>
-
         </ToastProvider>
-
       </BrowserRouter>
-
     </HelmetProvider>
-
   </StrictMode>
 );

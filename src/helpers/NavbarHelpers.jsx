@@ -8,7 +8,7 @@
   { name: "RENT V/S BUY CALCULATOR", href: "/calculator" },
   { name: "TRENDS", href: "/trends", badge: "TRENDING" },
   { name: "EXPLORE", href: "/explore" },
-  { name: "BLOG", href: "/blog" },
+ 
   { name: "TESTIMONIALS", href: "/testimonials" },
 ];
 
