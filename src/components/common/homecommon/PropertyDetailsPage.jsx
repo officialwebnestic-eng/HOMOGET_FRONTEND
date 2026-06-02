@@ -31,7 +31,13 @@ import {
   Video,
   Filter,
   Grid3x3,
-  LayoutList 
+  LayoutList ,
+  BadgeCheck,
+  CheckCircle2 ,
+  Eye,
+  Fingerprint,
+  Award
+   
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { useTheme } from "../../../context/ThemeContext";
@@ -210,6 +216,8 @@ const PropertyDetailsPage = () => {
       </div>
     );
   }
+
+    const isQRValid = property.dldExpiryDate ? new Date(property.dldExpiryDate) > new Date() : false;
 
 
   
@@ -412,6 +420,21 @@ const PropertyDetailsPage = () => {
             )}
           </section>
 
+
+
+
+   {/* Amenities */}
+          {property.amenities?.length > 0 && (
+            <section>
+              <AmenitiesSection amenities={property.amenities} />
+            </section>
+          )}
+ <GeospatialMap property={property} isDark={true} />
+   
+          
+       
+
+          <NearbyLocations property={property} isDark={isDark} />
           {/* Technical Specs - CONDITIONAL based on property type */}
           <section>
             <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-600 mb-8 md:mb-12 flex items-center gap-2">
@@ -508,108 +531,274 @@ const PropertyDetailsPage = () => {
                 <SpecItem label="permitType" value={property.permitType} />
 
               </div>
+
+
+
             </section>
           )}
 
-          {/* Amenities */}
-          {property.amenities?.length > 0 && (
-            <section>
-              <AmenitiesSection amenities={property.amenities} />
-            </section>
-          )}
 
-          <NearbyLocations property={property} isDark={isDark} />
+
+          {/* DLD QR CODE SECTION - Prominent Display */}
+{/* DLD QR & Regulatory Information Section - Two Column Layout */}
+<div className={`p-6 rounded-2xl ${isDark ? "bg-gradient-to-br from-green-900/20 to-emerald-900/10 border border-green-500/30" : "bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200"}`}>
+  
+  {/* Two Column Grid */}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+       {/* RIGHT COLUMN - Regulatory Information */}
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        <ShieldCheck size={14} className="text-amber-500" />
+        <p className="text-[9px] font-black uppercase tracking-widest text-amber-500">Regulatory Info</p>
+      </div>
+
+      <div className="space-y-2">
+        {/* Reference Number */}
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-[8px] text-slate-400 uppercase tracking-wider">Reference</span>
+          <span className="text-[10px] font-mono font-medium">{property.refrenceNo || property._id?.slice(-8).toUpperCase() || "N/A"}</span>
         </div>
 
-        {/* RIGHT COLUMN (Agent Sidebar) */}
+        {/* Listed Date / Days ago */}
+        <div className="flex justify-between items-center">
+          <span className="text-[8px] text-slate-400 uppercase tracking-wider">Listed</span>
+          <span className="text-[10px]">
+            {property.createdAt ? `${Math.ceil((new Date() - new Date(property.createdAt)) / (1000 * 60 * 60 * 24))} days ago` : "N/A"}
+          </span>
+        </div>
+
+        {/* Broker License */}
+        <div className="flex justify-between items-center">
+          <span className="text-[8px] text-slate-400 uppercase tracking-wider">Broker License</span>
+          <span className="text-[10px] font-mono">{property.agentId?.reraLicenseNumber || property.brnNumber || "N/A"}</span>
+        </div>
+
+        {/* Agency Name */}
+        <div className="flex justify-between items-center">
+          <span className="text-[8px] text-slate-400 uppercase tracking-wider">Agency Name</span>
+          <span className="text-[10px] font-medium truncate max-w-[140px] text-right">
+            {property.agentId?.agencyName || property.agentId?.name || "N/A"}
+          </span>
+        </div>
+
+        {/* Zone / Area */}
+        <div className="flex justify-between items-center">
+          <span className="text-[8px] text-slate-400 uppercase tracking-wider">Zone Name</span>
+          <span className="text-[10px]">{property.community || property.city || "N/A"}</span>
+        </div>
+
+        {/* Agent License */}
+        <div className="flex justify-between items-center pt-1 border-t border-zinc-500/10">
+          <span className="text-[8px] text-slate-400 uppercase tracking-wider">Agent License</span>
+          <span className="text-[10px] font-mono text-amber-500">{property.agentId?.agentLicense || property.agentId?.reraLicenseNumber || "N/A"}</span>
+        </div>
+      </div>
+    </div>
+    
+    {/* LEFT COLUMN - QR Code & Trakheesi */}
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        <BadgeCheck size={16} className="text-green-500" />
+        <p className="text-[10px] font-black uppercase tracking-widest text-green-600">DLD Verified</p>
+        {property.dldExpiryDate && (
+          <div className={`px-2 py-0.5 rounded-full text-[8px] font-bold ml-auto ${isQRValid ? "bg-green-500/20 text-green-500" : "bg-red-500/20 text-red-500"}`}>
+            {isQRValid ? "Active" : "Expired"}
+          </div>
+        )}
+      </div>
+
+      {/* QR Code */}
+      <div className="flex justify-center py-2">
+        {property.dldQRCode ? (
+          <div className="relative group">
+            <div className={`w-24 h-24 rounded-xl overflow-hidden cursor-pointer border-2 ${isQRValid ? "border-green-500" : "border-red-500/50"}`}>
+              <img 
+                src={property.dldQRCode} 
+                alt="DLD QR Code" 
+                className="w-full h-full object-cover"
+                onClick={() => window.open(property.dldQRCode, '_blank')}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="w-24 h-24 rounded-xl bg-gray-200 dark:bg-gray-800 flex flex-col items-center justify-center border-2 border-dashed">
+            <QrCode size={28} className="text-gray-400" />
+            <p className="text-[7px] text-gray-500 mt-1">No QR</p>
+          </div>
+        )}
+      </div>
+
+      {/* Trakheesi / Permit Number */}
+      <div className="flex justify-between items-center pt-2 mt-2 border-t border-green-500/20">
+        <span className="text-[8px] text-slate-400 uppercase tracking-wider">Trakheesi No.</span>
+        <span className="text-[10px] font-mono font-medium">{property.trakheesiNumber || "N/A"}</span>
+      </div>
+
+    
+    </div>
+
+ 
+
+  </div>
+</div>
+
+
+
+
+        </div>
+
+
+
+
+       {/* RIGHT COLUMN (Agent Sidebar & Compliance) */}
         <aside className="lg:col-span-4">
-          <div className="sticky top-32 space-y-8">
+          <div className="sticky top-32 space-y-6">
+
             {/* Agent Card */}
-            <div className={`p-6 rounded-2xl ${isDark ? "bg-zinc-900/50 border border-white/10" : "bg-gray-50 border border-gray-200"}`}>
-              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-500 mb-6">
-                Representative
-              </h4>
-              <div className="flex items-center gap-5 mb-6">
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-xl">
-                  {agentImage ? (
-                    <img src={agentImage} className="w-full h-full object-cover" alt={agentName} />
-                  ) : (
-                    agentName.charAt(0).toUpperCase()
-                  )}
+          <div className={`p-2 rounded-2xl ${isDark ? "bg-zinc-900/50 border border-white/10" : "bg-gray-50 border border-gray-200"}`}>
+  <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-500 mb-6">
+    Representative
+  </h4>
+  <div className="flex items-center gap-3 mb-3">
+    <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-xl">
+      {agentImage ? (
+        <img src={agentImage} className="w-full h-full object-cover" alt={agentName} />
+      ) : (
+        agentName.charAt(0).toUpperCase()
+      )}
+    </div>
+    <div>
+      <p className="text-lg font-bold uppercase tracking-tight">{agentName}</p>
+      <p className="text-[9px] text-amber-500 font-black uppercase tracking-widest">
+        Luxury Property Specialist
+      </p>
+      <div className="flex items-center gap-1 mt-1">
+        <Star size={12} className="text-amber-500 fill-amber-500" />
+        <span className="text-xs">4.9 (128 reviews)</span>
+      </div>
+    </div>
+  </div>
+
+  <div className=" pt-4 border-t border-zinc-500/10">
+    {/* Phone */}
+    <button onClick={handleCall} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-white/5 transition-colors">
+      <Phone size={14} className="text-amber-500" />
+      <span className="text-sm">{property.agentId?.phone || "Contact Available"}</span>
+    </button>
+    
+    {/* Email */}
+    <button onClick={handleEmail} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-white/5 transition-colors">
+      <Mail size={14} className="text-amber-500" />
+      <span className="text-sm">{property.agentId?.email || "Email Available"}</span>
+    </button>
+    
+    {/* City/Location */}
+    <div className="flex items-center gap-3 p-3">
+      <Globe size={14} className="text-amber-500" />
+      <span className="text-sm">{property.agentId?.city || "Dubai"}, UAE</span>
+    </div>
+    
+ 
+    
+    {/* RERA License Number (BRN Number) */}
+    <div className="flex items-center gap-3 p-3">
+      <BadgeCheck size={14} className="text-amber-500" />
+      <div className="flex flex-col">
+        <span className="text-[8px] text-slate-400 uppercase tracking-wider">RERA License / BRN</span>
+        <span className="text-sm font-mono font-medium">{property.agentId?.reraLicenseNumber || property.brnNumber || "N/A"}</span>
+      </div>
+    </div>
+    
+    {/* Language Spoken */}
+    <div className="flex items-center gap-3 p-3">
+      <Globe size={14} className="text-amber-500" />
+      <div className="flex flex-col">
+        <span className="text-[8px] text-slate-400 uppercase tracking-wider">Languages</span>
+        <div className="flex flex-wrap gap-1 mt-1">
+          {property.agentId?.languages && property.agentId.languages.length > 0 ? (
+            property.agentId.languages.map((lang, idx) => (
+              <span key={idx} className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500">
+                {lang}
+              </span>
+            ))
+          ) : (
+            <span className="text-sm">English, Arabic</span>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div className="mt-6 flex gap-3">
+    <button onClick={handleWhatsApp} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition-all">
+      <FaWhatsapp size={16} /> WhatsApp
+    </button>
+    <button onClick={handleCall} className="flex-1 py-3 rounded-xl bg-amber-500 text-black text-sm font-bold hover:bg-amber-600 transition-all">
+      Call Now
+    </button>
+  </div>
+</div>
+
+        
+
+            {/* Off-Plan Details Section (if applicable) */}
+            {property.category === "Off-Plan" && (
+              <div className={`p-6 rounded-2xl ${isDark ? "bg-zinc-900/50 border border-white/10" : "bg-gray-50 border border-gray-200"}`}>
+                <div className="flex items-center gap-2 mb-4">
+                  <Building size={14} className="text-purple-500" />
+                  <p className="text-[9px] font-black uppercase tracking-widest text-purple-500">Off-Plan Details</p>
                 </div>
-                <div>
-                  <p className="text-lg font-bold uppercase tracking-tight">{agentName}</p>
-                  <p className="text-[9px] text-amber-500 font-black uppercase tracking-widest">
-                    Luxury Property Specialist
-                  </p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <Star size={12} className="text-amber-500 fill-amber-500" />
-                    <span className="text-xs">4.9 (128 reviews)</span>
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center pb-2 border-b border-zinc-500/10">
+                    <span className="text-[9px] text-slate-400 uppercase tracking-wider">Off-Plan Type</span>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-500">
+                      {property.offPlanType || "Direct"}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center pb-2 border-b border-zinc-500/10">
+                    <span className="text-[9px] text-slate-400 uppercase tracking-wider">Delivery Date</span>
+                    <span className="text-xs font-mono">{property.deliveryDate ? new Date(property.deliveryDate).toLocaleDateString() : "N/A"}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center pb-2 border-b border-zinc-500/10">
+                    <span className="text-[9px] text-slate-400 uppercase tracking-wider">Completion</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full overflow-hidden">
+                        <div className="h-full bg-purple-500 rounded-full" style={{ width: `${property.completionPercentage || 0}%` }} />
+                      </div>
+                      <span className="text-xs font-bold">{property.completionPercentage || 0}%</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] text-slate-400 uppercase tracking-wider">Payment Plan</span>
+                    <span className="text-xs font-mono">{property.paymentPlan || "Standard"}</span>
                   </div>
                 </div>
               </div>
+            )}
 
-              <div className="space-y-3 pt-4 border-t border-zinc-500/10">
-                <button
-                  onClick={handleCall}
-                  className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-white/5 transition-colors"
-                >
-                  <Phone size={14} className="text-amber-500" />
-                  <span className="text-sm">{property.agentId?.phone || "Contact Available"}</span>
-                </button>
-                <button
-                  onClick={handleEmail}
-                  className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-white/5 transition-colors"
-                >
-                  <Mail size={14} className="text-amber-500" />
-                  <span className="text-sm">{property.agentId?.email || "Email Available"}</span>
-                </button>
-                <div className="flex items-center gap-3 p-3">
-                  <Globe size={14} className="text-amber-500" />
-                  <span className="text-sm">{property.agentId?.city || "Dubai"}, UAE</span>
-                </div>
-              </div>
-
-              <div className="mt-6 flex gap-3">
-                <button
-                  onClick={handleWhatsApp}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition-all"
-                >
-                  <FaWhatsapp size={16} /> WhatsApp
-                </button>
-                <button
-                  onClick={handleCall}
-                  className="flex-1 py-3 rounded-xl bg-amber-500 text-black text-sm font-bold hover:bg-amber-600 transition-all"
-                >
-                  Call Now
-                </button>
+            {/* Verification Note */}
+            <div className={`p-4 rounded-xl ${isDark ? "bg-amber-500/5 border border-amber-500/20" : "bg-amber-50 border border-amber-100"}`}>
+              <div className="flex items-start gap-2">
+                <Award size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
+                <p className="text-[9px] text-slate-500 leading-relaxed">
+                  All legal documentation for this property has been verified and pre-screened by the Homoget compliance team.
+                </p>
               </div>
             </div>
 
-            {/* Verification Badge */}
-            <div className={`p-6 rounded-2xl ${isDark ? "bg-zinc-900/50 border border-white/10" : "bg-gray-50 border border-gray-200"}`}>
-              <p className="text-[8px] font-black uppercase tracking-widest text-amber-500 mb-2">
-                Verified Asset
-              </p>
-              <p className="text-xs leading-relaxed opacity-60 italic">
-                All legal documentation for this property has been pre-screened by our compliance team.
-              </p>
-              <div className="mt-4 pt-3 border-t border-zinc-500/10">
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-400">Trakheesi Number</span>
-                  <span className="font-mono">{property.trakheesiNumber || "N/A"}</span>
-                </div>
-                <div className="flex justify-between text-xs mt-2">
-                  <span className="text-slate-400">Permit Type</span>
-                  <span>{property.permitType || "RERA"}</span>
-                </div>
-              </div>
-            </div>
           </div>
         </aside>
       </main>
 
-      <GeospatialMap property={property} isDark={true} />
+            
+
+
+
+      
     {/* RELATED PROPERTIES SECTION with Filters */}
         <section className={`py-16 px-6 md:px-12 ${isDark ? "bg-black/40" : "bg-gray-50"}`}>
           <div className="max-w-7xl mx-auto">

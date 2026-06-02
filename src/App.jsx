@@ -29,6 +29,9 @@ import MainLayout from "./routes/MainLayout";
 import UserProfile from "./pages/UserProfile";
 
 import GlobalWhatsAppChat from "./components/common/homecommon/GlobalWhatsaapChat";
+import CookieBanner from "./components/common/homecommon/CookieBanner";
+import GoogleAnalytics from "./components/common/homecommon/GoogleAnalytics";
+import FacebookPixel from "./components/common/homecommon/FacebookPixel";
 
 const ScrollToTop = () => {
 
@@ -49,7 +52,8 @@ function App() {
     <>
 
       <ScrollToTop />
-
+  <GoogleAnalytics />
+      <FacebookPixel />
       <ToastContainer />
 
       <Routes>
@@ -96,6 +100,7 @@ function App() {
       </Routes>
 
       <GlobalWhatsAppChat />
+      <CookieBanner />
 
     </>
   );

@@ -2,13 +2,11 @@ import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  ArrowUpRight,
   Phone,
   Mail,
   MapPin,
   Share2,
   Heart,
-  Plus,
   Square,
   BedDouble,
   ArrowRight,
@@ -19,7 +17,6 @@ import {
   Crown,
   Sparkles,
   Clock,
-  User,
   Star,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
@@ -27,6 +24,7 @@ import { useTheme } from "../../../context/ThemeContext";
 import useGetAllProperty from "../../../hooks/useGetAllProperty";
 import AgentHero from "./AgentHero";
 import { filterFields } from "../../../helpers/FiltersHelpers";
+import ShareModal from "../../../model/ShareModal";
 
 const themeColors = {
   light: {
@@ -91,6 +89,36 @@ const getStatusBadge = (property) => {
   return { text: "FOR SALE", icon: <Sparkles size={10} />, color: "bg-amber-500/20 text-amber-400 border-amber-500/30" };
 };
 
+// Wishlist Button Component
+const WishlistButton = ({ property, isDark }) => {
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  const handleWishlist = (e) => {
+    e.stopPropagation();
+    setIsWishlisted(!isWishlisted);
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    if (!isWishlisted) {
+      if (!wishlist.includes(property._id)) {
+        wishlist.push(property._id);
+        localStorage.setItem('wishlist', JSON.stringify(wishlist));
+      }
+    } else {
+      const newWishlist = wishlist.filter(id => id !== property._id);
+      localStorage.setItem('wishlist', JSON.stringify(newWishlist));
+    }
+  };
+
+  return (
+    <button
+      onClick={handleWishlist}
+      className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+      title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+    >
+      <Heart size={18} fill={isWishlisted ? "#ef4444" : "none"} className={isWishlisted ? "text-red-500" : ""} />
+    </button>
+  );
+};
+
 const Agentfilter = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
@@ -98,6 +126,7 @@ const Agentfilter = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [currentSort, setCurrentSort] = useState("newest");
   const [viewMode, setViewMode] = useState("grid");
+  const [shareProperty, setShareProperty] = useState(null);
 
   const [filters, setFilters] = useState({
     state: "",
@@ -138,12 +167,9 @@ const Agentfilter = () => {
   // Build active filters for API call
   const activeFilters = useMemo(() => {
     const active = { ...filters };
-    
-    // Add search query to filters
     if (searchQuery) {
       active.search = searchQuery;
     }
-    
     return active;
   }, [filters, searchQuery]);
 
@@ -163,6 +189,11 @@ const Agentfilter = () => {
     [navigate],
   );
 
+  const handleShareClick = (e, property) => {
+    e.stopPropagation();
+    setShareProperty(property);
+  };
+
   const handleSuggestionClick = (locationName) => {
     setSearchQuery(locationName);
     setShowSuggestions(false);
@@ -172,7 +203,6 @@ const Agentfilter = () => {
   };
 
   const handleSearchButtonClick = () => {
-    // Build query params
     const params = new URLSearchParams();
     if (searchQuery) params.append("search", searchQuery);
     if (filters.city) params.append("city", filters.city);
@@ -181,21 +211,17 @@ const Agentfilter = () => {
     if (filters.bathroom) params.append("bathroom", filters.bathroom);
     if (filters.minPrice) params.append("minPrice", filters.minPrice);
     if (filters.maxPrice) params.append("maxPrice", filters.maxPrice);
-    
     navigate(`/properties?${params.toString()}`);
   };
 
-  // Handle filter change
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
     setCurrentPage(1);
   };
 
-  // Handle apply filters
   const handleApplyFilters = () => {
     setShowFilters(false);
-    // Build query params with all filters
     const params = new URLSearchParams();
     if (searchQuery) params.append("search", searchQuery);
     if (filters.city) params.append("city", filters.city);
@@ -204,11 +230,9 @@ const Agentfilter = () => {
     if (filters.bathroom) params.append("bathroom", filters.bathroom);
     if (filters.minPrice) params.append("minPrice", filters.minPrice);
     if (filters.maxPrice) params.append("maxPrice", filters.maxPrice);
-    
     navigate(`/properties?${params.toString()}`);
   };
 
-  // Handle clear filters
   const handleClearFilters = () => {
     setFilters({
       state: "",
@@ -227,19 +251,16 @@ const Agentfilter = () => {
     navigate("/properties");
   };
 
-  // Get unique values for filter dropdowns
   const getUniqueValues = (data, key) => {
     if (!data || data.length === 0) return [];
     return [...new Set(data.flatMap((item) => item[key]).filter(Boolean))].sort();
   };
 
-  // Handle sort change
   const handleSortChange = (sortValue) => {
     setCurrentSort(sortValue);
     setCurrentPage(1);
   };
 
-  // Updated handleWhatsApp to send two sequential messages
   const handleWhatsApp = (e, property) => {
     e.stopPropagation();
 
@@ -247,6 +268,7 @@ const Agentfilter = () => {
     const price = `AED ${Number(property.price).toLocaleString()}`;
     const location = property.community || property.city;
     const propertyId = property._id;
+    const propertyUrl = `${window.location.origin}/property/${property._id}`;
 
     const managementNumber = "971585852283";
     const managementMsg = encodeURIComponent(
@@ -256,7 +278,8 @@ const Agentfilter = () => {
         `Location: ${location}\n` +
         `ID: ${propertyId}\n` +
         `Type: ${isOffPlan(property) ? 'Off-Plan' : property.category || 'Residential'}\n` +
-        `Offering: ${property.offeringType || 'Sale'}`
+        `Offering: ${property.offeringType || 'Sale'}\n` +
+        `Link: ${propertyUrl}`
     );
 
     const agentNumber = property.agentId?.phone || property.agentPhone || "971500000000";
@@ -264,7 +287,8 @@ const Agentfilter = () => {
       `Hello! I am interested in viewing your listing: *${propertyName}*.\n\n` +
         `📍 Location: ${location}\n` +
         `💰 Price: ${price}\n` +
-        `🏷️ Type: ${isOffPlan(property) ? 'Off-Plan Project' : property.propertytype || 'Property'}\n\n` +
+        `🏷️ Type: ${isOffPlan(property) ? 'Off-Plan Project' : property.propertytype || 'Property'}\n` +
+        `🔗 Link: ${propertyUrl}\n\n` +
         `Please provide more details regarding viewing schedule and availability.`
     );
 
@@ -288,11 +312,11 @@ const Agentfilter = () => {
   const handleEmail = (e, property) => {
     e.stopPropagation();
     const subject = `Inquiry: ${property.propertyname || property.propertyTitleEn}`;
-    window.location.href = `mailto:info@homoget.ae?subject=${encodeURIComponent(subject)}`;
+    const body = `I'm interested in this property:\n\n${property.propertyname || property.propertyTitleEn}\nPrice: AED ${Number(property.price).toLocaleString()}\nLocation: ${property.community || property.city}\n\nPlease contact me for more details.`;
+    window.location.href = `mailto:info@homoget.ae?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
   const eliteProperties = propertyList.slice(0, 9);
-  const insightProperties = propertyList.slice(9, 20);
 
   return (
     <div className={`${colors.background} min-h-screen pb-20 transition-colors duration-300`}>
@@ -366,12 +390,12 @@ const Agentfilter = () => {
             )}
             <button
               onClick={handleClearFilters}
-                className="px-2 py-1 bg-red-500/10 text-red-500 rounded-lg text-[9px] font-bold"
-              >
-                Clear All
-              </button>
-            </div>
-          )}
+              className="px-2 py-1 bg-red-500/10 text-red-500 rounded-lg text-[9px] font-bold"
+            >
+              Clear All
+            </button>
+          </div>
+        )}
 
         {/* PROPERTY GRID */}
         {loading ? (
@@ -441,6 +465,10 @@ const Agentfilter = () => {
                       <button onClick={(e) => handleCall(e, property.agentId?.phone)} className="p-2 text-blue-500 hover:scale-110 transition">
                         <Phone size={20} />
                       </button>
+                      <button onClick={(e) => handleShareClick(e, property)} className="p-2 text-gray-400 hover:text-amber-500 transition">
+                        <Share2 size={18} />
+                      </button>
+                      <WishlistButton property={property} isDark={theme === "dark"} />
                     </div>
                   </div>
                 );
@@ -570,43 +598,32 @@ const Agentfilter = () => {
                           className="text-green-500 hover:scale-110 transition-transform"
                           title="WhatsApp Agent"
                         >
-                          <FaWhatsapp size={25} />
+                          <FaWhatsapp size={22} />
                         </button>
                         <button
                           onClick={(e) => handleCall(e, property.agentId?.phone || property.agentPhone)}
                           className="text-blue-500 hover:scale-110 transition-transform"
                           title="Call Agent"
                         >
-                          <Phone size={25} />
+                          <Phone size={22} />
                         </button>
                         <button
                           onClick={(e) => handleEmail(e, property)}
                           className="text-amber-500 hover:scale-110 transition-transform"
                           title="Email Agent"
                         >
-                          <Mail size={25} />
+                          <Mail size={22} />
                         </button>
                       </div>
                       <div className="flex items-center gap-4">
-                        <Share2
-                          size={18}
+                        <button
+                          onClick={(e) => handleShareClick(e, property)}
                           className="text-gray-400 hover:text-amber-500 transition-colors cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigator.share?.({
-                              title: propertyTitle,
-                              text: `Check out this property: ${propertyTitle}`,
-                              url: window.location.href,
-                            });
-                          }}
-                        />
-                        <Heart
-                          size={18}
-                          className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                        />
+                          title="Share Property"
+                        >
+                          <Share2 size={18} />
+                        </button>
+                        <WishlistButton property={property} isDark={theme === "dark"} />
                       </div>
                     </div>
                   </div>
@@ -616,6 +633,15 @@ const Agentfilter = () => {
           </div>
         )}
       </div>
+
+      {/* Share Modal */}
+      {shareProperty && (
+        <ShareModal 
+          property={shareProperty} 
+          onClose={() => setShareProperty(null)} 
+          isDark={theme === "dark"} 
+        />
+      )}
     </div>
   );
 };
