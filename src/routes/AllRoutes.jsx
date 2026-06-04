@@ -7,18 +7,16 @@ import {
   ProfileRoutes,
   PropertyRoutes,
   BlogRoute,
-  SessionRoute,
-  AppoinmentRoute,
+ 
   BookingRoute,
-  ShellPropertyRoute,
-  PaymentRoutes,
-  VirtualTourRoute,
+
+
   InqueryRoutes,
   CustomersReviews,
   PublicRoutes,
   AgentCallSupport,
   agentDashboardRoute,
-  HomeLoans,
+
 
 } from "./RouteConfig";
 
@@ -49,16 +47,13 @@ const AllRoutes = () => {
               {ProfileRoutes()}
               {PropertyRoutes()}
               {BlogRoute()}
-              {SessionRoute()}
-              {AppoinmentRoute()}
+             
               {BookingRoute()}
-              {ShellPropertyRoute()}
-              {PaymentRoutes()}
-              {VirtualTourRoute()}
+            
               {InqueryRoutes()}
               {CustomersReviews()}
               {AgentCallSupport()}
-              {HomeLoans()}
+            
 
 
             </>

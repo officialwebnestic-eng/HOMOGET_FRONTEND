@@ -6,15 +6,14 @@
    ExternalLink, ShieldCheck, BadgeCheck, Building2,
    ArrowUpRight, Globe,
    ExternalLinkIcon
- } from "lucide-react";
- 
- 
+ } from "lucide-react"
+
     export  const socialLinks = [
-    { name: "Instagram", icon: Instagram, href: "https://www.instagram.com/homogetfinder?igsh=NW52M3NyZGJheHk1" },
-    { name: "LinkedIn", icon: Linkedin, href: "https://www.linkedin.com/in/homogetfinder?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" },
-    { name: "Facebook", icon: Facebook, href: "https://www.facebook.com/share/1GZAg56QKe/" },
-    {name:"tiktok", icon: ExternalLinkIcon, href: "https://www.tiktok.com/@homogetfinder?_t=ZS-90tTSGVAMq2&_r=1"},
-    { name: "YouTube", icon: Youtube, href: "https://youtube.com/@homogetfinder?si=YS78-D4xhRjh3xpZ" }
+    { name: "Instagram", icon: Instagram, href: "https://www.instagram.com/homogetsearch?igsh=MWowMWp5eTRza3Q01" },
+    { name: "LinkedIn", icon: Linkedin, href: "https://www.linkedin.com/in/homogetfinder" },
+    { name: "Facebook", icon: Facebook, href: "https://www.facebook.com/share/1BeJoJSnyG/" },
+    {name:"tiktok", icon: ExternalLinkIcon, href: "https://www.tiktok.com/@homogetsearch?_r=1&_t=ZS-96cyPsMun4h"},
+    { name: "YouTube", icon: Youtube, href: "https://youtube.com/@homogetsearch?si=5e-5qZUM3wQPmboU" }
   ];
 
    export  const discoverLinks = [
@@ -40,7 +39,7 @@
 
   export const resourcesLinks = [
     { name: "Market News", href: "/news" },
-    { name: "Help Center", href: "/faq" },
+    { name: "Help Center", href: "/homoget-help-center" },
     { name: "Privacy Policy", href: "/privacy-policy" },
     { name: "Terms of Service", href: "/terms-of-service" },
     { name: "RERA Compliance", href: "/rera-compliance" },

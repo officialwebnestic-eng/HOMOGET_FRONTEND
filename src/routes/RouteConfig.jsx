@@ -25,22 +25,14 @@ import Projects from "../components/common/homecommon/projects";
 import PropertyListing from "../components/common/PropertyListing";
 import AgentSupport from "../components/common/AgentSupport";
 import LegalDocumentationSupport from "../components/common/LegalDocumentationSupport";
-import VirtualTourAndWalkthrough from "../components/common/VirtualToureAnd Walkthrough";
-import VirtualToureBookingForm from "../components/VirtualToureBookingForm";
-import HomeLoanAssistantForm from "../components/common/HomeLoanAssistentForm";
 import ContactUs from "../components/common/ContactUs";
 import Blog from "../components/common/Blog";
 import CraeteBlog from "../components/admin/blog/CreateBlog";
 import ViewBlogList from "../components/admin/blog/ViewlBlogList";
 import UpdateBlog from "../components/admin/blog/UpdateBlog";
 import UpdateProperty from "../components/admin/Property/UpdateProperty";
-import CreateAppoinment from "../components/Appoinment/CreateAppoinment";
-import GetAppoinment from "../components/Appoinment/GetAppoinment";
-import SelctAppoinmentProperty from "../components/Appoinment/SelectAppoinmentProperty";
-import ShowUserAppoinment from "../components/Appoinment/ShowUserAppoinment"
 import CustomerReviews from "../components/admin/reviews/CustomerReviews";
 
-import TourList from "../components/admin/Tour/TourList";
 import PropertyDetailsAgent from "../components/agent/property/PropertyDetailsAgent";
 
 import RequestTable from "../components/agent/RequestTable/RequsetTable";
@@ -55,7 +47,6 @@ import LatestAgentBookingDetails from "../components/agent/Booking/LatestAgentBo
 import UserTestimonial from "../components/admin/reviews/UserTestimonial";
 import GetAllTransaction from "../components/admin/Transation/GetAllTransaction";
 import PrivateRoutes from "./PrivateRoutes";
-import HelpCenter from "../components/common/HelpCenter";
 import Roles from "../Authorization/Roles";
 import Permissions from "../Authorization/Permissions";
 import AddAgent from "../components/admin/Agent/AddAgent";
@@ -83,12 +74,11 @@ import OffPlan from "../components/OffPlan.jsx";
 import PropertyDetailsPage from "../components/common/homecommon/PropertyDetailsPage.jsx";
 import AddDeveloperForm from "../components/admin/Developer/AddDeveloperForm.jsx";
 import ViewAllDeveloperList from "../components/admin/Developer/ViewAllDeveloperList.jsx";
-import CreateAdminAppointment from "../components/admin/Appoinment/CreateAdminAppointment.jsx";
-import SelectAdminAppointmentProperty from "../components/admin/Appoinment/SelectAdminAppointmentProperty.jsx";
 import AddPropertyByAgent from "../components/admin/Property/AddPropertyByAgent.jsx";
 import ReraCompliance from "../ReraCompliance.jsx";
 import AboutFounder from "../components/common/AboutFounder .jsx";
 import BlogDetails from "../components/common/homecommon/BlogDetails.jsx";
+import HelpCenter from "../components/common/homecommon/HelpCenter .jsx";
 
 
 export const AdminRoutes = () => {
@@ -100,8 +90,6 @@ export const AdminRoutes = () => {
         <Route element={<PrivateRoutes />}>
             <Route element={<BaseLayout />}>
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                <Route path="/createadminappointment" element={<CreateAdminAppointment />} />
-                <Route path="/selectadminappoinmentproperty" element={<SelectAdminAppointmentProperty/>}/>
                 <Route path="/addagent" element={<AddAgent />} />
                 <Route path="/viewallagentlist" element={<ViewAllAgentList />} />
                 <Route path="/agentdetails/:id" element={<AgentDetails />} />
@@ -120,10 +108,7 @@ export const AdminRoutes = () => {
                 <Route path="/gettourbooking" element={<TourList />} />
            
                 <Route path="/viewallbookings" element={<ViewAllBookings />} />
-                <Route path="/createappoinment" element={<CreateAppoinment />} />
                 <Route path="/getappoinment" element={<GetAppoinment />} />
-                <Route path="/selectappoinmentproperty" element={<SelctAppoinmentProperty />} />
-                <Route path="/showuserappoinment" element={<ShowUserAppoinment />} />
                 <Route path="/createdeveloper" element={<AddDeveloperForm />} />
                 <Route path="/viewdevelopers" element={<ViewAllDeveloperList />} />
                 <Route path="/updatedeveloper/:id" element={<AddDeveloperForm />} />
@@ -156,21 +141,6 @@ export const agentDashboardRoute = () => {
             </Route>
         </Route>
 
-    )
-
-}
-
-export const HomeLoans = () => {
-    return (
-        <Route element={<PrivateRoutes />}>
-            <Route element={<ProtectRoutes action="view" module="Home Loan Management" />}>
-                <Route element={<BaseLayout />}>
-                    < Route path="/viewhomeloanrequest" element={<ViewHomeLoan />} />
-                    <Route path="/homeloanrequestform" element={<HomeLoanAssistantForm />} />
-
-                </Route>
-            </Route>
-        </Route>
     )
 
 }
@@ -247,41 +217,8 @@ export const BlogRoute = () => {
 
 }
 
-export const SessionRoute = () => {
-
-    return (
-
-        <Route element={<PrivateRoutes />}>
-            <Route element={<ProtectRoutes action="view" module="Session Management" />}>
-                <Route element={<BaseLayout />}>
-                    <Route path="/session/:roomName" element={<VideoCallRoom />} />
-                    <Route path="/viewallsession" element={<ViewAllSession />} />
-                    <Route path="/createsession" element={<CreateSession isOpen={true} onClose={() => navigate(-1)} />} />
 
 
-                </Route>
-            </Route>
-        </Route>
-    )
-}
-
-export const AppoinmentRoute = () => {
-    return (
-
-        <Route element={<PrivateRoutes />}>
-            <Route element={<ProtectRoutes action="view" module="Appoinment Management" />}>
-                <Route element={<BaseLayout />}>
-                    <Route path="/createappoinment" element={<CreateAppoinment />} />
-                    <Route path="/getappoinment" element={<GetAppoinment />} />
-                    <Route path="/selectappoinmentproperty" element={<SelctAppoinmentProperty />} />
-                    <Route path="/showuserappoinment" element={<ShowUserAppoinment />} />
-
-
-                </Route>
-            </Route>
-        </Route>
-    )
-}
 
 export const BookingRoute = () => {
     return (
@@ -303,52 +240,11 @@ export const BookingRoute = () => {
     )
 }
 
-export const ShellPropertyRoute = () => {
-    return (
-        <Route element={<PrivateRoutes />}>
-            <Route element={<ProtectRoutes action="view" module="Property Shell Management" />}>
-                <Route element={<BaseLayout />}>
-                    <Route path="/viewpropertyrequest" element={<GetShellPropertyRequest />} />
-                </Route>
-            </Route>
-        </Route>
-    )
-
-}
-
-
-export const PaymentRoutes = () => {
-    return (
-        <>
-            <Route element={<PrivateRoutes />}>
-                <Route element={<ProtectRoutes action="view" module="Payment Management" />}>
-                    <Route element={<BaseLayout />}>
-                        <Route path="/viewalltransiondata/:id" element={<ViewAllTransationData />} />
-                        <Route path="/getalltransaction" element={<GetAllTransaction />} />
-                    </Route>
-                </Route>
-            </Route>
-        </>
-    );
-};
 
 
 
-export const VirtualTourRoute = () => {
-    return (
-        <Route element={<ProtectRoutes action="view" module="Virtual Tour Management" />}>
-            <Route element={<BaseLayout />}>
-                <Route path="/viewalltransiondata/:id" element={<ViewAllTransationData />} />
-                <Route path="/getalltransaction" element={<GetAllTransaction />} />
 
 
-            </Route>
-        </Route>
-    )
-
-
-
-}
 export const InqueryRoutes = () => {
     return (
         <Route element={<PrivateRoutes />}>
@@ -411,19 +307,12 @@ export const PublicRoutes = () => {
             <Route path="/properties" element={<PropertyListing />} />
             <Route path="/real-estate-agents" element={<AgentSupport />} />
             <Route path="/documentationsupport" element={<LegalDocumentationSupport />} />
-            <Route path="/walkthrough" element={<VirtualTourAndWalkthrough />} />
-            <Route path="/virtualtoure" element={<VirtualToureBookingForm />} />
-            <Route path="/homeloanrequestform" element={<HomeLoanAssistantForm />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/bookings" element={<CreateBooking />} />
-            <Route path="/createappoinment" element={<CreateAppoinment />} />
-            <Route path="/selectappoinmentproperty" element={<SelctAppoinmentProperty />} />
-            <Route path="/showuserappoinment" element={<ShowUserAppoinment />} />
             <Route path="/testimonials" element={<UserTestimonial />} />
-            <Route path="/helpcenter" element={<HelpCenter />} />
             <Route path="/developer" element={<Developer />} />
             <Route path="/commercial" element={<Commercial />} />
-            <Route path="/luxury" element={<Luxury />} />
+          
             <Route path="/mortgage-assistance" element={<Mortgage />} />
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/measurement" element={<Measurement />} />
@@ -438,6 +327,8 @@ export const PublicRoutes = () => {
              <Route path="/rera-compliance" element={<ReraCompliance />} />
              <Route path="/about-founder" element={<AboutFounder />} />
               <Route path="/blog/:id" element={<BlogDetails />} />
+                             <Route path="/homoget-help-center"  element={<   HelpCenter />} />
+
 
             <Route path="/property/:id" element={<PropertyDetailsPage />} />
              </Route>

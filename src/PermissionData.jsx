@@ -6,18 +6,11 @@ import {
 export const Module = [
   { name: 'Team Management', icon: Users, view: true, update: true, delete: true },
   { name: 'Profile Management', icon: CheckCircle2, view: true, update: true, delete: true },
-  { name: 'CustomerSupport Management', icon: Edit, view: true, update: true, delete: true },
   { name: 'Property Management', icon: Database, view: true, update: true, delete: true },
   { name: 'Blog Management', icon: BarChart3, view: true, update: true, delete: true },
-  { name: 'Session Management', icon: Database, view: true, update: true, delete: true },
-  { name: 'Appoinment Management', icon: Settings, view: true, update: true, delete: true },
   { name: 'Booking Management', icon: BarChart3, view: true, update: true, delete: true },
   { name: 'Review Management', icon: BarChart3, view: true, update: true, delete: true },
-  { name: "Property Shell Management", icon: BarChart3, view: true, update: true, delete: true },
-  { name: 'Payment Management', icon: BarChart3, view: true, update: true, delete: true },
-  { name: 'Virtual Tour Management', icon: BarChart3, view: true, update: true, delete: true },
   { name: 'AgentSupport Management', icon: BarChart3, view: true, update: true, delete: true },
-  { name: 'Home Loan Management', icon: BarChart3, view: true, update: true, delete: true },
 ];
 
 export const dashboardPermissions = [

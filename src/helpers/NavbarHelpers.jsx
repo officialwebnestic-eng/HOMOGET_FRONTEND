@@ -1,5 +1,6 @@
   export const sidebarLinks = [
   { name: "MORTGAGE", href: "/mortgage-assistance", badge: "NEW" },
+  
   { name: "PROPERTY LISTING", href: "/properties" },
   { name: "FIND AGENT", href: "/real-estate-agents" },
   { name: "FIND DEVELOPER", href: "/developer" },
@@ -8,6 +9,7 @@
   { name: "RENT V/S BUY CALCULATOR", href: "/calculator" },
   { name: "TRENDS", href: "/trends", badge: "TRENDING" },
   { name: "EXPLORE", href: "/explore" },
+   {name:"HELP CENTER"  , href:"/homoget-help-center"},
  
   { name: "TESTIMONIALS", href: "/testimonials" },
 ];

@@ -61,6 +61,7 @@ const AgentHero = ({
   const suggestionRef = useRef(null);
   const sidebarRef = useRef(null);
   const debounceTimerRef = useRef(null);
+  const [videoError, setVideoError] = useState(false);
 
   // ========== GOOGLE GEMINI API ==========
   const GEMINI_API_KEY = "AIzaSyCZ7WFdsYoZrT79QaJsXT5wu5yA5yT8IDQ";
@@ -433,32 +434,66 @@ const AgentHero = ({
 
   return (
     <div className="relative min-h-[75vh] md:min-h-[80vh] flex items-center justify-center overflow-visible z-[40]">
-      {/* BACKGROUND */}
+      {/* BACKGROUND - Video with fallback */}
       <div className="absolute inset-0 z-0">
-        <img
-          src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=2000&q=80"
-          alt="Dubai"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80"></div>
+        {!videoError ? (
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+            poster="https://images.pexels.com/photos/280229/pexels-photo-280229.jpeg?auto=compress&cs=tinysrgb&w=1920"
+            onError={() => setVideoError(true)}
+          >
+            <source 
+              src="https://media.istockphoto.com/id/1735292197/video/american-neighborhood-during-golden-hour-sunset-aerial-shot-of-duplex-houses-and-homes-drone.jpg?b=1&s=640x640&k=20&c=5klZ8BMF8DOFRhfzZdx79xPfDGAFAPss2jTgCqRBplM=" 
+              type="video/mp4" 
+            />
+          </video>
+        ) : (
+          <img
+            src="https://images.pexels.com/photos/280229/pexels-photo-280229.jpeg?auto=compress&cs=tinysrgb&w=1920"
+            alt="Dubai Skyline"
+            className="w-full h-full object-cover"
+          />
+        )}
+        {/* Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30" />
       </div>
 
       {/* CONTENT */}
       <div className="relative z-10 w-full max-w-5xl mx-auto px-4">
         {/* TITLE */}
         <div className="text-center mb-8 md:mb-10">
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-white mb-2 tracking-tight">
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-white mb-2 tracking-tight"
+          >
             Homoget<span className="text-amber-500">.</span>
-          </h1>
-          <p className="text-white/70 uppercase tracking-[0.3em] text-[8px] md:text-[9px] lg:text-[10px] mt-2 font-medium">
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-white/70 uppercase tracking-[0.3em] text-[8px] md:text-[9px] lg:text-[10px] mt-2 font-medium"
+          >
             AI-Powered Real Estate Discovery
-          </p>
+          </motion.p>
         </div>
 
         {/* SEARCH BAR CONTAINER */}
         <div className="w-full max-w-3xl mx-auto relative" ref={suggestionRef}>
           {/* Main Search Bar */}
-          <div className="relative">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="relative"
+          >
             <div className="relative flex flex-wrap items-center w-full bg-white/95 dark:bg-slate-900/95 rounded-2xl shadow-xl border border-white/20 focus-within:ring-2 focus-within:ring-amber-500/30 transition-all">
               
               {/* Search Icon */}
@@ -535,10 +570,17 @@ const AgentHero = ({
                 </button>
               </div>
             </div>
+          </motion.div>
 
-            {/* AI SUGGESTIONS */}
+          {/* AI SUGGESTIONS */}
+          <AnimatePresence>
             {aiMode && internalSearchQuery.length >= 2 && (
-              <div className="mt-3">
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mt-3"
+              >
                 <div className="flex items-center gap-2 mb-2">
                   <Brain className="w-3.5 h-3.5 text-purple-400" />
                   <span className="text-[9px] text-purple-300 font-medium">AI Smart Recommendations</span>
@@ -583,74 +625,72 @@ const AgentHero = ({
                     ))}
                   </div>
                 ) : null}
-              </div>
+              </motion.div>
             )}
+          </AnimatePresence>
 
-            {/* LOCATION SUGGESTIONS DROPDOWN - ORIGINAL DESIGN */}
-            <AnimatePresence>
-              {showSuggestions && !aiMode && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-xl shadow-xl border overflow-hidden z-[999]"
-                >
-                  <div className="px-4 py-2 border-b bg-slate-50 dark:bg-slate-800/50">
-                    <p className="text-[8px] font-bold uppercase text-amber-500">Popular Locations in Dubai</p>
+          {/* LOCATION SUGGESTIONS DROPDOWN */}
+          <AnimatePresence>
+            {showSuggestions && !aiMode && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-xl shadow-xl border overflow-hidden z-[999]"
+              >
+                <div className="px-4 py-2 border-b bg-slate-50 dark:bg-slate-800/50">
+                  <p className="text-[8px] font-bold uppercase text-amber-500">Popular Locations in Dubai</p>
+                </div>
+
+                {isLoading ? (
+                  <div className="py-8 text-center">
+                    <Loader2 className="w-4 h-4 animate-spin mx-auto text-amber-500" />
                   </div>
-
-                  {isLoading ? (
-                    <div className="py-8 text-center">
-                      <Loader2 className="w-4 h-4 animate-spin mx-auto text-amber-500" />
-                    </div>
-                  ) : locationSuggestions.length > 0 ? (
-                    <div className="max-h-[320px] overflow-y-auto">
-                      {locationSuggestions.map((location, index) => {
-                        const badge = getBadgeInfo(location.type);
-                        return (
-                          <button
-                            key={location.id || index}
-                            onClick={() => handleLocationSelect(location)}
-                            className={`w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors border-b last:border-0 group ${
-                              selectedIndex === index ? 'bg-amber-500/10' : ''
-                            }`}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center group-hover:text-amber-500">
-                                {getLocationIcon(location.type)}
-                              </div>
-                              <div className="flex-1">
-                                <p className="font-medium text-sm group-hover:text-amber-500">
-                                  {location.name}
-                                </p>
-                                <p className="text-[10px] text-slate-500 mt-0.5">
-                                  {location.path_name || location.title}
-                                </p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <span className={`text-[7px] px-1.5 py-0.5 rounded-full ${badge.color}`}>
-                                    {badge.text}
-                                  </span>
-                                  {location.type && (
-                                    <span className="text-[7px] text-slate-400 uppercase">
-                                      {location.type}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <ChevronDown className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-all" />
+                ) : locationSuggestions.length > 0 ? (
+                  <div className="max-h-[320px] overflow-y-auto">
+                    {locationSuggestions.map((location, index) => {
+                      const badge = getBadgeInfo(location.type);
+                      return (
+                        <button
+                          key={location.id || index}
+                          onClick={() => handleLocationSelect(location)}
+                          className={`w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors border-b last:border-0 group ${
+                            selectedIndex === index ? 'bg-amber-500/10' : ''
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center group-hover:text-amber-500">
+                              {getLocationIcon(location.type)}
                             </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-sm group-hover:text-amber-500">
+                                {location.name}
+                              </p>
+                              <p className="text-[10px] text-slate-500 mt-0.5">
+                                {location.path_name || location.title}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className={`text-[7px] px-1.5 py-0.5 rounded-full ${badge.color}`}>
+                                  {badge.text}
+                                </span>
+                                {location.type && (
+                                  <span className="text-[7px] text-slate-400 uppercase">
+                                    {location.type}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <ChevronDown className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-all" />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-
-
 
         {/* FILTER SIDEBAR COMPONENT */}
         <div ref={sidebarRef}>

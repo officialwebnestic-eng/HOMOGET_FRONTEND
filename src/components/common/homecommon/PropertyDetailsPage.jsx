@@ -36,7 +36,8 @@ import {
   CheckCircle2 ,
   Eye,
   Fingerprint,
-  Award
+  Award,
+  Camera
    
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
@@ -56,6 +57,7 @@ import RelatedAssets from "../RelatedAssets .jsx";
 import FilterSidebar from "../../common/FilterSidebar.jsx"
  import SortBar from "../homecommon/SortBar .jsx"
   import LocationSearch from "../../../components/admin/Property/LocationSearch.jsx"
+import ShareModal from "../../../model/ShareModal.jsx";
 
 // Helper functions for property type detection
 const isOffPlan = (property) => {
@@ -83,6 +85,7 @@ const PropertyDetailsPage = () => {
     const [viewMode, setViewMode] = useState("grid");
     const [sortBy, setSortBy] = useState("newest");
     const [selectedLocation, setSelectedLocation] = useState(null);
+const [showShareModal, setShowShareModal] = useState(false);
     const [filters, setFilters] = useState({
       category: "",
       offeringType: "",
@@ -268,58 +271,158 @@ const PropertyDetailsPage = () => {
     <div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-[#050505] text-white" : "bg-white text-black"}`}>
 
       {/* 1. ARCHITECTURAL HERO (with Swiper Gallery) */}
-      <section className="relative w-full h-[75vh] bg-black overflow-hidden">
-        {images.length > 0 ? (
-          <Swiper
-            modules={[Autoplay, Pagination, SwiperNav]}
-            spaceBetween={0}
-            slidesPerView={1}
-            pagination={{ clickable: true }}
-            navigation
-            autoplay={{ delay: 4000 }}
-            className="h-full w-full"
+   {/* 1. HERO SECTION - Two Column Grid Layout */}
+<section className="relative w-full bg-black">
+  <div className="grid grid-cols-1 lg:grid-cols-5 min-h-[75vh]">
+    
+    {/* Left Column - Main Image Slider (3/5 width) */}
+    <div className="lg:col-span-3 relative h-[50vh] lg:h-[75vh] overflow-hidden">
+      {images.length > 0 ? (
+        <Swiper
+          modules={[Autoplay, Pagination, SwiperNav]}
+          spaceBetween={0}
+          slidesPerView={1}
+          pagination={{ clickable: true }}
+          navigation
+          autoplay={{ delay: 4000 }}
+          className="h-full w-full"
+        >
+          {images.map((img, idx) => (
+            <SwiperSlide key={idx}>
+              <div className="relative w-full h-full">
+                <img 
+                  src={img} 
+                  className="w-full h-full object-cover" 
+                  alt={`${propertyTitle} - ${idx + 1}`} 
+                />
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      ) : (
+        <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+          <Building size={64} className="text-white/20" />
+        </div>
+      )}
+      
+      {/* Back Button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-4 left-4 z-20 flex items-center gap-2 text-[10px] font-medium text-white/80 hover:text-amber-500 transition-all bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full"
+      >
+        <ArrowLeft size={14} /> Back
+      </button>
+      
+      {/* Status Badge */}
+      <div className="absolute top-4 right-4 z-20">
+        <span className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${statusBadge.color} text-white shadow-lg`}>
+          {statusBadge.icon} {statusBadge.text}
+        </span>
+      </div>
+    </div>
+
+    {/* Right Column - Small Image Grid (2/5 width) */}
+    <div className="lg:col-span-2 bg-black/5 dark:bg-white/5 p-2">
+      <div className="grid grid-cols-2 gap-2 h-full">
+        {images.slice(1, 5).map((img, idx) => (
+          <div 
+            key={idx} 
+            className="relative aspect-square overflow-hidden rounded-lg cursor-pointer group"
+            onClick={() => {
+              const swiper = document.querySelector('.swiper');
+              if (swiper && swiper.swiper) {
+                swiper.swiper.slideTo(idx + 1);
+              }
+            }}
           >
-            {images.map((img, idx) => (
-              <SwiperSlide key={idx}>
-                <img src={img} className="w-full h-full object-cover opacity-70" alt={`${propertyTitle} - ${idx + 1}`} />
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
-            <Building size={64} className="text-white/20" />
+            <img 
+              src={img} 
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+              alt={`Thumbnail ${idx + 2}`} 
+            />
+            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+        ))}
+        
+        {/* Show more photos overlay on last image */}
+        {images.length > 5 && (
+          <div 
+            className="relative aspect-square overflow-hidden rounded-lg cursor-pointer bg-black/70 flex items-center justify-center"
+            onClick={() => {
+              // Scroll to gallery section
+              document.getElementById('gallery')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            <div className="text-center">
+              <Camera size={24} className="text-white mx-auto mb-1" />
+              <span className="text-white text-xs font-bold">+{images.length - 4} more</span>
+            </div>
           </div>
         )}
-
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent" />
-
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-10 left-10 z-20 flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.4em] text-white/40 hover:text-amber-500 transition-all"
-        >
-          <ArrowLeft size={14} /> Back to Collection
-        </button>
-
-        {/* Status Badge on Hero */}
-        <div className="absolute top-10 right-10 z-20">
-          <span className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-2 ${statusBadge.color} text-white shadow-lg`}>
-            {statusBadge.icon} {statusBadge.text}
-          </span>
-        </div>
-
-        <div className="absolute bottom-12 left-10 md:left-20">
-          <span className="text-[9px] font-black text-amber-500 uppercase tracking-[0.5em] mb-3 block">
-            Ref. {property._id?.slice(-8).toUpperCase()}
-          </span>
-          <h1 className="text-4xl md:text-6xl font-light uppercase tracking-tighter italic leading-none">
-            {propertyTitle}
-          </h1>
-          <div className="flex items-center gap-2 mt-4">
-            <MapPin size={16} className="text-amber-500" />
-            <span className="text-sm text-white/60">{locationName}, UAE</span>
+        
+        {/* Fill empty spaces if less than 4 images */}
+        {images.length <= 4 && Array(4 - images.length).fill().map((_, idx) => (
+          <div key={`empty-${idx}`} className="aspect-square rounded-lg bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+            <Building size={24} className="text-gray-400" />
           </div>
-        </div>
-      </section>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  {/* Property Stats Bar - Below both columns */}
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 bg-white dark:bg-[#0a0a0c] border-b border-gray-100 dark:border-white/5">
+    <div>
+      <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Price</p>
+      <p className="text-lg md:text-xl font-bold text-amber-500">
+        AED {Number(property.price).toLocaleString()}
+        {isRent(property) && property.rentedPeriod && (
+          <span className="text-xs text-gray-400 font-normal ml-1">
+            /{property.rentedPeriod?.toLowerCase().replace("per ", "") || "year"}
+          </span>
+        )}
+      </p>
+    </div>
+    <div>
+      <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Bedrooms</p>
+      <p className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">{property.bedroom || 0}</p>
+    </div>
+    <div>
+      <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Bathrooms</p>
+      <p className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">{property.bathroom || 0}</p>
+    </div>
+    <div>
+      <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Area</p>
+      <p className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">{property.squarefoot?.toLocaleString()} sqft</p>
+    </div>
+  </div>
+
+  {/* Navigation Tabs with Share Button */}
+  <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-3 border-b border-gray-100 dark:border-white/5 bg-white dark:bg-[#0a0a0c] sticky top-0 z-30">
+    <div className="flex flex-wrap gap-6 overflow-x-auto">
+      {['Gallery', 'Description', 'Amenities', 'Location', 'Price Insights', 'Provided by'].map((tab, idx) => (
+        <button
+          key={idx}
+          onClick={() => {
+            const section = document.getElementById(tab.toLowerCase().replace(' ', '-'));
+            if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }}
+          className="text-[10px] md:text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-amber-500 transition-colors whitespace-nowrap pb-2 border-b-2 border-transparent hover:border-amber-500"
+        >
+          {tab}
+        </button>
+      ))}
+    </div>
+    
+    {/* Share Button */}
+    <button
+      onClick={() => setShowShareModal(true)}
+      className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-black transition-all text-[10px] font-bold uppercase tracking-wider"
+    >
+      <Share2 size={14} /> Share
+    </button>
+  </div>
+</section>
 
 
 
@@ -567,11 +670,7 @@ const PropertyDetailsPage = () => {
           </span>
         </div>
 
-        {/* Broker License */}
-        <div className="flex justify-between items-center">
-          <span className="text-[8px] text-slate-400 uppercase tracking-wider">Broker License</span>
-          <span className="text-[10px] font-mono">{property.agentId?.reraLicenseNumber || property.brnNumber || "N/A"}</span>
-        </div>
+    
 
         {/* Agency Name */}
         <div className="flex justify-between items-center">
@@ -630,7 +729,7 @@ const PropertyDetailsPage = () => {
 
       {/* Trakheesi / Permit Number */}
       <div className="flex justify-between items-center pt-2 mt-2 border-t border-green-500/20">
-        <span className="text-[8px] text-slate-400 uppercase tracking-wider">Trakheesi No.</span>
+        <span className="text-[8px] text-slate-400 uppercase tracking-wider">DLD PERMIT No.</span>
         <span className="text-[10px] font-mono font-medium">{property.trakheesiNumber || "N/A"}</span>
       </div>
 
@@ -889,11 +988,19 @@ const PropertyDetailsPage = () => {
             )}
           </div>
         </section>
+        {showShareModal && (
+  <ShareModal 
+    property={property} 
+    onClose={() => setShowShareModal(false)} 
+    isDark={isDark} 
+  />
+)}
     </div>
 
     
   );
 };
+
 
 const SpecItem = ({ label, value }) => {
   if (!value && value !== 0) return null;
@@ -907,6 +1014,8 @@ const SpecItem = ({ label, value }) => {
         {value}
       </p>
     </div>
+
+    
   );
 };
 
