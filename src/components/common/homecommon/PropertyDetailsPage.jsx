@@ -272,7 +272,7 @@ const [showShareModal, setShowShareModal] = useState(false);
 
       {/* 1. ARCHITECTURAL HERO (with Swiper Gallery) */}
    {/* 1. HERO SECTION - Two Column Grid Layout */}
-<section className="relative w-full bg-black">
+<section className="relative w-full ">
   <div className="grid grid-cols-1 lg:grid-cols-5 min-h-[75vh]">
     
     {/* Left Column - Main Image Slider (3/5 width) */}

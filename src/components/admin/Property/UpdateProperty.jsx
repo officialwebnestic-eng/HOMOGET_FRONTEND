@@ -1108,8 +1108,6 @@ const UpdateProperty = () => {
                 </div>
               </div>
             )}
-
-       
               <div id="dld" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
                 <SectionHeader icon={<QrCode />} title="DLD QR Code" currentStep={currentStep} stepIndex={5} />
 
