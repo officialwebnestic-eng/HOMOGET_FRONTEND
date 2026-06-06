@@ -312,14 +312,14 @@ const ViewPropertyList = ({ mode = "all" }) => {
                         {/* Title / Ref */}
                         <td className="px-2 py-2">
                           <div className="font-semibold text-[10px] line-clamp-1">{property.propertyTitleEn?.slice(0, 30)}</div>
-                          <span className={`inline-block mt-0.5 px-1 py-0.5 rounded text-[12px] font-bold ${
+                          <span className={`inline-block mt-0.5 px-1 py-0.5 rounded text-[7px] font-bold ${
                             property.publishingStatus === 'Published' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
                           }`}>
                             {property.publishingStatus}
                           </span>
                         </td>
                           <td className="px-2 py-2">
-                          <div className="text-[12px] text-slate-400 font-mono"> {property.refrenceNo|| 'N/A'}</div>
+                          <div className="text-[8px] text-slate-400 font-mono">REF: {property.refrenceNo|| 'N/A'}</div>
                          
                         </td>
                         
@@ -327,10 +327,10 @@ const ViewPropertyList = ({ mode = "all" }) => {
                         <td className="px-2 py-2">
                           <div className="flex items-center gap-1">
                             <User size={10} className="text-amber-500" />
-                            <span className="text-[12px] font-medium">{agentName}</span>
+                            <span className="text-[9px] font-medium">{agentName}</span>
                           </div>
                           {agentEmail && (
-                            <div className="text-[12px] text-slate-400 truncate max-w-[100px]">{agentEmail}</div>
+                            <div className="text-[7px] text-slate-400 truncate max-w-[100px]">{agentEmail}</div>
                           )}
                          </td>
                         
@@ -340,9 +340,9 @@ const ViewPropertyList = ({ mode = "all" }) => {
                             {property.category === 'Off-Plan' ? <Landmark size={10} className="text-purple-400" /> :
                              property.category === 'Commercial' ? <Briefcase size={10} className="text-cyan-400" /> :
                              <Home size={10} className="text-amber-400" />}
-                            <span className="text-[12px]">{property.category}</span>
+                            <span className="text-[9px]">{property.category}</span>
                           </div>
-                          <div className="text-[12px] text-slate-400">{property.propertytype || 'N/A'}</div>
+                          <div className="text-[8px] text-slate-400">{property.propertytype || 'N/A'}</div>
                           <div className="mt-0.5">
                             <span className={`px-1 py-0.5 rounded text-[7px] font-bold ${
                               property.offeringType === 'Rent' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'
@@ -356,23 +356,23 @@ const ViewPropertyList = ({ mode = "all" }) => {
                         <td className="px-2 py-2">
                           <div className="flex items-center gap-1">
                             <MapPin size={10} className="text-amber-400 flex-shrink-0" />
-                            <span className="text-[12px] line-clamp-2 max-w-[150px]">{property.displayAddress || property.address || 'Dubai'}</span>
+                            <span className="text-[9px] line-clamp-2 max-w-[150px]">{property.displayAddress || property.address || 'Dubai'}</span>
                           </div>
                           {property.community && (
-                            <div className="text-[12px] text-slate-400 mt-0.5">{property.community}</div>
+                            <div className="text-[7px] text-slate-400 mt-0.5">{property.community}</div>
                           )}
                          </td>
                             <td className="px-2 py-2">
                           <div className="flex items-center gap-1">
                             <Calendar size={10} className="text-amber-400 flex-shrink-0" />
-                            <span className="text-[12px] line-clamp-2 max-w-[150px]">{property.listingStartDate  || ' No Date'}</span>
+                            <span className="text-[9px] line-clamp-2 max-w-[150px]">{property.listingStartDate  || ' No Date'}</span>
                           </div>
                          
                          </td>
                             <td className="px-2 py-2">
                           <div className="flex items-center gap-1">
                             <Calendar size={10} className="text-amber-400 flex-shrink-0" />
-                            <span className="text-[12px] line-clamp-2 max-w-[150px]">{property.listingEndDate  || ' NO Date'}</span>
+                            <span className="text-[9px] line-clamp-2 max-w-[150px]">{property.listingEndDate  || ' NO Date'}</span>
                           </div>
                          
                          </td>
@@ -382,10 +382,10 @@ const ViewPropertyList = ({ mode = "all" }) => {
                           {property.trakheesiNumber ? (
                             <div className="font-mono text-[9px] text-amber-400">{property.trakheesiNumber}</div>
                           ) : (
-                            <span className="text-[12px] text-slate-500">—</span>
+                            <span className="text-[8px] text-slate-500">—</span>
                           )}
                           {property.permitType && (
-                            <div className="text-[12px] text-slate-400">{property.permitType}</div>
+                            <div className="text-[7px] text-slate-400">{property.permitType}</div>
                           )}
                          </td>
                         
@@ -395,18 +395,18 @@ const ViewPropertyList = ({ mode = "all" }) => {
                             <span className="flex items-center gap-0.5 text-[9px]"><Bed size={8} /> {property.bedroom || 0}</span>
                             <span className="flex items-center gap-0.5 text-[9px]"><Bath size={8} /> {property.bathroom || 0}</span>
                           </div>
-                          <div className="text-[12px] text-slate-400">{property.squarefoot?.toLocaleString()} sqft</div>
-                          <div className="text-[12px] text-slate-400">{property.furnishingType?.slice(0, 6) || '---'}</div>
+                          <div className="text-[8px] text-slate-400">{property.squarefoot?.toLocaleString()} sqft</div>
+                          <div className="text-[8px] text-slate-400">{property.furnishingType?.slice(0, 6) || '---'}</div>
                          </td>
                         
                         {/* Price */}
                         <td className="px-2 py-2">
-                          <div className="font-bold text-[12px] text-amber-500">{formatPrice(property.price)}</div>
+                          <div className="font-bold text-[10px] text-amber-500">{formatPrice(property.price)}</div>
                           {property.offeringType === 'Rent' && property.rentedPeriod && (
-                            <div className="text-[12px] text-slate-400">/{property.rentedPeriod}</div>
+                            <div className="text-[7px] text-slate-400">/{property.rentedPeriod}</div>
                           )}
                           {property.cheques && (
-                            <div className="text-[12px] text-slate-400">{property.cheques} chq</div>
+                            <div className="text-[7px] text-slate-400">{property.cheques} chq</div>
                           )}
                          </td>
                         
@@ -416,7 +416,7 @@ const ViewPropertyList = ({ mode = "all" }) => {
                             <div className="flex flex-col items-center gap-0.5">
                               {hasOffPlanDocs ? (
                                 <>
-                                  <span className="text-[12px] text-green-400">{property.offPlanDocuments.length} files</span>
+                                  <span className="text-[8px] text-green-400">{property.offPlanDocuments.length} files</span>
                                   <button
                                     onClick={(e) => { e.stopPropagation(); openDocumentModal(property); }}
                                     className="p-1 rounded bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition"
@@ -446,7 +446,7 @@ const ViewPropertyList = ({ mode = "all" }) => {
                           <div className="flex flex-col items-center gap-0.5">
                             {hasOwnerDocs ? (
                               <>
-                                <span className="text-[12px] text-green-400">{property.ownerDocuments.length} files</span>
+                                <span className="text-[8px] text-green-400">{property.ownerDocuments.length} files</span>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); openDocumentModal(property); }}
                                   className="p-1 rounded bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition"
@@ -455,10 +455,10 @@ const ViewPropertyList = ({ mode = "all" }) => {
                                 </button>
                               </>
                             ) : (
-                              <span className="text-[12px] text-slate-500">No docs</span>
+                              <span className="text-[8px] text-slate-500">No docs</span>
                             )}
                             {property.ownerName && (
-                              <div className="text-[12px] text-slate-400 truncate max-w-[70px]">{property.ownerName?.slice(0, 15)}</div>
+                              <div className="text-[7px] text-slate-400 truncate max-w-[70px]">{property.ownerName?.slice(0, 15)}</div>
                             )}
                           </div>
                          </td>
