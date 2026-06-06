@@ -1109,8 +1109,7 @@ const UpdateProperty = () => {
               </div>
             )}
 
-            {/* SECTION 6: DLD QR CODE - Only for Off-Plan properties */}
-            {isOffPlan && (
+       
               <div id="dld" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
                 <SectionHeader icon={<QrCode />} title="DLD QR Code" currentStep={currentStep} stepIndex={5} />
 
@@ -1164,7 +1163,7 @@ const UpdateProperty = () => {
                   </div>
                 </div>
               </div>
-            )}
+          
 
             {/* SECTION 7-11: DOCUMENTS, DESCRIPTION, MEDIA, AMENITIES, PRICING */}
             {/* (These sections remain the same as before) */}
