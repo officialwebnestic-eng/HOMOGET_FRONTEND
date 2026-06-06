@@ -1136,7 +1136,7 @@ const UpdateProperty = () => {
                       </div>  
                     </div>
                   )}
-                  
+        
                   <div className="mt-4">
                     <div
                       className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${

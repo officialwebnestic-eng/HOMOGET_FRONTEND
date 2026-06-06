@@ -24,7 +24,7 @@ const GeospatialMap = memo(({ property, isDark }) => {
     longitude = 55.2708;
   }
   
-  const locationQuery = property?.displayAddress || property?.address || property?.locationName || property?.community || property?.city || "Dubai";
+  const locationQuery = property?.displayAddress;
 
   const handleOpenMap = () => {
     window.open(`https://www.google.com/maps?q=${latitude},${longitude}`, "_blank");
@@ -42,11 +42,13 @@ const GeospatialMap = memo(({ property, isDark }) => {
       {/* Address */}
       <div className="flex items-center gap-2 mb-3">
         <MapPin size={14} className="text-amber-500" />
+         <span className="text-xl font-serif text-black">
+          {locationQuery}
+        </span>
         <span className="text-xl font-serif text-black">
           {locationQuery}
         </span>
       </div>
-
       {/* Small Map Button */}
       <button
         onClick={handleOpenMap}
