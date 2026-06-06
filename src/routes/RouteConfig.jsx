@@ -105,10 +105,8 @@ export const AdminRoutes = () => {
                 <Route path="/viewbloglist" element={<ViewBlogList />} />
                 <Route path="/updateblog/:id" element={<UpdateBlog />} />
                 <Route path="/updatepropertydetails/:id" element={<UpdateProperty />} />
-                <Route path="/gettourbooking" element={<TourList />} />
            
                 <Route path="/viewallbookings" element={<ViewAllBookings />} />
-                <Route path="/getappoinment" element={<GetAppoinment />} />
                 <Route path="/createdeveloper" element={<AddDeveloperForm />} />
                 <Route path="/viewdevelopers" element={<ViewAllDeveloperList />} />
                 <Route path="/updatedeveloper/:id" element={<AddDeveloperForm />} />
