@@ -1000,8 +1000,6 @@ const [showShareModal, setShowShareModal] = useState(false);
     
   );
 };
-
-
 const SpecItem = ({ label, value }) => {
   if (!value && value !== 0) return null;
 

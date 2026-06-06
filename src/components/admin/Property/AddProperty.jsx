@@ -8,7 +8,8 @@ import {
   Upload, X, MapPin, Loader2, Sparkles, ShieldCheck, FileText,
   Wallet, Building2, Plus, Trash2, Layers, Camera, CheckCircle2, 
   Hash, DollarSign, Home, File, FileCheck, FileWarning, UserCheck, 
-  Building, QrCode, Info, ChevronRight, ChevronLeft, Save, Eye
+  Building, QrCode, Info, ChevronRight, ChevronLeft, Save, Eye,
+  Calendar
 } from "lucide-react";
 import { useToast } from "../../../model/SuccessToasNotification";
 import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
@@ -97,6 +98,8 @@ const AddProperty = () => {
       dldQRCode: "",
       dldPermitNumber: "",
       dldExpiryDate: "",
+      listingStartDate: "",
+      listingEndDate: "",
     },
   });
 
@@ -122,6 +125,7 @@ const AddProperty = () => {
     { id: "offplan", label: "Off-Plan", icon: <Building size={16} />, condition: isOffPlan },
     { id: "documents", label: "Documents", icon: <FileText size={16} /> },
         { id: "dld ", label: "DLD Verification", icon: <FileText size={16} /> },
+  { id: "listing", label: "Listing Period", icon: <Calendar size={16} /> },
 
     { id: "media", label: "Media", icon: <Camera size={16} />, fields: ["images"] },
     { id: "amenities", label: "Amenities", icon: <Sparkles size={16} /> },
@@ -588,6 +592,7 @@ const AddProperty = () => {
                   <label className={labelClass}>Property Title (Arabic)</label>
                   <input {...register("propertyTitleAr")} className={`${inputClass} text-right`} dir="rtl" />
                 </div>
+                
                 <div>
                   <label className={labelClass}>Category {requiredStar}</label>
                   <select {...register("category", { required: true })} className={inputClass}>
@@ -632,6 +637,71 @@ const AddProperty = () => {
               </div>
             </div>
 
+{/* LISTING DATES SECTION */}
+<div className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
+  <SectionHeader icon={<Calendar />} title="Listing Period" currentStep={currentStep} stepIndex={4} />
+  
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {/* Listing Start Date */}
+    <div>
+      <label className={labelClass}>
+        <Calendar size={12} className="inline mr-1 text-amber-500" />
+        Listing Start Date
+      </label>
+      <input 
+        type="date" 
+        {...register("listingStartDate")} 
+        className={inputClass} 
+      />
+      <p className="text-[8px] text-slate-400 mt-1">
+        Date when the property becomes available for listing
+      </p>
+    </div>
+
+    {/* Listing End Date */}
+    <div>
+      <label className={labelClass}>
+        <Calendar size={12} className="inline mr-1 text-amber-500" />
+        Listing End Date
+      </label>
+      <input 
+        type="date" 
+        {...register("listingEndDate")} 
+        className={inputClass} 
+      />
+      <p className="text-[8px] text-slate-400 mt-1">
+        Leave empty for no expiry date
+      </p>
+    </div>
+  </div>
+
+  {/* Listing Status Preview */}
+  <div className="mt-4 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+    <div className="flex items-center justify-between">
+      <span className="text-[9px] font-medium text-slate-500">Listing Status:</span>
+      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+        watch("listingEndDate") && new Date(watch("listingEndDate")) < new Date()
+          ? "bg-red-500/20 text-red-500"
+          : "bg-green-500/20 text-green-500"
+      }`}>
+        {watch("listingEndDate") && new Date(watch("listingEndDate")) < new Date()
+          ? "Expired"
+          : "Active"}
+      </span>
+    </div>
+    <div className="flex items-center justify-between mt-2">
+      <span className="text-[8px] text-slate-400">Listing Period:</span>
+      <span className="text-[8px] font-mono">
+        {watch("listingStartDate") 
+          ? new Date(watch("listingStartDate")).toLocaleDateString() 
+          : "Start date not set"} 
+        {watch("listingEndDate") 
+          ? ` → ${new Date(watch("listingEndDate")).toLocaleDateString()}` 
+          : " → No expiry"}
+      </span>
+    </div>
+  </div>
+</div>
             {/* SECTION 2: COMPLIANCE */}
             <div id="compliance" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
               <SectionHeader icon={<ShieldCheck />} title="License & Compliance" currentStep={currentStep} stepIndex={1} />

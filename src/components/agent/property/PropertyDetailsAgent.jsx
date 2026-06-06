@@ -5,7 +5,8 @@ import {
   Building2, Globe, Bath, Bed, Ruler, Layers, 
   Barcode, Wrench, Search, Filter, ChevronLeft, ChevronRight,
   MapPin, Sparkles, Crown, Briefcase, Landmark, Eye,
-  FileText, FileCheck, UserCheck, ShieldCheck, Download, X
+  FileText, FileCheck, UserCheck, ShieldCheck, Download, X,
+  Calendar
 } from 'lucide-react';
 import useGetPropertyBuyUserId from '../../../hooks/useGetPropertyBuyUserId';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -425,6 +426,21 @@ const PropertyDetailsAgent = () => {
                           <Ruler size={14} className="text-amber-500" />
                           <span className={`text-xs font-medium ${currentTheme.textPrimary}`}>
                             {property.squarefoot?.toLocaleString()} sqft
+                          </span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 py-3 mb-3 border-t border-b border-slate-200 dark:border-white/10">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Calendar size={14} className="text-amber-500" />
+                          <span className={`text-xs font-medium ${currentTheme.textPrimary}`}>
+                            {property.listingStartDate || "No Date"}
+                          </span>
+                        </div>
+                       
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Calendar size={14} className="text-amber-500" />
+                          <span className={`text-xs font-medium ${currentTheme.textPrimary}`}>
+                            {property.listingEndDate || "No Date"}
                           </span>
                         </div>
                       </div>

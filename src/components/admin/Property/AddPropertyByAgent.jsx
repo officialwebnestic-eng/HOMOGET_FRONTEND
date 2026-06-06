@@ -31,7 +31,8 @@ import {
   Info,
   ChevronRight,
   ChevronLeft,
-  Save
+  Save,
+  Calendar
 } from "lucide-react";
 import { useToast } from "../../../model/SuccessToasNotification";
 import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
@@ -159,6 +160,8 @@ const AddPropertyByAgent = () => {
   // Form steps configuration
   const formSteps = [
     { id: "basic", label: "Basic Info", icon: <Home size={16} /> },
+      { id: "listing", label: "Listing Period", icon: <Calendar size={16} /> },
+
     { id: "compliance", label: "Compliance", icon: <ShieldCheck size={16} /> },
     { id: "specs", label: "Specifications", icon: <Layers size={16} /> },
     { id: "location", label: "Location", icon: <MapPin size={16} /> },
@@ -379,6 +382,8 @@ const AddPropertyByAgent = () => {
         ownerVisaCopy: data.ownerVisaCopy || "",
         // DLD QR fields
         dldExpiryDate: data.dldExpiryDate || "",
+         listingStartDate: data.listingStartDate || "",
+         listingEndDate: data.listingEndDate || "",
       };
       
       Object.keys(payload).forEach((key) => {
@@ -639,6 +644,71 @@ const AddPropertyByAgent = () => {
                 </div>
               </div>
             </div>
+            {/* LISTING DATES SECTION */}
+<div className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
+  <SectionHeader icon={<Calendar />} title="Listing Period" currentStep={currentStep} stepIndex={4} />
+  
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {/* Listing Start Date */}
+    <div>
+      <label className={labelClass}>
+        <Calendar size={12} className="inline mr-1 text-amber-500" />
+        Listing Start Date
+      </label>
+      <input 
+        type="date" 
+        {...register("listingStartDate")} 
+        className={inputClass} 
+      />
+      <p className="text-[8px] text-slate-400 mt-1">
+        Date when the property becomes available for listing
+      </p>
+    </div>
+
+    {/* Listing End Date */}
+    <div>
+      <label className={labelClass}>
+        <Calendar size={12} className="inline mr-1 text-amber-500" />
+        Listing End Date
+      </label>
+      <input 
+        type="date" 
+        {...register("listingEndDate")} 
+        className={inputClass} 
+      />
+      <p className="text-[8px] text-slate-400 mt-1">
+        Leave empty for no expiry date
+      </p>
+    </div>
+  </div>
+
+  {/* Listing Status Preview */}
+  <div className="mt-4 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+    <div className="flex items-center justify-between">
+      <span className="text-[9px] font-medium text-slate-500">Listing Status:</span>
+      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+        watch("listingEndDate") && new Date(watch("listingEndDate")) < new Date()
+          ? "bg-red-500/20 text-red-500"
+          : "bg-green-500/20 text-green-500"
+      }`}>
+        {watch("listingEndDate") && new Date(watch("listingEndDate")) < new Date()
+          ? "Expired"
+          : "Active"}
+      </span>
+    </div>
+    <div className="flex items-center justify-between mt-2">
+      <span className="text-[8px] text-slate-400">Listing Period:</span>
+      <span className="text-[8px] font-mono">
+        {watch("listingStartDate") 
+          ? new Date(watch("listingStartDate")).toLocaleDateString() 
+          : "Start date not set"} 
+        {watch("listingEndDate") 
+          ? ` → ${new Date(watch("listingEndDate")).toLocaleDateString()}` 
+          : " → No expiry"}
+      </span>
+    </div>
+  </div>
+</div>
 
             {/* SECTION 2: COMPLIANCE */}
             <div id="compliance" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
