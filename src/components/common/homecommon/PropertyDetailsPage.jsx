@@ -370,58 +370,12 @@ const [showShareModal, setShowShareModal] = useState(false);
     </div>
   </div>
 
-  {/* Property Stats Bar - Below both columns */}
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 bg-white dark:bg-[#0a0a0c] border-b border-gray-100 dark:border-white/5">
-    <div>
-      <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Price</p>
-      <p className="text-lg md:text-xl font-bold text-amber-500">
-        AED {Number(property.price).toLocaleString()}
-        {isRent(property) && property.rentedPeriod && (
-          <span className="text-xs text-gray-400 font-normal ml-1">
-            /{property.rentedPeriod?.toLowerCase().replace("per ", "") || "year"}
-          </span>
-        )}
-      </p>
-    </div>
-    <div>
-      <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Bedrooms</p>
-      <p className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">{property.bedroom || 0}</p>
-    </div>
-    <div>
-      <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Bathrooms</p>
-      <p className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">{property.bathroom || 0}</p>
-    </div>
-    <div>
-      <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Area</p>
-      <p className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">{property.squarefoot?.toLocaleString()} sqft</p>
-    </div>
-  </div>
 
-  {/* Navigation Tabs with Share Button */}
-  <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-3 border-b border-gray-100 dark:border-white/5 bg-white dark:bg-[#0a0a0c] sticky top-0 z-30">
-    <div className="flex flex-wrap gap-6 overflow-x-auto">
-      {['Gallery', 'Description', 'Amenities', 'Location', 'Price Insights', 'Provided by'].map((tab, idx) => (
-        <button
-          key={idx}
-          onClick={() => {
-            const section = document.getElementById(tab.toLowerCase().replace(' ', '-'));
-            if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }}
-          className="text-[10px] md:text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-amber-500 transition-colors whitespace-nowrap pb-2 border-b-2 border-transparent hover:border-amber-500"
-        >
-          {tab}
-        </button>
-      ))}
-    </div>
+
+
     
-    {/* Share Button */}
-    <button
-      onClick={() => setShowShareModal(true)}
-      className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-black transition-all text-[10px] font-bold uppercase tracking-wider"
-    >
-      <Share2 size={14} /> Share
-    </button>
-  </div>
+ 
+
 </section>
 
 
@@ -436,11 +390,14 @@ const [showShareModal, setShowShareModal] = useState(false);
                 {formatPrice(property.price, property.rentedPeriod)}
               </p>
             </div>
+
             <div className="hidden md:block">
               <p className="text-[8px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Property Type</p>
               <p className="text-[11px] font-black uppercase tracking-widest">{property.propertytype || "Property"}</p>
             </div>
           </div>
+
+  
           <div className="flex gap-3">
             <button
               onClick={handleWhatsApp}
@@ -448,16 +405,47 @@ const [showShareModal, setShowShareModal] = useState(false);
             >
               <FaWhatsapp size={14} /> WhatsApp
             </button>
-            <button
+           
+               <button
+                onClick={() => setShowShareModal(true)}
+              className="bg-red-600 text-white px-6 py-3 l text-[10px] font-black uppercase tracking-[0.2em] hover:bg-green-700 transition-all flex items-center gap-2"
+            >
+               <Share2 size={14} /> Share
+            </button>
+             <button
               onClick={() => navigate(`/bookings/${id}`, { state: { propertyData: property } })}
               className="bg-amber-500 text-black px-8 py-3 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white transition-all shadow-2xl flex items-center gap-2"
             >
               <CalendarCheck size={14} /> Initiate Booking
             </button>
           </div>
+           
+  
+         
+         
         </div>
       </div>
 
+
+
+ <div className={`sticky top-0 z-40 ${isDark ? "border-zinc-500/10 bg-black/80" : "border-gray-200 bg-white/80"} backdrop-blur-xl`}>
+  <div className="w-full px-3 md:px-10 py-1.5">
+    <div className="flex flex-row  gap-3 sm:gap-5">
+      <div className="flex items-center gap-1">
+        <Bed size={12} className="text-amber-500" />
+        <span className="text-xs font-bold text-amber-500">{property.bedroom || 0}</span>
+      </div>
+      <div className="flex items-center gap-1">
+        <Bath size={12} className="text-amber-500" />
+        <span className="text-xs font-bold text-amber-500">{property.bathroom || 0}</span>
+      </div>
+      <div className="flex items-center gap-1">
+        <Ruler size={12} className="text-amber-500" />
+        <span className="text-xs font-bold text-amber-500">{property.squarefoot?.toLocaleString()} sqft</span>
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* ===== SECTION 2: GALLERY SECTION (THUMBNAILS BELOW) ===== */}
      {mediaItems.length > 1 && (
