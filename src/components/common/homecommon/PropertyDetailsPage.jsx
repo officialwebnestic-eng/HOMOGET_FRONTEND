@@ -345,7 +345,7 @@ const [showShareModal, setShowShareModal] = useState(false);
         ))}
         
         {/* Show more photos overlay on last image */}
-        {images.length > 5 && (
+        {images.length > 4 && (
           <div 
             className="relative aspect-square overflow-hidden rounded-lg cursor-pointer bg-black/70 flex items-center justify-center"
             onClick={() => {
