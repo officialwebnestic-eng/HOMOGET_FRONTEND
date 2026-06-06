@@ -134,6 +134,7 @@ const UpdateProperty = () => {
       rentedPeriod: "Per Year",
       listingStartDate: new Date().toISOString().split('T')[0],
       listingEndDate: "",
+      zoneName: "",
     },
   });
 
@@ -149,6 +150,7 @@ const UpdateProperty = () => {
   const watchAgentId = watch("agentId");
   const isOffPlan = watchCategory === "Off-Plan";
   const watchOffPlanType = watch("offPlanType");
+const zoneNameValue = watch("zoneName");
 
   // Form steps configuration - Hide DLD section if not Off-Plan
   const formSteps = [
@@ -274,6 +276,7 @@ const UpdateProperty = () => {
             nearByLocations: data.nearByLocations && data.nearByLocations.length 
               ? data.nearByLocations 
               : [{ locationName: "", distance: "", transportType: "Drive" }],
+              zoneName: data.zoneName || "",
           };
           
           reset(formData);
@@ -516,6 +519,7 @@ const UpdateProperty = () => {
         dldExpiryDate: data.dldExpiryDate || "",
         listingStartDate: data.listingStartDate || new Date().toISOString().split('T')[0],
         listingEndDate: data.listingEndDate || null,
+        zoneName: data.zoneName || "",
       };
       
       for (const key in payload) {
@@ -1108,59 +1112,112 @@ const UpdateProperty = () => {
                 </div>
               </div>
             )}
-              <div id="dld" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-                <SectionHeader icon={<QrCode />} title="DLD QR Code" currentStep={currentStep} stepIndex={5} />
+             {/* Replace the entire DLD section with this updated version */}
+{/* SECTION: DLD VERIFICATION - COMPLETELY FIXED */}
+<div id="dld" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
+  <SectionHeader icon={<QrCode />} title="DLD Verification" currentStep={currentStep} stepIndex={5} />
 
-                <div className="mt-2 p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 rounded-lg bg-green-500/20">
-                      <QrCode size={18} className="text-green-500" />
-                    </div>
-                    <div>
-                      <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>DLD Verified QR Code</h3>
-                      <p className="text-[9px] text-slate-500">Upload official Dubai Land Department QR code</p>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className={labelClass}>DLD QR Expiry Date</label>
-                    <input type="date" {...register("dldExpiryDate")} className={inputClass} />
-                  </div>
-                  
-                  {existingDldQRCode && !dldQRPreview && (
-                    <div className="mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                      <p className="text-[10px] text-green-600 mb-2">Current QR Code:</p>
-                      <div className="flex items-center justify-between">
-                        <img src={existingDldQRCode} alt="Existing DLD QR" className="w-16 h-16 object-contain" />
-                        <button type="button" onClick={removeExistingDldQR} className="text-xs text-red-500">Remove</button>
-                      </div>  
-                    </div>
-                  )}
-        
-                  <div className="mt-4">
-                    <div
-                      className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
-                        dldQRPreview ? "border-green-400 bg-green-50 dark:bg-green-950" : "border-gray-300 dark:border-gray-600 hover:border-green-400"
-                      }`}
-                      onClick={() => document.getElementById("dldQRInput")?.click()}
-                    >
-                      <input id="dldQRInput" type="file" accept="image/*" className="hidden" onChange={handleDldQRUpload} />
-                      {dldQRPreview ? (
-                        <div className="flex flex-col items-center gap-2">
-                          <img src={dldQRPreview} alt="DLD QR" className="w-20 h-20 object-contain" />
-                          <p className="text-xs font-medium text-green-600">✓ QR Code uploaded</p>
-                          <button type="button" onClick={(e) => { e.stopPropagation(); removeDldQR(); }} className="text-xs text-red-500">Remove</button>
-                        </div>
-                      ) : (
-                        <>
-                          <Upload size={28} className="mx-auto mb-2 text-gray-400" />
-                          <p className="text-xs font-medium">Click to upload DLD QR Code</p>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
+  <div className="mt-2 p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
+    <div className="flex items-center gap-3 mb-4">
+      <div className="p-2 rounded-lg bg-green-500/20">
+        <QrCode size={18} className="text-green-500" />
+      </div>
+      <div>
+        <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>DLD Verified QR Code</h3>
+        <p className="text-[9px] text-slate-500">Upload official Dubai Land Department QR code</p>
+      </div>
+    </div>
+    
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div>
+        <label className={labelClass}>DLD Expiry Date</label>
+        <input 
+          type="date" 
+          {...register("dldExpiryDate")} 
+          className={inputClass} 
+        />
+      </div>
+      
+      {/* COMPLETELY FIXED ZONE NAME INPUT - No conflicts */}
+      <div>
+        <label className={labelClass}>Zone Name</label>
+        <input 
+          type="text" 
+          {...register("zoneName", {
+            // Optional: Add validation
+            setValueAs: (value) => value?.trim() || ""
+          })}
+          className={inputClass}
+          placeholder="e.g., Dubai Marina, Downtown Dubai, Palm Jumeirah"
+          autoComplete="off"
+        />
+        <p className="text-[8px] text-slate-400 mt-1">Enter the community, district, or zone name</p>
+      </div>
+    </div>
+    
+    {/* Debug: Show current value (remove in production) */}
+    <div className="mt-2 text-[8px] text-slate-400">
+      Current zone name: {watch("zoneName") || "Not set"}
+    </div>
+    
+    {/* Existing DLD QR Code */}
+    {existingDldQRCode && !dldQRPreview && (
+      <div className="mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+        <p className="text-[10px] text-green-600 mb-2">Current QR Code:</p>
+        <div className="flex items-center justify-between">
+          <img src={existingDldQRCode} alt="Existing DLD QR" className="w-16 h-16 object-contain" />
+          <button 
+            type="button" 
+            onClick={removeExistingDldQR} 
+            className="text-xs text-red-500 hover:text-red-600 transition-colors"
+          >
+            Remove
+          </button>
+        </div>  
+      </div>
+    )}
+
+    {/* Upload New DLD QR Code */}
+    <div className="mt-4">
+      <div
+        className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
+          dldQRPreview ? "border-green-400 bg-green-50 dark:bg-green-950/20" : "border-gray-300 dark:border-gray-600 hover:border-green-400"
+        }`}
+        onClick={() => document.getElementById("dldQRInput")?.click()}
+      >
+        <input 
+          id="dldQRInput" 
+          type="file" 
+          accept="image/*" 
+          className="hidden" 
+          onChange={handleDldQRUpload} 
+        />
+        {dldQRPreview ? (
+          <div className="flex flex-col items-center gap-2">
+            <img src={dldQRPreview} alt="DLD QR" className="w-20 h-20 object-contain" />
+            <p className="text-xs font-medium text-green-600">✓ QR Code uploaded</p>
+            <button 
+              type="button" 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                removeDldQR(); 
+              }} 
+              className="text-xs text-red-500 hover:text-red-600"
+            >
+              Remove
+            </button>
+          </div>
+        ) : (
+          <>
+            <Upload size={28} className="mx-auto mb-2 text-gray-400" />
+            <p className="text-xs font-medium">Click to upload DLD QR Code</p>
+            <p className="text-[8px] text-slate-400 mt-1">PNG, JPG up to 2MB</p>
+          </>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
           
 
             {/* SECTION 7-11: DOCUMENTS, DESCRIPTION, MEDIA, AMENITIES, PRICING */}

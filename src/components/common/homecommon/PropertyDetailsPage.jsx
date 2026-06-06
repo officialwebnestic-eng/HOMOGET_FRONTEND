@@ -914,9 +914,9 @@ const [controlledSwiper, setControlledSwiper] = useState(null);
 
         {/* Agency Name */}
         <div className="flex justify-between items-center">
-          <span className="text-[8px] text-slate-400 uppercase tracking-wider">Agency Name</span>
+          <span className="text-[8px] text-slate-400 uppercase tracking-wider">Agent  Name</span>
           <span className="text-[10px] font-medium truncate max-w-[140px] text-right">
-            {property.agentId?.agencyName || property.agentId?.name || "N/A"}
+            {property.agentId?.name || "N/A"}
           </span>
         </div>
 

@@ -123,6 +123,7 @@ const AddPropertyByAgent = () => {
       // DLD QR Code fields
       dldQRCode: "",
       dldExpiryDate: "",
+       zoneName:"",
     },
   });
 
@@ -384,6 +385,7 @@ const AddPropertyByAgent = () => {
         dldExpiryDate: data.dldExpiryDate || "",
          listingStartDate: data.listingStartDate || "",
          listingEndDate: data.listingEndDate || "",
+         zoneName: data.zoneName || "",
       };
       
       Object.keys(payload).forEach((key) => {
@@ -965,6 +967,10 @@ const AddPropertyByAgent = () => {
                 <label className={labelClass}>DLD QR Expiry Date</label>
                 <input type="date" {...register("dldExpiryDate")} className={inputClass} />
               </div>
+               <div>
+                    <label className={labelClass}>Zone Name</label>
+                    <input type="text" {...register("zoneName")} className={inputClass} />
+                  </div>
               
               {/* QR Code Upload */}
               <div className="mt-4">

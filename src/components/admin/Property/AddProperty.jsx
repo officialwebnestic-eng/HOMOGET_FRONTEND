@@ -100,6 +100,7 @@ const AddProperty = () => {
       dldExpiryDate: "",
       listingStartDate: "",
       listingEndDate: "",
+       ZoneName:"",
     },
   });
 
@@ -363,6 +364,9 @@ const AddProperty = () => {
         ownerVisaCopy: data.ownerVisaCopy || "",
         dldPermitNumber: data.dldPermitNumber || "",
         dldExpiryDate: data.dldExpiryDate || "",
+        ZoneName: data.ZoneName || "",
+
+         
       };
       
       for (const key in payload) {
@@ -517,7 +521,6 @@ const AddProperty = () => {
             ))}
           </div>
         </div>
-
         <div className="flex gap-6">
           {/* Sidebar Navigation - Fixed z-index issue */}
           <aside className={`hidden lg:block w-64 flex-shrink-0 transition-all duration-300 ${isSidebarOpen ? 'block' : 'hidden'}`}>
@@ -657,6 +660,7 @@ const AddProperty = () => {
         Date when the property becomes available for listing
       </p>
     </div>
+    
 
     {/* Listing End Date */}
     <div>
@@ -992,6 +996,10 @@ const AddProperty = () => {
       <label className={labelClass}>DLD QR Expiry Date</label>
       <input type="date" {...register("dldExpiryDate")} className={inputClass} />
     </div>
+    <div>
+                    <label className={labelClass}>Zone Name</label>
+                    <input type="text" {...register("zoneName")} className={inputClass} />
+                  </div>
     
     {/* QR Code Upload */}
     <div className="mt-4">
