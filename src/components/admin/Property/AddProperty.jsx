@@ -100,7 +100,7 @@ const AddProperty = () => {
       dldExpiryDate: "",
       listingStartDate: "",
       listingEndDate: "",
-       ZoneName:"",
+       zoneName:"",
     },
   });
 
@@ -364,7 +364,7 @@ const AddProperty = () => {
         ownerVisaCopy: data.ownerVisaCopy || "",
         dldPermitNumber: data.dldPermitNumber || "",
         dldExpiryDate: data.dldExpiryDate || "",
-        ZoneName: data.ZoneName || "",
+        zoneName: data.zoneName || "",
 
          
       };

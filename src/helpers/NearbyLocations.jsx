@@ -3,6 +3,9 @@ import { Navigation, Car, Footprints, TrainFront, HelpCircle, ShieldCheck } from
 
 // --- SUB-COMPONENT: INDIVIDUAL CARD ---
 const LocationCard = ({ loc, idx, isDark }) => {
+  // Safety check - if loc is invalid, return null
+  if (!loc || !loc.locationName) return null;
+
   const getTransportAssets = (type) => {
     const cleanType = type?.trim().toLowerCase() || '';
 
@@ -77,7 +80,7 @@ const LocationCard = ({ loc, idx, isDark }) => {
           {loc.locationName}
         </h4>
         <p className={`text-[8px] font-medium opacity-50 uppercase tracking-tighter`}>
-          {loc.transportType} — {loc.time || '5 mins'}
+          {loc.transportType} — {loc.distance || '5 mins'}
         </p>
       </div>
 
@@ -85,7 +88,7 @@ const LocationCard = ({ loc, idx, isDark }) => {
       <div className="mt-4 pt-3 border-t border-dashed border-slate-200/50 dark:border-white/5 flex justify-between items-end">
         <div>
           <p className="text-[7px] font-bold text-amber-600 uppercase mb-1">Distance</p>
-          <p className="text-base font-black leading-none">{loc.distance}</p>
+          <p className="text-base font-black leading-none">{loc.distance || 'N/A'}</p>
         </div>
         <div className="text-right">
           <p className="text-[7px] font-bold text-amber-600 uppercase mb-1">Travel Time</p>
@@ -98,7 +101,19 @@ const LocationCard = ({ loc, idx, isDark }) => {
 
 // --- MAIN COMPONENT ---
 const NearbyLocations = ({ property, isDark }) => {
-  if (!property?.nearByLocations || property.nearByLocations.length === 0) return null;
+  // ✅ SAFETY CHECK 1: If property doesn't exist, show nothing
+  if (!property) return null;
+  
+  // ✅ SAFETY CHECK 2: If nearByLocations doesn't exist or is not an array, show nothing
+  if (!property.nearByLocations || !Array.isArray(property.nearByLocations)) return null;
+  
+  // ✅ SAFETY CHECK 3: Filter out invalid locations (empty or null)
+  const validLocations = property.nearByLocations.filter(loc => 
+    loc && loc.locationName && loc.locationName.trim() !== ''
+  );
+  
+  // ✅ SAFETY CHECK 4: If no valid locations, show nothing
+  if (validLocations.length === 0) return null;
 
   return (
     <section className={`py-8 ${isDark ? 'bg-[#0a0c12]' : 'bg-slate-50'}`}>
@@ -114,7 +129,7 @@ const NearbyLocations = ({ property, isDark }) => {
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {property.nearByLocations.map((loc, idx) => (
+          {validLocations.map((loc, idx) => (
             <LocationCard 
               key={idx} 
               loc={loc} 

@@ -923,7 +923,7 @@ const [controlledSwiper, setControlledSwiper] = useState(null);
         {/* Zone / Area */}
         <div className="flex justify-between items-center">
           <span className="text-[8px] text-slate-400 uppercase tracking-wider">Zone Name</span>
-          <span className="text-[10px]">{property.community || property.city || "N/A"}</span>
+          <span className="text-[10px]">{property.zoneName || "N/A"}</span>
         </div>
 
         {/* Agent License */}
