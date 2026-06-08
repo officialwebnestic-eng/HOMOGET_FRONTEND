@@ -58,6 +58,7 @@ import FilterSidebar from "../../common/FilterSidebar.jsx"
  import SortBar from "../homecommon/SortBar .jsx"
   import LocationSearch from "../../../components/admin/Property/LocationSearch.jsx"
 import ShareModal from "../../../model/ShareModal.jsx";
+import CurrencyDisplay from "./CurrencyDisplay.jsx";
 
 // Helper functions for property type detection
 const isOffPlan = (property) => {
@@ -552,12 +553,15 @@ const [controlledSwiper, setControlledSwiper] = useState(null);
       {/* Left Section - Price and Property Type */}
       <div className="flex flex-wrap items-center gap-3 sm:gap-4 md:gap-6 lg:gap-8 w-full sm:w-auto">
         {/* Price */}
-        <div className="flex-shrink-0">
-          <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold font-serif text-amber-500">
-            {formatPrice(property.price, property.rentedPeriod)}
-          </p>
-        </div>
-        
+   <CurrencyDisplay 
+  price={property.price} 
+  period={isRent(property) ? property.rentedPeriod : null}
+  currency={property?.currency || "AED"}
+  isDark={theme === "dark"}
+  priceClassName="text-lg font-black leading-tight"
+  periodClassName="text-xs text-gray-400 font-normal"
+/>
+
         {/* Property Type - Hidden on mobile */}
         <div className="hidden sm:block">
           <p className="text-[8px] uppercase tracking-widest text-zinc-500 dark:text-zinc-400 font-bold mb-0.5">

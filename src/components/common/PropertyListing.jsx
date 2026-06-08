@@ -15,6 +15,7 @@ import { useTheme } from "../../context/ThemeContext";
 import useGetAllProperty from "../../hooks/useGetAllProperty";
 import FilterSidebar from './FilterSidebar';
 import SortBar from './homecommon/SortBar ';
+import CurrencyDisplay from './homecommon/CurrencyDisplay';
 
 // Helper functions for property type detection
 const isOffPlan = (property) => {
@@ -699,16 +700,16 @@ const PropertyListing = () => {
               
               {/* Price */}
               <div className="mb-3">
-                <p className="text-[8px] text-slate-400">Starting From</p>
-                <p className="text-lg font-bold text-amber-500">
-                  AED {property.price?.toLocaleString()}
-                  {isRent(property) && property.rentedPeriod && (
-                    <span className="text-xs text-slate-400 font-normal ml-1">
-                      / {property.rentedPeriod?.toLowerCase().replace("per ", "") || "year"}
-                    </span>
-                  )}
-                </p>
-              </div>
+        <p className="text-[8px] text-slate-400">Starting From</p>
+        <CurrencyDisplay 
+          price={property.price} 
+          period={isRent(property) ? property.rentedPeriod : null}
+          currency={property?.currency || "AED"}
+          isDark={isDark}
+          priceClassName="text-lg font-bold"
+          periodClassName="text-xs text-slate-400 font-normal"
+        />
+      </div>
               
               {/* Action Buttons - WhatsApp, Call, Email */}
               <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-white/10">

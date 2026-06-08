@@ -25,6 +25,7 @@ import useGetAllProperty from "../../../hooks/useGetAllProperty";
 import AgentHero from "./AgentHero";
 import { filterFields } from "../../../helpers/FiltersHelpers";
 import ShareModal from "../../../model/ShareModal";
+import CurrencyDisplay from "./CurrencyDisplay";
 
 const themeColors = {
   light: {
@@ -521,16 +522,14 @@ const Agentfilter = () => {
                     </h3>
 
                     <div className="flex items-center justify-between gap-3 mb-3 mt-3 md:mt-5 flex-wrap">
-                      <div>
-                        <p className="text-amber-500 text-lg font-black leading-tight">
-                          AED {Number(property.price).toLocaleString()}
-                          {isRent(property) && property.rentedPeriod && (
-                            <span className="text-xs text-gray-400 font-normal ml-1">
-                              / {property.rentedPeriod?.toLowerCase().replace("per ", "") || "year"}
-                            </span>
-                          )}
-                        </p>
-                      </div>
+                     <CurrencyDisplay 
+  price={property.price} 
+  period={isRent(property) ? property.rentedPeriod : null}
+  currency={property?.currency || "AED"}
+  isDark={theme === "dark"}
+  priceClassName="text-lg font-black leading-tight"
+  periodClassName="text-xs text-gray-400 font-normal"
+/>
                       <div className="px-3 py-1 rounded-full bg-black/5 dark:bg-white/10">
                         <p className="text-black dark:text-white text-xs font-bold uppercase tracking-wide">
                           {property.category}
