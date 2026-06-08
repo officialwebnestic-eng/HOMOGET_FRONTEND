@@ -27,6 +27,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
+import CurrencyDisplay from "./CurrencyDisplay";
 
 // Helper functions for property type detection
 const isOffPlan = (property) => {
@@ -431,25 +432,25 @@ const AgentPropertyList = () => {
                     )}
 
                     {/* Price */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <p className="text-[8px] font-black uppercase text-slate-400 tracking-tighter mb-0.5">
-                          {isOffPlanProperty ? "Starting From" : "Listing Price"}
-                        </p>
-                        <p className="text-xl font-black text-amber-500 tracking-tighter">
-                          <span className="text-[9px] mr-0.5">{property.currency || "AED"}</span>
-                          {Number(property.price).toLocaleString()}
-                          {isRent(property) && property.rentedPeriod && (
-                            <span className="text-[8px] text-slate-400 font-normal ml-0.5">
-                              /{property.rentedPeriod?.toLowerCase().replace("per ", "")?.slice(0, 3)}
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                      <button className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-black transition-all duration-500">
-                        <ArrowUpRight size={20} />
-                      </button>
-                    </div>
+                   <div className="flex items-center justify-between mb-4">
+    <div>
+      <p className="text-[8px] font-black uppercase text-slate-400 tracking-tighter mb-0.5">
+        {isOffPlanProperty ? "Starting From" : "Listing Price"}
+      </p>
+      <CurrencyDisplay 
+        price={property.price} 
+        period={isRent(property) ? property.rentedPeriod : null}
+        currency={property?.currency || "AED"}
+        isDark={isDark}
+        priceClassName="text-xl font-black tracking-tighter"
+        periodClassName="text-[8px] text-slate-400 font-normal"
+        imageSize="sm"
+      />
+    </div>
+    <button className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-black transition-all duration-500">
+      <ArrowUpRight size={20} />
+    </button>
+  </div>
 
                     {/* Agent Info Section - Enhanced */}
                     {hasValidAgent && (
