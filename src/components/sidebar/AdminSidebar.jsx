@@ -116,6 +116,8 @@ export default function Sidebar() {
             ]}
           />
 
+
+
           {/* Developers Dropdown */}
           <DropdownMenu
             icon={<Building2 size={20} />}
@@ -143,6 +145,20 @@ export default function Sidebar() {
             items={[
               { to: "/addproperty", label: "List Property", icon: <Plus size={14} /> },
               { to: "/viewpropertylist", label: "All Properties", icon: <Eye size={14} /> }
+            ]}
+          />
+          
+          {/* Agents Dropdown */}
+          <DropdownMenu
+            icon={<Users size={20} />}
+            label="Broker Property List"
+            menuKey="Users"
+            openDropdown={openDropdown}
+            toggleDropdown={toggleDropdown}
+            ct={ct}
+            isOpen={isOpen}
+            items={[
+              { to: "/viewpropertyrequest", label: "Broker Property List", icon: <UserCheck size={14} /> },
             ]}
           />
 

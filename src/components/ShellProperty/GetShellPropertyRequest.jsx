@@ -3,7 +3,7 @@ import { http } from "../../axios/axios";
 import { useTheme } from "../../context/ThemeContext";
 import EmptyStateModel from "../../model/EmptyStateModel";
 import { useLoading } from "../../model/LoadingModel";
-import { IndianRupee } from "lucide-react";
+import { IndianRupee, Eye, CheckCircle, XCircle, Clock, Search, Filter, Calendar, MapPin, Home, User, Building2, Bed, Bath, Square } from "lucide-react";
 
 const GetShellPropertyRequest = () => {
   const [requests, setRequests] = useState([]);
@@ -21,6 +21,7 @@ const GetShellPropertyRequest = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const LoadingModel = useLoading({ type: "table", count: 1, rows: 5, columns: 4 });
+  
   // Fetch requests from API
   const fetchRequests = async () => {
     try {
@@ -62,343 +63,321 @@ const GetShellPropertyRequest = () => {
   };
 
   // Theme-based classes
-  const bgClass = theme === "dark" ? "bg-gray-900" : "bg-gray-50";
-  const cardClass = theme === "dark" ? "bg-gray-800" : "bg-white";
+  const bgClass = theme === "dark" ? "bg-[#0F1219]" : "bg-[#F8FAFC]";
+  const cardClass = theme === "dark" ? "bg-[#161B26]" : "bg-white";
   const textClass = theme === "dark" ? "text-gray-200" : "text-gray-800";
+  const textMutedClass = theme === "dark" ? "text-gray-400" : "text-gray-500";
   const borderClass = theme === "dark" ? "border-gray-700" : "border-gray-200";
-  const inputClass =
-    theme === "dark"
-      ? "bg-gray-700 text-white border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-      : "bg-white text-gray-900 border-gray-300 focus:ring-blue-500 focus:border-blue-500";
+  const inputClass = theme === "dark"
+    ? "bg-[#1A1F2B] text-white border-gray-700 focus:ring-amber-500 focus:border-amber-500"
+    : "bg-white text-gray-900 border-gray-200 focus:ring-amber-500 focus:border-amber-500";
+
+  const getStatusBadge = (status) => {
+    switch(status) {
+      case 'approved':
+        return { color: 'bg-green-500/10 text-green-500 border-green-500/20', icon: <CheckCircle size={10} />, label: 'Approved' };
+      case 'rejected':
+        return { color: 'bg-red-500/10 text-red-500 border-red-500/20', icon: <XCircle size={10} />, label: 'Rejected' };
+      default:
+        return { color: 'bg-amber-500/10 text-amber-500 border-amber-500/20', icon: <Clock size={10} />, label: 'Pending' };
+    }
+  };
 
   return (
     <div className={`min-h-screen ${bgClass} p-4 sm:p-6 transition-colors`}>
-      <div className={`rounded-lg shadow-md ${cardClass} `}>
-        {/* Header with tabs and search */}
-        <div
-          className={`flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4 p-4 rounded-lg 
-            ${theme === "dark"
-              ? "bg-gradient-to-r from-blue-800 to-cyan-800"
-              : "bg-gradient-to-r from-blue-600 to-cyan-600"
-            }`}
-        >
-          <h2 className="text-xl sm:text-2xl font-bold text-white">
-            Callback Requests
-          </h2>
+      <div className={`rounded-xl shadow-lg ${cardClass} border ${borderClass} overflow-hidden`}>
+        
+        {/* Header Section */}
+        <div className={`p-5 border-b ${borderClass}`}>
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                <Building2 size={20} className="text-amber-500" />
+              </div>
+              <div>
+                <h2 className={`text-base font-bold uppercase tracking-wider ${textClass}`}>
+                  Callback Requests
+                </h2>
+                <p className={`text-[10px] font-medium ${textMutedClass}`}>
+                  Manage property inquiry requests
+                </p>
+              </div>
+            </div>
 
-          {/* Status Tabs */}
-          <div className="flex flex-wrap gap-2">
-            {["pending", "approved", "rejected"].map((status) => (
-              <button
-                key={status}
-                onClick={() => {
-                  setStatusTab(status);
-                  setCurrentPage(1);
-                }}
-                className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition-colors ${statusTab === status
-                  ? theme === "dark"
-                    ? "bg-blue-700 text-white"
-                    : "bg-blue-600 text-white"
-                  : theme === "dark"
-                    ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
-                  }`}
-              >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </button>
-            ))}
-          </div>
+            {/* Status Tabs */}
+            <div className="flex flex-wrap gap-1.5">
+              {["pending", "approved", "rejected"].map((status) => {
+                const counts = {
+                  pending: totalRequests,
+                  approved: requests.filter(r => r.status === 'approved').length,
+                  rejected: requests.filter(r => r.status === 'rejected').length
+                };
+                return (
+                  <button
+                    key={status}
+                    onClick={() => {
+                      setStatusTab(status);
+                      setCurrentPage(1);
+                    }}
+                    className={`relative px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+                      statusTab === status
+                        ? "bg-amber-500 text-black shadow-md"
+                        : `${textMutedClass} hover:bg-amber-500/10`
+                    }`}
+                  >
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                    {statusTab === status && (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-white animate-pulse" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
 
-          {/* Search Input */}
-          <div className="w-full lg:w-auto">
-            <input
-              type="text"
-              placeholder="Search by name or email..."
-              className={`w-full sm:w-64 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${inputClass}`}
-              value={searchTerm}
-              onChange={handleSearch}
-            />
+            {/* Search Input */}
+            <div className="relative w-full lg:w-72">
+              <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${textMutedClass}`} />
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                className={`w-full pl-9 pr-4 py-2 text-xs rounded-lg border focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all ${inputClass}`}
+                value={searchTerm}
+                onChange={handleSearch}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Loading Spinner */}
+        {/* Loading State */}
         {loading ? (
-          <LoadingModel loading={true} />
+          <div className="p-8">
+            <LoadingModel loading={true} />
+          </div>
         ) : error ? (
           <EmptyStateModel
-
             title="Failed to fetch requests"
-            message="Failed to fetch requests. Please try again later."
-          ></EmptyStateModel>
+            message={error}
+            icon="error"
+          />
+        ) : requests.length === 0 ? (
+          <EmptyStateModel
+            title={`No ${statusTab} requests found`}
+            message={`There are no ${statusTab} property inquiry requests at the moment.`}
+            icon="empty"
+          />
         ) : (
           <>
             {/* Data Table */}
-            <div className="overflow-x-auto rounded-lg">
-              <table className="min-w-full divide-y divide-gray-200">
-                {/* Table Header */}
-                <thead
-                  className={`${theme === "dark"
-                    ? "bg-gradient-to-r from-blue-800 to-cyan-800"
-                    : "bg-gradient-to-r from-blue-500 to-cyan-500"
-                    }`}
-                >
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className={`bg-amber-500/5 ${borderClass}`}>
                   <tr>
                     {[
-                      "Property",
-                      "User",
-                      "Type",
-                      "Price",
-                      "Beds/Baths",
-                      "Location",
-                      "Status",
-                      "Date",
+                      "Property", "User", "Type", "Price", "Beds/Baths", 
+                      "Location", "Status", "Date"
                     ].map((header) => (
                       <th
                         key={header}
-                        className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
+                        className="px-4 py-3 text-left text-[9px] font-black uppercase tracking-wider text-amber-500"
                       >
                         {header}
                       </th>
                     ))}
                   </tr>
                 </thead>
-
-                {/* Table Body */}
-                <tbody className={`${bgClass} divide-y ${textClass} `}>
-                  {requests.length > 0 ? (
-                    requests.map((request) => {
-                      const hasImage =
-                        Array.isArray(request.image) &&
-                        request.image.length > 0;
-                      return (
-                        <tr
-                          key={request._id}
-                          className={`${theme === "dark"
-                            ? "hover:bg-gray-700"
-                            : "hover:bg-gray-50"
-                            } transition-colors`}
-                        >
-                          {/* Property */}
-                          <td className="  whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="flex-shrink-0 h-10 w-10">
-                                {hasImage ? (
-                                  <img
-                                    className="h-10 w-10 rounded-full object-cover"
-                                    src={request.image[0]}
-                                    alt={request.propertyname}
-                                  />
-                                ) : (
-                                  <div className="h-10 w-10 flex items-center justify-center bg-gray-200 text-gray-500 text-xs rounded-full">
-                                    No Img
-                                  </div>
-                                )}
-                              </div>
-                              <div className="ml-3 sm:ml-4">
-                                <div
-                                  className={`text-sm font-medium ${textClass}`}
-                                >
-                                  {request.propertyname}
-                                </div>
-                                <div
-                                  className={`text-xs sm:text-sm ${theme === "dark"
-                                    ? "text-gray-400"
-                                    : "text-gray-500"
-                                    }`}
-                                >
-                                  {request.address}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* User */}
-                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm">
-                            <div className={textClass}>
-                              {request.userId?.firstname}{" "}
-                              {request.userId?.lastname}
-                            </div>
-                            <div
-                              className={`text-xs sm:text-sm ${theme === "dark"
-                                ? "text-gray-400"
-                                : "text-gray-500"
-                                }`}
-                            >
-                              {request.userId?.email}
-                            </div>
-                          </td>
-
-                          {/* Type */}
-                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm">
-                            <div className={textClass}>
-                              {request.propertytype}
-                            </div>
-                            <div
-                              className={`text-xs sm:text-sm ${theme === "dark"
-                                ? "text-gray-400"
-                                : "text-gray-500"
-                                }`}
-                            >
-                              {request.listingtype}
-                            </div>
-                          </td>
-
-                          {/* Price */}
-                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm">
-                            <div className={`text-sm font-semibold ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>
-                              <IndianRupee size={12} className="inline-block mr-1 text-cyan-800" />
-                              {request.price}
-                            </div>
-                          </td>
-
-                          {/* Beds/Baths */}
-                          <td
-                            className={`px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm ${theme === "dark"
-                              ? "text-gray-300"
-                              : "text-gray-500"
-                              }`}
-                          >
-                            {request.bedroom ?? "N/A"} Beds /{" "}
-                            {request.bathroom ?? "N/A"} Baths
-                          </td>
-
-                          {/* Location */}
-                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm">
-                            <div className={textClass}>
-                              {request.city}, {request.state}
-                            </div>
-                            <div
-                              className={`text-xs sm:text-sm ${theme === "dark"
-                                ? "text-gray-400"
-                                : "text-gray-500"
-                                }`}
-                            >
-                              {request.zipcode}
-                            </div>
-                          </td>
-
-                          {/* Status */}
-                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                            {statusTab === "pending" ? (
-                              <select
-                                value={request.status}
-                                onChange={(e) =>
-                                  handleStatusChange(e.target.value, request._id)
-                                }
-                                className={`block w-full px-2 py-1 text-sm rounded-md ${inputClass}`}
-                              >
-                                <option value="pending">Pending</option>
-                                <option value="approved">Approve</option>
-                                <option value="rejected">Reject</option>
-                              </select>
-                            ) : (
-                              <span
-                                className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${request.status === "approved"
-                                  ? theme === "dark"
-                                    ? "bg-green-900 text-green-200"
-                                    : "bg-green-100 text-green-800"
-                                  : request.status === "rejected"
-                                    ? theme === "dark"
-                                      ? "bg-red-900 text-red-200"
-                                      : "bg-red-100 text-red-800"
-                                    : theme === "dark"
-                                      ? "bg-yellow-900 text-yellow-200"
-                                      : "bg-yellow-100 text-yellow-800"
-                                  }`}
-                              >
-                                {request.status.charAt(0).toUpperCase() +
-                                  request.status.slice(1)}
-                              </span>
-                            )}
-                          </td>
-
-                          {/* Date */}
-                          <td
-                            className={`px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm ${theme === "dark"
-                              ? "text-gray-400"
-                              : "text-gray-500"
-                              }`}
-                          >
-                            {new Date(request.createdAt).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan="8"
-                        className={`px-6 py-4 text-center text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"
-                          }`}
+                <tbody className={`divide-y ${borderClass}`}>
+                  {requests.map((request) => {
+                    const hasImage = Array.isArray(request.image) && request.image.length > 0;
+                    const statusBadge = getStatusBadge(request.status);
+                    
+                    return (
+                      <tr
+                        key={request._id}
+                        className={`transition-colors ${theme === "dark" ? "hover:bg-white/5" : "hover:bg-gray-50"}`}
                       >
-                        No {statusTab} requests found.
-                      </td>
-                    </tr>
-                  )}
+                        {/* Property */}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                              {hasImage ? (
+                                <img
+                                  className="w-full h-full object-cover"
+                                  src={request.image[0]}
+                                  alt={request.propertyname}
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Home size={16} className="text-gray-400" />
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <div className={`text-xs font-semibold ${textClass}`}>
+                                {request.propertyname?.substring(0, 30)}
+                                {request.propertyname?.length > 30 && "..."}
+                              </div>
+                              <div className={`text-[9px] ${textMutedClass} flex items-center gap-1 mt-0.5`}>
+                                <MapPin size={8} />
+                                {request.address?.substring(0, 25)}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* User */}
+                        <td className="px-4 py-3">
+                          <div className={`text-xs font-medium ${textClass}`}>
+                            {request.userId?.firstname} {request.userId?.lastname}
+                          </div>
+                          <div className={`text-[9px] ${textMutedClass} flex items-center gap-1 mt-0.5`}>
+                            <User size={8} />
+                            {request.userId?.email}
+                          </div>
+                        </td>
+
+                        {/* Type */}
+                        <td className="px-4 py-3">
+                          <span className={`text-xs ${textClass}`}>
+                            {request.propertytype || "N/A"}
+                          </span>
+                          <div className={`text-[9px] ${textMutedClass} mt-0.5`}>
+                            {request.listingtype || "Sale"}
+                          </div>
+                        </td>
+
+                        {/* Price */}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-0.5">
+                            <IndianRupee size={10} className="text-amber-500" />
+                            <span className={`text-xs font-bold text-amber-500`}>
+                              {request.price?.toLocaleString()}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Beds/Baths */}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-0.5">
+                              <Bed size={10} className={textMutedClass} />
+                              <span className={`text-[10px] ${textClass}`}>{request.bedroom ?? 0}</span>
+                            </div>
+                            <div className="flex items-center gap-0.5">
+                              <Bath size={10} className={textMutedClass} />
+                              <span className={`text-[10px] ${textClass}`}>{request.bathroom ?? 0}</span>
+                            </div>
+                            <div className="flex items-center gap-0.5">
+                              <Square size={10} className={textMutedClass} />
+                              <span className={`text-[9px] ${textMutedClass}`}>{request.squarefoot} sqft</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Location */}
+                        <td className="px-4 py-3">
+                          <div className={`text-[10px] font-medium ${textClass}`}>
+                            {request.city || "Dubai"}, {request.state || "UAE"}
+                          </div>
+                          <div className={`text-[8px] ${textMutedClass} mt-0.5`}>
+                            {request.zipcode}
+                          </div>
+                        </td>
+
+                        {/* Status */}
+                        <td className="px-4 py-3">
+                          {statusTab === "pending" ? (
+                            <select
+                              value={request.status}
+                              onChange={(e) => handleStatusChange(e.target.value, request._id)}
+                              className={`text-[9px] font-medium px-2 py-1 rounded-lg border ${inputClass} cursor-pointer`}
+                            >
+                              <option value="pending">⏳ Pending</option>
+                              <option value="approved">✅ Approve</option>
+                              <option value="rejected">❌ Reject</option>
+                            </select>
+                          ) : (
+                            <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider border ${statusBadge.color}`}>
+                              {statusBadge.icon}
+                              {statusBadge.label}
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Date */}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1">
+                            <Calendar size={8} className={textMutedClass} />
+                            <span className={`text-[9px] ${textMutedClass}`}>
+                              {new Date(request.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div
-                className={`px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4 border-t ${borderClass} mt-4`}
-              >
-                <p
-                  className={`text-xs sm:text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-700"
-                    }`}
-                >
-                  Showing{" "}
-                  <span className="font-medium">
-                    {(currentPage - 1) * itemsPerPage + 1}
-                  </span>{" "}
-                  to{" "}
-                  <span className="font-medium">
-                    {Math.min(currentPage * itemsPerPage, totalRequests)}
-                  </span>{" "}
-                  of <span className="font-medium">{totalRequests}</span> results
+              <div className={`px-5 py-4 flex flex-col md:flex-row items-center justify-between gap-4 border-t ${borderClass}`}>
+                <p className={`text-[9px] font-medium ${textMutedClass}`}>
+                  Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                  {Math.min(currentPage * itemsPerPage, totalRequests)} of{" "}
+                  <span className="text-amber-500">{totalRequests}</span> results
                 </p>
 
-                <div className="flex gap-1">
+                <div className="flex gap-1.5">
                   <button
                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className={`px-3 py-1 rounded-md text-sm ${theme === "dark"
-                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                      : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all ${
+                      theme === "dark"
+                        ? "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    Prev
+                    Previous
                   </button>
 
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (page) => (
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
                       <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-1 rounded-md text-sm ${page === currentPage
-                          ? theme === "dark"
-                            ? "bg-blue-700 text-white"
-                            : "bg-blue-500 text-white"
-                          : theme === "dark"
-                            ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                            : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
-                          }`}
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-8 h-8 rounded-lg text-[10px] font-bold transition-all ${
+                          pageNum === currentPage
+                            ? "bg-amber-500 text-black shadow-md"
+                            : theme === "dark"
+                              ? "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
                       >
-                        {page}
+                        {pageNum}
                       </button>
-                    )
-                  )}
+                    );
+                  })}
 
                   <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
-                    className={`px-3 py-1 rounded-md text-sm ${theme === "dark"
-                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                      : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all ${
+                      theme === "dark"
+                        ? "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     Next
                   </button>
@@ -409,7 +388,7 @@ const GetShellPropertyRequest = () => {
         )}
       </div>
     </div>
-  );
+  );s
 };
 
 export default GetShellPropertyRequest;
