@@ -45,9 +45,7 @@ const GeospatialMap = memo(({ property, isDark }) => {
          <span className="text-xl font-serif text-black">
           {locationQuery}
         </span>
-        <span className="text-xl font-serif text-black">
-          {locationQuery}
-        </span>
+       
       </div>
       {/* Small Map Button */}
       <button

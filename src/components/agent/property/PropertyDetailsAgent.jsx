@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Pencil, Trash2, Home, Tag, IndianRupee,
-  Building2, Globe, Bath, Bed, Ruler, Layers, 
-  Barcode, Wrench, Search, Filter, ChevronLeft, ChevronRight,
-  MapPin, Sparkles, Crown, Briefcase, Landmark, Eye,
-  FileText, FileCheck, UserCheck, ShieldCheck, Download, X,
+  Pencil, Trash2, Home, Bath, Bed, Ruler,
+  Filter, ChevronLeft, ChevronRight,
+  MapPin, Eye, FileText, FileCheck, UserCheck, ShieldCheck, Download, X,
   Calendar
 } from 'lucide-react';
 import useGetPropertyBuyUserId from '../../../hooks/useGetPropertyBuyUserId';
@@ -14,10 +12,8 @@ import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/autoplay';
-import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../../context/ThemeContext';
-import { notfound } from '../../../ExportImages';
 import PermissionProtectedAction from '../../../Authorization/PermissionProtectedActions';
 import EmptyStateModel from '../../../model/EmptyStateModel';
 import { useLoading } from '../../../model/LoadingModel';
@@ -35,21 +31,24 @@ const PropertyDetailsAgent = () => {
     propertytype: "",
     bedroom: "",
   });
+  
   const navigate = useNavigate();
   const limit = 9;
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const brandColor = "#f59e0b";
 
-  const { propertyList, loading, error, pagination, deletePropertyById } = useGetPropertyBuyUserId(currentPage, limit, filters);
+  // Use the hook - it now manages its own fetch lifecycle
+  const { propertyList, loading, error, pagination, deletePropertyById } = 
+    useGetPropertyBuyUserId(currentPage, limit, filters);
 
-  const handleFilterChange = (e) => {
+  const handleFilterChange = useCallback((e) => {
     const { name, value } = e.target;
-    setFilters({ ...filters, [name]: value });
+    setFilters(prev => ({ ...prev, [name]: value }));
     setCurrentPage(1);
-  };
+  }, []);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setFilters({
       propertyname: "",
       price: "",
@@ -59,17 +58,17 @@ const PropertyDetailsAgent = () => {
       bedroom: "",
     });
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleDelete = (id) => {
+  const handleDelete = useCallback((id) => {
     if (window.confirm("Are you sure you want to delete this property?")) {
       deletePropertyById(id);
     }
-  };
+  }, [deletePropertyById]);
 
-  const handleUpdate = (id) => {
+  const handleUpdate = useCallback((id) => {
     navigate(`/updatepropertydetails/${id}`);
-  };
+  }, [navigate]);
 
   const handleDownload = (fileName, docType) => {
     if (fileName && fileName !== 'N/A') {
@@ -429,18 +428,18 @@ const PropertyDetailsAgent = () => {
                           </span>
                         </div>
                       </div>
+                      
                       <div className="grid grid-cols-2 gap-2 py-3 mb-3 border-t border-b border-slate-200 dark:border-white/10">
                         <div className="flex items-center justify-center gap-1.5">
                           <Calendar size={14} className="text-amber-500" />
                           <span className={`text-xs font-medium ${currentTheme.textPrimary}`}>
-                            {property.listingStartDate || "No Date"}
+                            {property.listingStartDate ? formatDate(property.listingStartDate) : "No Date"}
                           </span>
                         </div>
-                       
                         <div className="flex items-center justify-center gap-1.5">
                           <Calendar size={14} className="text-amber-500" />
                           <span className={`text-xs font-medium ${currentTheme.textPrimary}`}>
-                            {property.listingEndDate || "No Date"}
+                            {property.listingEndDate ? formatDate(property.listingEndDate) : "No Date"}
                           </span>
                         </div>
                       </div>
@@ -541,7 +540,7 @@ const PropertyDetailsAgent = () => {
         )}
       </div>
 
-      {/* Document Modal */}
+    {/* Document Modal */}
       <AnimatePresence>
         {showDocumentModal && selectedProperty && (
           <motion.div

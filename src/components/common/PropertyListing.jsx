@@ -541,6 +541,7 @@ const PropertyListing = () => {
                 >
                   <Grid3x3 size={16} />
                 </button>
+                
                 <button
                   onClick={() => setViewMode('list')}
                   className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-amber-500 text-white' : 'text-slate-500'}`}

@@ -274,23 +274,23 @@ const Agentfilter = () => {
     const managementNumber = "971585852283";
     const managementMsg = encodeURIComponent(
       `*New Client Interest Alert!*\n\n` +
-        `Property: ${propertyName}\n` +
-        `Price: ${price}\n` +
-        `Location: ${location}\n` +
-        `ID: ${propertyId}\n` +
-        `Type: ${isOffPlan(property) ? 'Off-Plan' : property.category || 'Residential'}\n` +
-        `Offering: ${property.offeringType || 'Sale'}\n` +
-        `Link: ${propertyUrl}`
+      `Property: ${propertyName}\n` +
+      `Price: ${price}\n` +
+      `Location: ${location}\n` +
+      `ID: ${propertyId}\n` +
+      `Type: ${isOffPlan(property) ? 'Off-Plan' : property.category || 'Residential'}\n` +
+      `Offering: ${property.offeringType || 'Sale'}\n` +
+      `Link: ${propertyUrl}`
     );
 
     const agentNumber = property.agentId?.phone || property.agentPhone || "971500000000";
     const agentMsg = encodeURIComponent(
       `Hello! I am interested in viewing your listing: *${propertyName}*.\n\n` +
-        `📍 Location: ${location}\n` +
-        `💰 Price: ${price}\n` +
-        `🏷️ Type: ${isOffPlan(property) ? 'Off-Plan Project' : property.propertytype || 'Property'}\n` +
-        `🔗 Link: ${propertyUrl}\n\n` +
-        `Please provide more details regarding viewing schedule and availability.`
+      `📍 Location: ${location}\n` +
+      `💰 Price: ${price}\n` +
+      `🏷️ Type: ${isOffPlan(property) ? 'Off-Plan Project' : property.propertytype || 'Property'}\n` +
+      `🔗 Link: ${propertyUrl}\n\n` +
+      `Please provide more details regarding viewing schedule and availability.`
     );
 
     window.open(`https://wa.me/${managementNumber}?text=${managementMsg}`, "_blank");
@@ -344,11 +344,11 @@ const Agentfilter = () => {
         totalResults={total || propertyList.length}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py- relative z-20">
         {/* HEADER SECTION */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-center md-5  gap-4">
           <div className="flex items-center gap-4">
-            <div className="h-1 w-12 bg-amber-500 rounded-full" />
+            <div className="h-1 w-12 bg-amber-52000 rounded-full" />
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-slate-800 dark:text-white">
               Exclusive <span className="text-amber-500">Properties</span>
             </h1>
@@ -371,12 +371,7 @@ const Agentfilter = () => {
                 <button onClick={() => setSearchQuery("")} className="hover:text-white">×</button>
               </span>
             )}
-            {filters.city && (
-              <span className="px-2 py-1 bg-blue-500/10 text-blue-500 rounded-lg text-[10px] font-bold flex items-center gap-1">
-                📍 {filters.city}
-                <button onClick={() => setFilters(prev => ({ ...prev, city: "" }))} className="hover:text-white">×</button>
-              </span>
-            )}
+          
             {filters.propertytype && (
               <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded-lg text-[10px] font-bold flex items-center gap-1">
                 🏷️ {filters.propertytype}
@@ -427,6 +422,8 @@ const Agentfilter = () => {
               const agentName = property.agentId?.name || "Property Consultant";
               const agentImage = property.agentId?.profilePhoto || property.name;
               const agentRating = property.agentId?.rating || 4.8;
+              const locationQuery = property?.displayAddress;
+
 
               if (viewMode === "list") {
                 return (
@@ -522,19 +519,22 @@ const Agentfilter = () => {
                     </h3>
 
                     <div className="flex items-center justify-between gap-3 mb-3 mt-3 md:mt-5 flex-wrap">
-                     <CurrencyDisplay 
-  price={property.price} 
-  period={isRent(property) ? property.rentedPeriod : null}
-  currency={property?.currency || "AED"}
-  isDark={theme === "dark"}
-  priceClassName="text-lg font-black leading-tight"
-  periodClassName="text-xs text-gray-400 font-normal"
-/>
+                      <CurrencyDisplay
+                        price={property.price}
+                        period={isRent(property) ? property.rentedPeriod : null}
+                        currency={property?.currency || "AED"}
+                        isDark={theme === "dark"}
+                        priceClassName="text-lg font-black leading-tight"
+                        periodClassName="text-xs text-gray-400 font-normal"
+                      />
+                      
                       <div className="px-3 py-1 rounded-full bg-black/5 dark:bg-white/10">
                         <p className="text-black dark:text-white text-xs font-bold uppercase tracking-wide">
                           {property.category}
                         </p>
                       </div>
+
+      
                     </div>
 
                     {isCommercialProperty ? (
@@ -568,6 +568,12 @@ const Agentfilter = () => {
                       </div>
                     )}
 
+                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/5 dark:bg-white/10">
+  <MapPin size={10} className="text-amber-500" />
+  <span className="text-[9px] font-bold uppercase tracking-wide text-black dark:text-white">
+    {locationQuery}
+  </span>
+</div>
                     {/* Agent Info Bar */}
                     <div className="flex items-center gap-3 py-3 mt-2 border-t border-gray-100 dark:border-white/5">
                       <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 flex-shrink-0">
@@ -635,10 +641,10 @@ const Agentfilter = () => {
 
       {/* Share Modal */}
       {shareProperty && (
-        <ShareModal 
-          property={shareProperty} 
-          onClose={() => setShareProperty(null)} 
-          isDark={theme === "dark"} 
+        <ShareModal
+          property={shareProperty}
+          onClose={() => setShareProperty(null)}
+          isDark={theme === "dark"}
         />
       )}
     </div>

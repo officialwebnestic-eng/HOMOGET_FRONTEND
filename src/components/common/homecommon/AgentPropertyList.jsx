@@ -217,11 +217,11 @@ const AgentPropertyList = () => {
 
   return (
     <section
-      className={`py-16 px-6 ${isDark ? "bg-[#0a0a0c]" : "bg-slate-50"}`}
+      className={`py-5 md:py-10 px-6 ${isDark ? "bg-[#0a0a0c]" : "bg-slate-50"}`}
     >
       <div className="max-w-7xl mx-auto">
         {/* --- HEADER --- */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-5 md:mb-10 gap-4">
           <div className="flex items-center gap-4">
             <div className="h-1 w-12 bg-amber-500 rounded-full" />
               <h1 className={`text-3xl md:text-4xl lg:text-5xl font-serif font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-800'}`}>
@@ -284,6 +284,8 @@ const AgentPropertyList = () => {
               const agentImage = property.agentId?.profilePhoto;
               const agentRating = property.agentId?.rating || 4.8;
               const hasValidAgent = property.agentId && Object.keys(property.agentId).length > 0;
+                            const locationQuery = property?.displayAddress;
+
 
               return (
                 <motion.div
@@ -300,6 +302,7 @@ const AgentPropertyList = () => {
                     })
                   }
                 >
+                  
                   {/* Image Section */}
                   <div className="relative h-72 overflow-hidden">
                     <img
@@ -344,14 +347,6 @@ const AgentPropertyList = () => {
                         </div>
                       </div>
                     )}
-
-                    {/* Location Badge */}
-                    <div className="absolute bottom-5 left-5 z-10 flex items-center gap-1.5 text-white bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                      <MapPin size={12} className="text-amber-400" />
-                      <span className="text-[10px] font-bold truncate max-w-[150px]">
-                        {location}, UAE
-                      </span>
-                    </div>
                   </div>
 
                   {/* Content Section */}
@@ -451,6 +446,12 @@ const AgentPropertyList = () => {
       <ArrowUpRight size={20} />
     </button>
   </div>
+       <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/5 dark:bg-white/10">
+                      <MapPin size={10} className="text-amber-500" />
+                      <span className="text-[9px] font-bold uppercase tracking-wide text-black dark:text-white">
+                        {locationQuery}
+                      </span>
+                    </div>
 
                     {/* Agent Info Section - Enhanced */}
                     {hasValidAgent && (
@@ -526,6 +527,8 @@ const AgentPropertyList = () => {
                         />
                       </div>
                     </div>
+
+                         
                   </div>
                 </motion.div>
               );

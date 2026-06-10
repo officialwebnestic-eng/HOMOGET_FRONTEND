@@ -1,5 +1,5 @@
 // AgentDashboard.jsx - corrected version
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useContext, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Line, Doughnut, Bar } from "react-chartjs-2";
 import {
@@ -21,17 +21,18 @@ import PermissionProtectedAction from "../../Authorization/PermissionProtectedAc
 import { monthOptions, fullMonths } from "../../helpers/DashboardHelpers";
 import userGetPropertyByUser from "../../hooks/useGetPropertybyUser";
 
+
 ChartJS.register(
   CategoryScale, LinearScale, PointElement, LineElement,
   BarElement, Title, Tooltip, Legend, ArcElement, Filler
 );
+
 
 const AgentDashboard = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const isDark = theme === 'dark';
-
   // State for property listing pagination and filters
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -48,12 +49,16 @@ const AgentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [recentActivities, setRecentActivities] = useState([]);
 
-  // Fetch agent's own properties using the hook
-  const { propertyList, pagination, loading: propsLoading, deletePropertyById, refetch } = userGetPropertyByUser(currentPage, 10, {
+  // IMPORTANT: Memoize filters to prevent object recreation on every render
+  const memoizedFilters = useMemo(() => ({
     propertyname: searchTerm,
     city: selectedCity,
     bedroom: bedroomFilter,
-  });
+  }), [searchTerm, selectedCity, bedroomFilter]);
+
+  // Use the hook with memoized filters
+  const { propertyList, pagination, loading: propsLoading, deletePropertyById, refetch } = 
+    userGetPropertyByUser(currentPage, 10, memoizedFilters);
 
   const colors = useMemo(() => ({
     background: isDark ? 'bg-[#0a0a0c]' : 'bg-slate-50',
@@ -146,6 +151,22 @@ const AgentDashboard = () => {
   const monthlyTarget = 500000;
   const targetPercentage = Math.min((currentMonthIncome / monthlyTarget) * 100, 100);
 
+  // Handler to prevent unnecessary re-renders
+  const handleSearchChange = useCallback((e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  }, []);
+
+  const handleCityChange = useCallback((e) => {
+    setSelectedCity(e.target.value);
+    setCurrentPage(1);
+  }, []);
+
+  const handleBedroomChange = useCallback((e) => {
+    setBedroomFilter(e.target.value);
+    setCurrentPage(1);
+  }, []);
+
   if (loading || !user) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${colors.background}`}>
@@ -190,41 +211,41 @@ const AgentDashboard = () => {
         </div>
       </div>
 
-{/* STATS GRID - 4 colored cards per row */}
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-  <StatCard 
-    title="Total Balance" 
-    value={`AED ${stats.totalBalance.toLocaleString()}`} 
-    icon={<Wallet size={20} />} 
-    trend="+12.5%" 
-    color="amber" 
-    isDark={isDark} 
-  />
-  <StatCard 
-    title="Revenue Flow" 
-    value={`AED ${stats.totalSales.toLocaleString()}`} 
-    icon={<TrendingUp size={20} />} 
-    trend="+8.2%" 
-    color="emerald" 
-    isDark={isDark} 
-  />
-  <StatCard 
-    title="Properties" 
-    value={stats.totalProperty} 
-    icon={<Home size={20} />} 
-    trend="+3" 
-    color="blue" 
-    isDark={isDark} 
-  />
-  <StatCard 
-    title="Active Clients" 
-    value={stats.totalUser} 
-    icon={<Users size={20} />} 
-    trend="+12" 
-    color="purple" 
-    isDark={isDark} 
-  />
-</div>
+      {/* STATS GRID */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard 
+          title="Total Balance" 
+          value={`AED ${stats.totalBalance.toLocaleString()}`} 
+          icon={<Wallet size={20} />} 
+          trend="+12.5%" 
+          color="amber" 
+          isDark={isDark} 
+        />
+        <StatCard 
+          title="Revenue Flow" 
+          value={`AED ${stats.totalSales.toLocaleString()}`} 
+          icon={<TrendingUp size={20} />} 
+          trend="+8.2%" 
+          color="emerald" 
+          isDark={isDark} 
+        />
+        <StatCard 
+          title="Properties" 
+          value={stats.totalProperty} 
+          icon={<Home size={20} />} 
+          trend="+3" 
+          color="blue" 
+          isDark={isDark} 
+        />
+        <StatCard 
+          title="Active Clients" 
+          value={stats.totalUser} 
+          icon={<Users size={20} />} 
+          trend="+12" 
+          color="purple" 
+          isDark={isDark} 
+        />
+      </div>
 
       {/* CHARTS ROW */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
@@ -324,7 +345,7 @@ const AgentDashboard = () => {
         </div>
       </div>
 
-      {/* MY PROPERTIES SECTION (from API) */}
+      {/* MY PROPERTIES SECTION */}
       <div className={`rounded-2xl border ${colors.card} overflow-hidden mb-8`}>
         <div className="p-6 border-b border-slate-200 dark:border-white/10 flex flex-wrap justify-between items-center gap-4">
           <div>
@@ -336,10 +357,10 @@ const AgentDashboard = () => {
               type="text"
               placeholder="Search..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
               className={`px-3 py-1.5 text-[10px] rounded-lg border ${colors.card}`}
             />
-            <button onClick={() => navigate("/addproperty")} className="flex items-center gap-1 text-[9px] font-bold text-amber-500 hover:underline">
+            <button onClick={() => navigate("/addpropertybyagent")} className="flex items-center gap-1 text-[9px] font-bold text-amber-500 hover:underline">
               <Plus size={12} /> Add New
             </button>
           </div>
@@ -356,7 +377,7 @@ const AgentDashboard = () => {
                   <th className="px-6 py-4">Price</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4 text-right">Action</th>
-                 </tr>
+                </tr>
               </thead>
               <tbody>
                 {propertyList.map((prop) => (
@@ -384,8 +405,7 @@ const AgentDashboard = () => {
             <div className="py-12 text-center"><Building size={32} className="mx-auto mb-2 opacity-30" /><p className="text-[10px] opacity-50">No properties listed yet</p></div>
           )}
         </div>
-        {/* Pagination controls */}
-        {pagination.totalPages > 1 && (
+        {pagination?.totalPages > 1 && (
           <div className="flex justify-center gap-2 p-4 border-t">
             <button disabled={pagination.page <= 1} onClick={() => setCurrentPage(p => p - 1)} className="px-3 py-1 rounded bg-slate-100 dark:bg-white/5 text-xs">Prev</button>
             <span className="text-xs">Page {pagination.page} of {pagination.totalPages}</span>
@@ -393,8 +413,6 @@ const AgentDashboard = () => {
           </div>
         )}
       </div>
-
-     
 
       {/* BOTTOM TIPS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -406,11 +424,8 @@ const AgentDashboard = () => {
   );
 };
 
-// Enhanced Stat Card Component with colored background (supports all colors)
+// Rest of the component functions remain the same...
 const StatCard = ({ title, value, icon, trend, color, isDark }) => {
-  const isPositive = trend?.startsWith('+');
-  
-  // Full color palette (including orange and teal)
   const colorConfig = {
     amber: {
       bg: isDark ? 'bg-amber-500/20' : 'bg-amber-50',
@@ -439,24 +454,9 @@ const StatCard = ({ title, value, icon, trend, color, isDark }) => {
       iconBg: 'bg-purple-500 text-white',
       text: 'text-purple-600 dark:text-purple-400',
       trend: 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400'
-    },
-    orange: {
-      bg: isDark ? 'bg-orange-500/20' : 'bg-orange-50',
-      border: 'border-orange-200 dark:border-orange-500/30',
-      iconBg: 'bg-orange-500 text-white',
-      text: 'text-orange-600 dark:text-orange-400',
-      trend: 'bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400'
-    },
-    teal: {
-      bg: isDark ? 'bg-teal-500/20' : 'bg-teal-50',
-      border: 'border-teal-200 dark:border-teal-500/30',
-      iconBg: 'bg-teal-500 text-white',
-      text: 'text-teal-600 dark:text-teal-400',
-      trend: 'bg-teal-100 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400'
     }
   };
 
-  // Fallback to amber if color is not found (prevents crash)
   const config = colorConfig[color] || colorConfig.amber;
 
   return (
@@ -484,7 +484,6 @@ const StatCard = ({ title, value, icon, trend, color, isDark }) => {
   );
 };
 
-// Achievement Item (unchanged)
 const AchievementItem = ({ icon, title, description, date, isDark }) => (
   <div className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isDark ? 'hover:bg-white/5' : 'hover:bg-slate-50'}`}>
     <div className="p-2 rounded-lg bg-slate-100 dark:bg-white/5">{icon}</div>
@@ -493,7 +492,6 @@ const AchievementItem = ({ icon, title, description, date, isDark }) => (
   </div>
 );
 
-// Tip Card (unchanged)
 const TipCard = ({ icon, title, description, color, isDark }) => {
   const colorClasses = {
     amber: 'bg-amber-500/10 text-amber-500 border-amber-500/20',

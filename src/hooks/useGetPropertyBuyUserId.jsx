@@ -3,77 +3,79 @@ import { http } from "../axios/axios";
 import useDebounce from './useDebounce';
 import { useToast } from "../model/SuccessToasNotification";
 
-const useGetPropertyBuyUserId = (page = 1, limit = 12, filters = {}) => {
+const useGetPropertyByUser = (page = 1, limit = 12, filters = {}) => {
   const [propertyList, setPropertyList] = useState([]);
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { addToast } = useToast();
-  const isInitialMount = useRef(true);
+  
+  // Refs to prevent duplicate calls
+  const isMounted = useRef(true);
+  const isFetching = useRef(false);
+  const abortController = useRef(null);
+  const initialFetchDone = useRef(false);
+  const prevParamsRef = useRef({ page, limit, filters: {} });
 
-  const debouncedFilters = useDebounce(filters, 500);
+  // Create a stable filters reference using JSON.stringify comparison
+  const filtersKey = JSON.stringify(filters);
+  const debouncedFiltersKey = useDebounce(filtersKey, 500);
+  
+  // Parse debounced filters back to object
+  const debouncedFilters = useMemo(() => {
+    try {
+      return JSON.parse(debouncedFiltersKey);
+    } catch {
+      return {};
+    }
+  }, [debouncedFiltersKey]);
 
   const fetchProperty = useCallback(async () => {
+    // Prevent multiple simultaneous requests
+    if (isFetching.current) {
+      console.log("Fetch already in progress, skipping...");
+      return;
+    }
+    
+    // Check if params actually changed
+    const currentParams = { page, limit, filters: debouncedFilters };
+    if (initialFetchDone.current && 
+        JSON.stringify(currentParams) === JSON.stringify(prevParamsRef.current)) {
+      console.log("Params unchanged, skipping fetch");
+      return;
+    }
+    prevParamsRef.current = currentParams;
+    
+    // Cancel previous request
+    if (abortController.current) {
+      abortController.current.abort();
+    }
+    
+    abortController.current = new AbortController();
+    isFetching.current = true;
+    
     setLoading(true);
     setError(null);
     
     try {
-      // Clean filters - remove empty, null, undefined, and "all" values
+      // Clean filters - remove empty values
       const cleanedFilters = Object.fromEntries(
         Object.entries(debouncedFilters).filter(([_, v]) => 
           v !== "" && v !== null && v !== undefined && v !== "all"
         )
       );
       
-      // Map frontend filters to backend expected field names
       const mappedFilters = {
-        // Text search filters
-        propertyTitleEn: cleanedFilters.propertyTitleEn,
         propertyname: cleanedFilters.propertyname,
         city: cleanedFilters.city,
-        community: cleanedFilters.community,
         state: cleanedFilters.state,
-        zipcode: cleanedFilters.zipcode,
-        
-        // Exact match filters
         propertytype: cleanedFilters.propertytype,
-        category: cleanedFilters.category,
-        offeringType: cleanedFilters.offeringType,
-        furnishingType: cleanedFilters.furnishingType,
-        availability: cleanedFilters.availability,
-        status: cleanedFilters.status,
-        permitType: cleanedFilters.permitType,
-        publishingStatus: cleanedFilters.publishingStatus,
-        
-        // Price range
-        minPrice: cleanedFilters.minPrice,
-        maxPrice: cleanedFilters.maxPrice,
-        
-        // Size range
-        minSquarefoot: cleanedFilters.minSquarefoot,
-        maxSquarefoot: cleanedFilters.maxSquarefoot,
-        
-        // Room counts and numeric filters
         bedroom: cleanedFilters.bedroom,
-        bathroom: cleanedFilters.bathroom,
-        totalFloor: cleanedFilters.totalFloor,
-        parkingSlots: cleanedFilters.parkingSlots,
-        
-        // Array filters (comma-separated strings)
-        amenities: cleanedFilters.amenities,
-        propertytypeList: cleanedFilters.propertytypeList,
-        keywords: cleanedFilters.keywords,
-        
-        // Special features (boolean)
-        hasVirtualTour: cleanedFilters.hasVirtualTour,
-        hasVideoTour: cleanedFilters.hasVideoTour,
-        
-        // Sorting
+        price: cleanedFilters.price,
         sortBy: cleanedFilters.sortBy || "createdAt",
         sortOrder: cleanedFilters.sortOrder || "desc"
       };
       
-      // Remove undefined values from mapped filters
       const finalFilters = Object.fromEntries(
         Object.entries(mappedFilters).filter(([_, v]) => v !== undefined && v !== "")
       );
@@ -87,10 +89,11 @@ const useGetPropertyBuyUserId = (page = 1, limit = 12, filters = {}) => {
       console.log("Fetching properties with query:", query);
 
       const response = await http.get(`/getpropertybyuser?${query}`, {
-        withCredentials: true
+        withCredentials: true,
+        signal: abortController.current.signal
       });
 
-      console.log("API Response:", response.data);
+      if (!isMounted.current) return;
 
       if (response.data.success) {
         setPropertyList(response.data.data || []);
@@ -106,23 +109,44 @@ const useGetPropertyBuyUserId = (page = 1, limit = 12, filters = {}) => {
         setPropertyList([]);
       }
     } catch (err) {
+      if (err.name === 'AbortError') {
+        console.log("Request aborted");
+        return;
+      }
       console.error("fetchProperty error:", err);
-      setError(err.response?.data?.message || err.message || "Something went wrong");
-      setPropertyList([]);
-      
-      // Only show toast for errors on refetch, not initial load
-      if (!isInitialMount.current) {
-        addToast(err.response?.data?.message || "Failed to fetch properties", "error");
+      if (isMounted.current) {
+        setError(err.response?.data?.message || err.message || "Something went wrong");
+        setPropertyList([]);
       }
     } finally {
-      setLoading(false);
-      isInitialMount.current = false;
+      if (isMounted.current) {
+        setLoading(false);
+      }
+      isFetching.current = false;
     }
-  }, [page, limit, debouncedFilters, addToast]);
+  }, [page, limit, debouncedFilters]);
 
+  // Initial fetch - only once on mount
   useEffect(() => {
-    fetchProperty();
-  }, [fetchProperty]);
+    if (!initialFetchDone.current) {
+      initialFetchDone.current = true;
+      fetchProperty();
+    }
+    
+    return () => {
+      isMounted.current = false;
+      if (abortController.current) {
+        abortController.current.abort();
+      }
+    };
+  }, []); // Empty dependency array - runs only once
+
+  // Refetch only when page, limit, or debouncedFilters actually change
+  useEffect(() => {
+    if (initialFetchDone.current) {
+      fetchProperty();
+    }
+  }, [page, limit, debouncedFilters]);
 
   const deletePropertyById = async (id) => {
     try {
@@ -132,7 +156,9 @@ const useGetPropertyBuyUserId = (page = 1, limit = 12, filters = {}) => {
 
       if (response.data.success === true) {
         addToast(response.data.message || "Property deleted successfully", "success");
-        await fetchProperty(); // Refresh the list
+        // Reset prev params to force refetch
+        prevParamsRef.current = {};
+        await fetchProperty();
         return true;
       }
       return false;
@@ -152,7 +178,8 @@ const useGetPropertyBuyUserId = (page = 1, limit = 12, filters = {}) => {
 
       if (response.data.success === true) {
         addToast(response.data.message || "Property status updated successfully", "success");
-        await fetchProperty(); // Refresh the list
+        prevParamsRef.current = {};
+        await fetchProperty();
         return true;
       }
       return false;
@@ -163,6 +190,8 @@ const useGetPropertyBuyUserId = (page = 1, limit = 12, filters = {}) => {
     }
   };
 
+
+  
   return { 
     propertyList, 
     pagination, 
@@ -174,4 +203,4 @@ const useGetPropertyBuyUserId = (page = 1, limit = 12, filters = {}) => {
   };
 };
 
-export default useGetPropertyBuyUserId;
+export default useGetPropertyByUser;

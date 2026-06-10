@@ -79,6 +79,7 @@ import ReraCompliance from "../ReraCompliance.jsx";
 import AboutFounder from "../components/common/AboutFounder .jsx";
 import BlogDetails from "../components/common/homecommon/BlogDetails.jsx";
 import HelpCenter from "../components/common/homecommon/HelpCenter .jsx";
+import UserAgentDetails from "../components/common/homecommon/UserAgentDetails.jsx";
 
 
 export const AdminRoutes = () => {
@@ -326,7 +327,7 @@ export const PublicRoutes = () => {
              <Route path="/about-founder" element={<AboutFounder />} />
               <Route path="/blog/:id" element={<BlogDetails />} />
                              <Route path="/homoget-help-center"  element={<   HelpCenter />} />
-
+<Route path="/user-agent-details/:id" element={<UserAgentDetails />} />
 
             <Route path="/property/:id" element={<PropertyDetailsPage />} />
              </Route>

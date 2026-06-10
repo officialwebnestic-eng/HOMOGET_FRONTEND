@@ -136,13 +136,10 @@ const AboutUs = () => {
             <p className="text-lg md:text-sm text-slate-black font-serif max-w-2xl">{t.heroPara}</p>
             <div className="flex flex-wrap gap-12 pt-8">
               <div className="text-start">
-                <p className="text-5xl font-black text-amber-500">12+</p>
+                <p className="text-2xl md:text-3xl font-serif text-amber-500">3+</p>
                 <p className="text-[10px] uppercase font-bold opacity-60 tracking-widest">{t.yearsLabel}</p>
               </div>
-              <div className="text-start">
-                <p className="text-5xl font-black text-amber-500">AED 5B+</p>
-                <p className="text-[10px] uppercase font-bold opacity-60 tracking-widest">{t.assetsLabel}</p>
-              </div>
+           
             </div>
           </motion.div>
         </div>

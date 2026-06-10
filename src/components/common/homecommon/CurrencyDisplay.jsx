@@ -12,8 +12,9 @@ const CurrencyDisplay = ({
   periodClassName = "",
   showImageOnly = false,
   showPeriod = true,
-  imageSize = "md", // sm, md, lg
-  periodPosition = "right" // "right" or "below"
+  imageSize = "sm", // sm, md, lg
+  periodPosition = "right", // "right" or "below"
+  showImage = true // New prop to control image visibility
 }) => {
   const [imageError, setImageError] = useState(false);
   
@@ -21,18 +22,18 @@ const CurrencyDisplay = ({
   const shouldShowPeriod = showPeriod && period && period !== "Total Amount";
   const formattedPeriod = shouldShowPeriod ? `/ ${period}` : "";
   
-  // Image size mappings
+  // Smaller image size mappings
   const imageSizes = {
-    sm: "h-4 sm:h-5 md:h-6",
-    md: "h-6 sm:h-8 md:h-10",
-    lg: "h-8 sm:h-10 md:h-12"
+    sm: "h-3 sm:h-4 md:h-5",
+    md: "h-4 sm:h-5 md:h-6",
+    lg: "h-5 sm:h-6 md:h-7"
   };
   
-  // Price size mappings
+  // Smaller price size mappings
   const priceSizes = {
-    sm: "text-base sm:text-lg md:text-xl",
-    md: "text-lg sm:text-xl md:text-2xl lg:text-3xl",
-    lg: "text-xl sm:text-2xl md:text-3xl lg:text-4xl"
+    sm: "text-sm sm:text-base md:text-lg",
+    md: "text-base sm:text-lg md:text-xl",
+    lg: "text-lg sm:text-xl md:text-2xl"
   };
   
   const formatNumber = () => {
@@ -69,7 +70,7 @@ const CurrencyDisplay = ({
     if (!shouldShowPeriod) return null;
     
     return (
-      <span className={`${periodPosition === "right" ? "ml-1" : "mt-1"} text-xs text-gray-400 font-normal ${periodClassName}`}>
+      <span className={`${periodPosition === "right" ? "ml-1" : "mt-1"} text-[10px] text-gray-400 font-normal ${periodClassName}`}>
         {formattedPeriod}
       </span>
     );
@@ -80,7 +81,7 @@ const CurrencyDisplay = ({
   // Image only mode
   if (showImageOnly) {
     return (
-      isAED && !imageError && (
+      isAED && !imageError && showImage && (
         <img 
           src={DubaiCurrencyImage}
           alt="Dubai Currency"
@@ -95,8 +96,8 @@ const CurrencyDisplay = ({
   if (periodPosition === "below") {
     return (
       <div className={`flex flex-col ${className}`}>
-        <div className="flex items-center gap-2 flex-wrap">
-          {isAED && !imageError && (
+        <div className="flex items-center gap-1 flex-wrap">
+          {isAED && !imageError && showImage && (
             <img 
               src={DubaiCurrencyImage}
               alt="Dubai Currency"
@@ -115,8 +116,8 @@ const CurrencyDisplay = ({
   
   // Default: Period on the right (horizontal layout)
   return (
-    <div className={`flex items-center gap-2 flex-wrap ${className}`}>
-      {isAED && !imageError && (
+    <div className={`flex items-center gap-1 flex-wrap ${className}`}>
+      {isAED && !imageError && showImage && (
         <img 
           src={DubaiCurrencyImage}
           alt="Dubai Currency"

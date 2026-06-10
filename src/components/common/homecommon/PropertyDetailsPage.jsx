@@ -198,38 +198,99 @@ const handleImageClick = (index) => {
   };
 
   // Handle WhatsApp
-  const handleWhatsApp = () => {
-    const managementNo = "971585852283";
-    const agentNo = property?.agentId?.phone?.replace(/\s+/g, "") || "971500000000";
-    const propertyTitle = property?.propertyTitleEn || property?.propertyname;
-    const msg = encodeURIComponent(
-      `🏢 *Property Inquiry - Homoget*\n\n` +
-      `🏠 *Property:* ${propertyTitle}\n` +
-      `💰 *Price:* AED ${Number(property?.price).toLocaleString()}${isRent(property) ? `/${property?.rentedPeriod?.toLowerCase().replace("per ", "") || "year"}` : ""}\n` +
-      `📍 *Location:* ${property?.community || property?.city}\n` +
-      `📐 *Area:* ${property?.squarefoot?.toLocaleString()} sqft\n\n` +
-      `I'm interested in this property. Please share more details.`
-    );
-    window.open(`https://wa.me/${managementNo}?text=${msg}`, "_blank");
-
-    setTimeout(() => {
-      if (window.confirm("✅ Message sent to Management.\n\nNotify agent directly?")) {
-        window.open(`https://wa.me/${agentNo}?text=${msg}`, "_blank");
-      }
-    }, 1000);
-  };
+const handleWhatsApp = () => {
+  const managementNo = "971585852283";
+  const agentNo = property?.agentId?.phone?.replace(/\s+/g, "") || "971500000000";
+  const propertyTitle = property?.propertyTitleEn || property?.propertyname || "Property";
+  const price = property?.price ? `AED ${Number(property.price).toLocaleString()}` : "Contact for price";
+  const pricePeriod = isRent(property) && property?.rentedPeriod 
+    ? `/${property?.rentedPeriod?.toLowerCase().replace("per ", "") || "year"}` 
+    : "";
+  const location = property?.community || property?.city || property?.locationName || "Dubai";
+  const area = property?.squarefoot ? `${property.squarefoot.toLocaleString()} sqft` : "N/A";
+  const bedroom = property?.bedroom || 0;
+  const bathroom = property?.bathroom || 0;
+  const propertyType = property?.propertytype || property?.category || "Property";
+  const referenceNo = property?.refrenceNo || property?._id?.slice(-8) || "N/A";
+  const propertyUrl = `${window.location.origin}/property/${property?._id}`;
+  
+  const msg = encodeURIComponent(
+    `🏢 *Property Inquiry - Homoget*\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `🏠 *PROPERTY DETAILS*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `• Title: ${propertyTitle}\n` +
+    `• Reference: ${referenceNo}\n` +
+    `• Type: ${propertyType}\n` +
+    `• Price: ${price}${pricePeriod}\n` +
+    `• Location: ${location}\n` +
+    `• Bedrooms: ${bedroom}\n` +
+    `• Bathrooms: ${bathroom}\n` +
+    `• Area: ${area}\n` +
+    `• Link: ${propertyUrl}\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `👤 *CLIENT MESSAGE*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `I'm interested in this property and would like to schedule a viewing.\n\n` +
+    `Please contact me with more details and availability.\n\n` +
+    `Best regards`
+  );
+  
+  // Send to management first
+  window.open(`https://wa.me/${managementNo}?text=${msg}`, "_blank");
+  
+  // Send to agent after 1 second
+  setTimeout(() => {
+    window.open(`https://wa.me/${agentNo}?text=${msg}`, "_blank");
+  }, 1000);
+};
   // Handle Call
   const handleCall = () => {
     if (property?.agentId?.phone) {
       window.location.href = `tel:${property.agentId.phone}`;
     }
   };
-  // Handle Email
-  const handleEmail = () => {
-    const subject = encodeURIComponent(`Inquiry: ${property?.propertyTitleEn || property?.propertyname}`);
-    window.location.href = `mailto:info@homoget.ae?subject=${subject}`;
-  };
 
+
+const handleEmail = () => {
+  const propertyTitle = property?.propertyTitleEn || property?.propertyname || 'Property';
+  const price = property?.price ? `AED ${property.price.toLocaleString()}` : 'Contact for price';
+  const location = property?.city || property?.community || property?.locationName || 'Dubai';
+  const bedroom = property?.bedroom || 0;
+  const bathroom = property?.bathroom || 0;
+  const area = property?.squarefoot ? `${property.squarefoot.toLocaleString()} sqft` : 'N/A';
+  const propertyType = property?.propertytype || property?.category || 'Property';
+  const referenceNo = property?.refrenceNo || property?._id?.slice(-8) || 'N/A';
+  const propertyUrl = `${window.location.origin}/property/${property?._id}`;
+  
+  const subject = encodeURIComponent(`Inquiry: ${propertyTitle}`);
+  
+  const body = encodeURIComponent(
+    `Hello ${agent?.name || 'Agent'},%0A%0A` +
+    `I'm interested in the following property and would like more information:%0A%0A` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A` +
+    `🏠 PROPERTY DETAILS%0A` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A` +
+    `• Title: ${propertyTitle}%0A` +
+    `• Reference: ${referenceNo}%0A` +
+    `• Type: ${propertyType}%0A` +
+    `• Price: ${price}%0A` +
+    `• Location: ${location}%0A` +
+    `• Bedrooms: ${bedroom}%0A` +
+    `• Bathrooms: ${bathroom}%0A` +
+    `• Area: ${area}%0A` +
+    `• Link: ${propertyUrl}%0A%0A` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A` +
+    `👤 MY CONTACT DETAILS%0A` +
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A` +
+    `Please contact me to schedule a viewing or for more information.%0A%0A` +
+    `Best regards,%0A` +
+    `[Your Name]%0A` +
+    `[Your Phone Number]`
+  );
+  
+  window.location.href = `mailto:${agent?.email}?subject=${subject}&body=${body}`;
+};
   if (loading) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${theme === "dark" ? "bg-[#050505]" : "bg-white"}`}>
@@ -589,7 +650,7 @@ const [controlledSwiper, setControlledSwiper] = useState(null);
         >
           <FaWhatsapp size={12} smSize={14} className="text-white" />
           <span className="hidden xs:inline">WhatsApp</span>
-          <span className="xs:hidden">WA</span>
+          <span className="xs:hidden">WhatsApp</span>
         </button>
         
         {/* Share Button */}
@@ -608,7 +669,7 @@ const [controlledSwiper, setControlledSwiper] = useState(null);
           className="flex-1 sm:flex-none bg-amber-500 hover:bg-amber-600 text-black px-3 sm:px-5 md:px-6 lg:px-8 py-2.5 sm:py-3 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-md shadow-lg hover:shadow-xl"
         >
           <CalendarCheck size={12} smSize={14} />
-          <span className="hidden sm:inline">Initiate Booking</span>
+          <span className="hidden sm:inline">Report </span>
           <span className="sm:hidden">Book</span>
         </button>
       </div>
@@ -1038,7 +1099,7 @@ const [controlledSwiper, setControlledSwiper] = useState(null);
     {/* City/Location */}
     <div className="flex items-center gap-3 p-3">
       <Globe size={14} className="text-amber-500" />
-      <span className="text-sm">{property.agentId?.city || "Dubai"}, UAE</span>
+      <span className="text-sm">{property.agentId?.address || "Dubai"}, UAE</span>
     </div>
     
  
@@ -1072,14 +1133,17 @@ const [controlledSwiper, setControlledSwiper] = useState(null);
     </div>
   </div>
 
-  <div className="mt-6 flex gap-3">
-    <button onClick={handleWhatsApp} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition-all">
-      <FaWhatsapp size={16} /> WhatsApp
-    </button>
-    <button onClick={handleCall} className="flex-1 py-3 rounded-xl bg-amber-500 text-black text-sm font-bold hover:bg-amber-600 transition-all">
-      Call Now
-    </button>
-  </div>
+ <div className="mt-6 flex gap-3">
+  <button onClick={handleWhatsApp} className="flex-1 flex items-center justify-center gap-2 py-3  bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition-all">
+    <FaWhatsapp size={16} /> WhatsApp
+  </button>
+  <button onClick={handleCall} className="flex-1 py-3  bg-amber-500 text-black text-sm font-bold hover:bg-amber-600 transition-all">
+    Call Now
+  </button>
+  <button onClick={handleEmail} className="flex-1 flex items-center justify-center gap-2 py-3  bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-all">
+    <Mail size={16} /> Email
+  </button>
+</div>
 </div>
 
         
