@@ -36,5 +36,5 @@ const PermissionProtectedAction = ({
   
   return hasAccess ? children : fallback;
 };
-
+p
 export default PermissionProtectedAction;
