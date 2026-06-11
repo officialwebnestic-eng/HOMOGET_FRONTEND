@@ -17,6 +17,7 @@ import { useTheme } from '../../../context/ThemeContext';
 import PermissionProtectedAction from '../../../Authorization/PermissionProtectedActions';
 import EmptyStateModel from '../../../model/EmptyStateModel';
 import { useLoading } from '../../../model/LoadingModel';
+import WatermarkedImage from '../../../helpers/WatermarkedImage';
 
 const PropertyDetailsAgent = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -337,11 +338,11 @@ const PropertyDetailsAgent = () => {
                         >
                           {property.image.slice(0, 4).map((img, i) => (
                             <SwiperSlide key={i}>
-                              <img
-                                src={img}
-                                alt={property.propertyname}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              />
+                              <WatermarkedImage
+    src={img}
+    alt={property.propertyname}
+    className="group-hover:scale-105 transition-transform duration-500"
+  />
                             </SwiperSlide>
                           ))}
                         </Swiper>

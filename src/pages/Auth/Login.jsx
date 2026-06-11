@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft, ShieldCheck, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../hooks/useAuth";
 import { navbarlogo } from "../../ExportImages";
@@ -10,10 +10,12 @@ import { navbarlogo } from "../../ExportImages";
 const Login = () => {
   const { theme } = useTheme();
   const { LoginUser } = useAuth();
+  const navigate = useNavigate();
   const isDark = theme === "dark";
 
   const [currentBg, setCurrentBg] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const backgrounds = [
     "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=2070&q=80",
@@ -21,7 +23,7 @@ const Login = () => {
     "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=2070&q=80"
   ];
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
+  const { register, handleSubmit, formState: { errors } } = useForm();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -29,6 +31,19 @@ const Login = () => {
     }, 6000);
     return () => clearInterval(interval);
   }, []);
+
+  // ✅ Fixed: Properly handle form submission
+  const onSubmit = async (data) => {
+    setIsSubmitting(true);
+    try {
+      await LoginUser(data);
+      // LoginUser handles redirect internally
+    } catch (error) {
+      console.error("Login error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Compact input style (smaller padding)
   const inputBase = `w-full pl-10 pr-12 py-3 rounded-xl border transition-all duration-300 outline-none font-medium text-sm ${
@@ -105,7 +120,7 @@ const Login = () => {
         </div>
 
         {/* Form – reduced spacing */}
-        <form onSubmit={handleSubmit(LoginUser)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Email Field */}
           <div className="space-y-1">
             <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
@@ -156,6 +171,7 @@ const Login = () => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            type="submit"
             disabled={isSubmitting}
             className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-xl flex items-center justify-center gap-2 group transition-all disabled:opacity-50 mt-4"
           >
@@ -189,4 +205,4 @@ const Login = () => {
   );
 };
 
-export default Login; 
+export default Login;

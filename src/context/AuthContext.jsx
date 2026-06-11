@@ -1,3 +1,4 @@
+// context/AuthContext.jsx
 import { createContext, useEffect, useState, useMemo, useCallback } from "react";
 import { http } from "../axios/axios";
 import { useToast } from "../model/SuccessToasNotification";
@@ -7,28 +8,16 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const { addToast } = useToast();
 
-  const [user, setUser] = useState({
-    id: "",
-    firstname: "",
-    lastname: "",
-    role: "",
-    email: "",
-  });
-
-
-
-
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Use useCallback to keep the function reference stable
   const setUserDetails = useCallback((userData) => {
-    console.log(userData, "thi sis a user data in set user ")
+    console.log("Setting user details:", userData);
     setUser({
-      // Maps both _id (from DB) and id (from frontend logic)
       id: userData._id || userData.id || "",
-      firstname: userData.firstname || "",
-      lastname: userData.lastname || "",
+      firstname: userData.firstname || userData.name?.split(" ")[0] || "",
+      lastname: userData.lastname || userData.name?.split(" ")[1] || "",
       role: userData.role || "",
       email: userData.email || "",
     });
@@ -38,58 +27,64 @@ export const AuthProvider = ({ children }) => {
   const logoutUser = async () => {
     try {
       const res = await http.post("/logoutuser", {}, { withCredentials: true });
-
       if (res.data.success) {
-        setUser({
-          id: "",
-          firstname: "",
-          lastname: "",
-          role: "",
-          email: "",
-        });
+        setUser(null);
         setIsAuthenticated(false);
-        addToast("Logged out successfully");
-      } else {
-        addToast("Logout failed", "error");
+        localStorage.removeItem("user"); // Only remove user, token is in cookie
+        addToast("Logged out successfully", "success");
+        window.location.href = "/login";
       }
     } catch (err) {
-      console.error("Logout error:", err?.response?.data || err.message);
+      console.error("Logout error:", err);
       addToast("Logout failed", "error");
     }
   };
 
-  // Check auth status on initial load or refresh
-  useEffect(() => {
-    const verifyUser = async () => {
-      setLoading(true);
-      try {
-        const res = await http.get("/checkauth", { withCredentials: true });
-        if (res.data.success && res.data.user) {
-          // Map backend user object to your frontend structure
-          const backendUser = res.data.user;
-          // Inside verifyUser() after successful /checkauth
-          setUser({
-            id: backendUser.id || backendUser._id,
-            firstname: backendUser.name?.split(" ")[0] || backendUser.firstname || "",
-            lastname: backendUser.name?.split(" ")[1] || backendUser.lastname || "",
-            role: backendUser.role,
-            email: backendUser.email,
-          });
-          setIsAuthenticated(true);
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
+// context/AuthContext.jsx
+useEffect(() => {
+  const verifyUser = async () => {
+    setLoading(true);
+    try {
+      const res = await http.get("/checkauth", { 
+        withCredentials: true 
+      }).catch(err => {
+        // If cookie is expired or invalid, clear it
+        if (err.response?.status === 401) {
+          console.log("⚠️ Cookie expired or invalid");
+          // Clear the expired cookie
+          document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         }
-      } catch (err) {
-        console.error("Auth check error:", err);
+        return null;
+      });
+      
+      console.log("📡 Auth check response:", res?.data);
+      
+      if (res?.data?.success && res.data.user) {
+        const backendUser = res.data.user;
+        setUser({
+          id: backendUser.id || backendUser._id,
+          firstname: backendUser.name?.split(" ")[0] || backendUser.firstname || "",
+          lastname: backendUser.name?.split(" ")[1] || backendUser.lastname || "",
+          role: backendUser.role,
+          email: backendUser.email,
+        });
+        setIsAuthenticated(true);
+        console.log("✅ User authenticated via cookie:", backendUser.role);
+      } else {
         setIsAuthenticated(false);
-      } finally {
-        setLoading(false);
+        setUser(null);
       }
-    };
+    } catch (err) {
+      console.error("Auth check error:", err);
+      setIsAuthenticated(false);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    verifyUser();
-  }, [setUserDetails]);
+  verifyUser();
+}, []);
 
   const value = useMemo(
     () => ({
@@ -104,16 +99,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {/* This check prevents protected routes from redirecting 
-        to login before the 'checkauth' API finishes 
-      */}
-      {!loading ? (
-        children
-      ) : (
-        <div className="flex items-center justify-center h-screen w-full bg-slate-50 dark:bg-slate-950">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-        </div>
-      )}
+      {children}
     </AuthContext.Provider>
   );
 };

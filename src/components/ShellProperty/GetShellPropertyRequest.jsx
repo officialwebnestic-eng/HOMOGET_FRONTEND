@@ -1,59 +1,127 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { http } from "../../axios/axios";
 import { useTheme } from "../../context/ThemeContext";
 import EmptyStateModel from "../../model/EmptyStateModel";
 import { useLoading } from "../../model/LoadingModel";
-import { IndianRupee, Eye, CheckCircle, XCircle, Clock, Search, Filter, Calendar, MapPin, Home, User, Building2, Bed, Bath, Square } from "lucide-react";
+import { 
+  IndianRupee, Eye, CheckCircle, XCircle, Clock, Search, 
+  Calendar, MapPin, Home, User, Building2, Bed, Bath, Square,
+  UserCheck, UserX, Shield, Building, RefreshCw, Check, X, Hash,
+  AlertTriangle, Send, Trash2
+} from "lucide-react";
+import useGetAllAgent from "../../hooks/useGetAllAgent";
 
-const GetShellPropertyRequest = () => {
-  const [requests, setRequests] = useState([]);
+const GetFreelancerProperties = () => {
+  const navigate = useNavigate();
+  const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [agents, setAgents] = useState([]);
+  const [selectedAgentId, setSelectedAgentId] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+  const { agentList = [] } = useGetAllAgent();
   const { theme } = useTheme();
-
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalRequests, setTotalRequests] = useState(0);
+  const [totalProperties, setTotalProperties] = useState(0);
   const itemsPerPage = 10;
-
-  const [statusTab, setStatusTab] = useState("pending");
   const [searchTerm, setSearchTerm] = useState("");
 
   const LoadingModel = useLoading({ type: "table", count: 1, rows: 5, columns: 4 });
   
-  // Fetch requests from API
-  const fetchRequests = async () => {
+  // Fetch pending properties
+  const fetchProperties = async () => {
     try {
       setLoading(true);
       const response = await http.get(
-        `/getpendingrequest?page=${currentPage}&limit=${itemsPerPage}&status=${statusTab}&search=${searchTerm}`,
+        `/pending-approval?page=${currentPage}&limit=${itemsPerPage}&search=${searchTerm}`,
         { withCredentials: true }
       );
-      setRequests(response.data.data);
-      setTotalRequests(response.data.count);
-      setTotalPages(Math.ceil(response.data.count / itemsPerPage));
+      setProperties(response.data.data);
+      setTotalProperties(response.data.pagination.total);
+      setTotalPages(response.data.pagination.totalPages);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch requests");
+      setError(err.response?.data?.message || "Failed to fetch properties");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchRequests();
-  }, [currentPage, statusTab, searchTerm]);
+  // Fetch verified agents for assignment
+  const fetchVerifiedAgents = async () => {
+    try {
+      const response = await http.get("/verified-agents", {
+        withCredentials: true
+      });
+      setAgents(response.data.data);
+    } catch (err) {
+      console.error("Failed to fetch agents:", err);
+    }
+  };
 
-  const handleStatusChange = async (newStatus, requestId) => {
+  useEffect(() => {
+    fetchProperties();
+    fetchVerifiedAgents();
+  }, [currentPage, searchTerm]);
+
+  // View property details
+  const handleViewProperty = (propertyId) => {
+    navigate(`/propertydetails/${propertyId}`);
+  };
+
+  // Approve property
+  const handleApprove = async () => {
+    if (!selectedProperty) return;
+    
+    setActionLoading(true);
     try {
       await http.post(
-        `/approvedpropertyrequest/${requestId}`,
-        { status: newStatus },
+        `/approve-freelancer-property/${selectedProperty._id}`,
+        { status: "approved", assignedAgentId: selectedAgentId || null },
         { withCredentials: true }
       );
-      fetchRequests();
+      await fetchProperties();
+      setShowApproveModal(false);
+      setSelectedProperty(null);
+      setSelectedAgentId("");
     } catch (err) {
-      console.error("Failed to update status:", err);
+      console.error("Failed to approve:", err);
+      alert(err.response?.data?.message || "Failed to approve property");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Reject property
+  const handleReject = async () => {
+    if (!selectedProperty) return;
+    
+    if (!rejectionReason.trim()) {
+      alert("Please enter a rejection reason");
+      return;
+    }
+    
+    setActionLoading(true);
+    try {
+      await http.post(
+        `/approve-freelancer-property/${selectedProperty._id}`,
+        { status: "rejected", rejectionReason: rejectionReason },
+        { withCredentials: true }
+      );
+      await fetchProperties();
+      setShowRejectModal(false);
+      setSelectedProperty(null);
+      setRejectionReason("");
+    } catch (err) {
+      console.error("Failed to reject:", err);
+      alert(err.response?.data?.message || "Failed to reject property");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -72,17 +140,6 @@ const GetShellPropertyRequest = () => {
     ? "bg-[#1A1F2B] text-white border-gray-700 focus:ring-amber-500 focus:border-amber-500"
     : "bg-white text-gray-900 border-gray-200 focus:ring-amber-500 focus:border-amber-500";
 
-  const getStatusBadge = (status) => {
-    switch(status) {
-      case 'approved':
-        return { color: 'bg-green-500/10 text-green-500 border-green-500/20', icon: <CheckCircle size={10} />, label: 'Approved' };
-      case 'rejected':
-        return { color: 'bg-red-500/10 text-red-500 border-red-500/20', icon: <XCircle size={10} />, label: 'Rejected' };
-      default:
-        return { color: 'bg-amber-500/10 text-amber-500 border-amber-500/20', icon: <Clock size={10} />, label: 'Pending' };
-    }
-  };
-
   return (
     <div className={`min-h-screen ${bgClass} p-4 sm:p-6 transition-colors`}>
       <div className={`rounded-xl shadow-lg ${cardClass} border ${borderClass} overflow-hidden`}>
@@ -92,46 +149,16 @@ const GetShellPropertyRequest = () => {
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                <Building2 size={20} className="text-amber-500" />
+                <Shield size={20} className="text-amber-500" />
               </div>
               <div>
                 <h2 className={`text-base font-bold uppercase tracking-wider ${textClass}`}>
-                  Callback Requests
+                  Freelancer Properties - Pending Approval
                 </h2>
                 <p className={`text-[10px] font-medium ${textMutedClass}`}>
-                  Manage property inquiry requests
+                  Review and approve properties submitted by freelancers
                 </p>
               </div>
-            </div>
-
-            {/* Status Tabs */}
-            <div className="flex flex-wrap gap-1.5">
-              {["pending", "approved", "rejected"].map((status) => {
-                const counts = {
-                  pending: totalRequests,
-                  approved: requests.filter(r => r.status === 'approved').length,
-                  rejected: requests.filter(r => r.status === 'rejected').length
-                };
-                return (
-                  <button
-                    key={status}
-                    onClick={() => {
-                      setStatusTab(status);
-                      setCurrentPage(1);
-                    }}
-                    className={`relative px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
-                      statusTab === status
-                        ? "bg-amber-500 text-black shadow-md"
-                        : `${textMutedClass} hover:bg-amber-500/10`
-                    }`}
-                  >
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                    {statusTab === status && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-white animate-pulse" />
-                    )}
-                  </button>
-                );
-              })}
             </div>
 
             {/* Search Input */}
@@ -139,7 +166,7 @@ const GetShellPropertyRequest = () => {
               <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${textMutedClass}`} />
               <input
                 type="text"
-                placeholder="Search by name or email..."
+                placeholder="Search by title or reference..."
                 className={`w-full pl-9 pr-4 py-2 text-xs rounded-lg border focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all ${inputClass}`}
                 value={searchTerm}
                 onChange={handleSearch}
@@ -155,14 +182,14 @@ const GetShellPropertyRequest = () => {
           </div>
         ) : error ? (
           <EmptyStateModel
-            title="Failed to fetch requests"
+            title="Failed to fetch properties"
             message={error}
             icon="error"
           />
-        ) : requests.length === 0 ? (
+        ) : properties.length === 0 ? (
           <EmptyStateModel
-            title={`No ${statusTab} requests found`}
-            message={`There are no ${statusTab} property inquiry requests at the moment.`}
+            title="No pending properties"
+            message="All freelancer properties have been reviewed. No pending approvals at the moment."
             icon="empty"
           />
         ) : (
@@ -173,8 +200,8 @@ const GetShellPropertyRequest = () => {
                 <thead className={`bg-amber-500/5 ${borderClass}`}>
                   <tr>
                     {[
-                      "Property", "User", "Type", "Price", "Beds/Baths", 
-                      "Location", "Status", "Date"
+                      "Property", "Freelancer Agent", "Type", "Price", 
+                      "Beds/Baths", "Location", "Submitted", "Actions"
                     ].map((header) => (
                       <th
                         key={header}
@@ -186,13 +213,13 @@ const GetShellPropertyRequest = () => {
                   </tr>
                 </thead>
                 <tbody className={`divide-y ${borderClass}`}>
-                  {requests.map((request) => {
-                    const hasImage = Array.isArray(request.image) && request.image.length > 0;
-                    const statusBadge = getStatusBadge(request.status);
+                  {properties.map((property) => {
+                    const hasImage = Array.isArray(property.image) && property.image.length > 0;
+                    const freelancer = property.agentId;
                     
                     return (
                       <tr
-                        key={request._id}
+                        key={property._id}
                         className={`transition-colors ${theme === "dark" ? "hover:bg-white/5" : "hover:bg-gray-50"}`}
                       >
                         {/* Property */}
@@ -202,8 +229,8 @@ const GetShellPropertyRequest = () => {
                               {hasImage ? (
                                 <img
                                   className="w-full h-full object-cover"
-                                  src={request.image[0]}
-                                  alt={request.propertyname}
+                                  src={property.image[0]}
+                                  alt={property.propertyTitleEn}
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
@@ -213,35 +240,40 @@ const GetShellPropertyRequest = () => {
                             </div>
                             <div>
                               <div className={`text-xs font-semibold ${textClass}`}>
-                                {request.propertyname?.substring(0, 30)}
-                                {request.propertyname?.length > 30 && "..."}
+                                {property.propertyTitleEn?.substring(0, 30)}
+                                {property.propertyTitleEn?.length > 30 && "..."}
                               </div>
                               <div className={`text-[9px] ${textMutedClass} flex items-center gap-1 mt-0.5`}>
-                                <MapPin size={8} />
-                                {request.address?.substring(0, 25)}
+                                <Hash size={8} />
+                                {property.refrenceNo}
                               </div>
                             </div>
                           </div>
                         </td>
 
-                        {/* User */}
+                        {/* Freelancer Agent */}
                         <td className="px-4 py-3">
                           <div className={`text-xs font-medium ${textClass}`}>
-                            {request.userId?.firstname} {request.userId?.lastname}
+                            {freelancer?.name || "Unknown"}
                           </div>
                           <div className={`text-[9px] ${textMutedClass} flex items-center gap-1 mt-0.5`}>
                             <User size={8} />
-                            {request.userId?.email}
+                            {freelancer?.email || "No email"}
+                          </div>
+                          <div className="mt-1">
+                            <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-purple-500/10 text-purple-500">
+                              Freelancer
+                            </span>
                           </div>
                         </td>
 
                         {/* Type */}
                         <td className="px-4 py-3">
                           <span className={`text-xs ${textClass}`}>
-                            {request.propertytype || "N/A"}
+                            {property.propertytype || "N/A"}
                           </span>
                           <div className={`text-[9px] ${textMutedClass} mt-0.5`}>
-                            {request.listingtype || "Sale"}
+                            {property.category} • {property.offeringType}
                           </div>
                         </td>
 
@@ -250,69 +282,88 @@ const GetShellPropertyRequest = () => {
                           <div className="flex items-center gap-0.5">
                             <IndianRupee size={10} className="text-amber-500" />
                             <span className={`text-xs font-bold text-amber-500`}>
-                              {request.price?.toLocaleString()}
+                              {property.price?.toLocaleString()}
                             </span>
                           </div>
-                        </td>
+                         </td>
 
                         {/* Beds/Baths */}
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <div className="flex items-center gap-0.5">
                               <Bed size={10} className={textMutedClass} />
-                              <span className={`text-[10px] ${textClass}`}>{request.bedroom ?? 0}</span>
+                              <span className={`text-[10px] ${textClass}`}>{property.bedroom ?? 0}</span>
                             </div>
                             <div className="flex items-center gap-0.5">
                               <Bath size={10} className={textMutedClass} />
-                              <span className={`text-[10px] ${textClass}`}>{request.bathroom ?? 0}</span>
+                              <span className={`text-[10px] ${textClass}`}>{property.bathroom ?? 0}</span>
                             </div>
                             <div className="flex items-center gap-0.5">
                               <Square size={10} className={textMutedClass} />
-                              <span className={`text-[9px] ${textMutedClass}`}>{request.squarefoot} sqft</span>
+                              <span className={`text-[9px] ${textMutedClass}`}>{property.squarefoot} sqft</span>
                             </div>
                           </div>
-                        </td>
+                         </td>
 
                         {/* Location */}
                         <td className="px-4 py-3">
                           <div className={`text-[10px] font-medium ${textClass}`}>
-                            {request.city || "Dubai"}, {request.state || "UAE"}
+                            {property.zoneName || property.locationName || "N/A"}
                           </div>
-                          <div className={`text-[8px] ${textMutedClass} mt-0.5`}>
-                            {request.zipcode}
+                          <div className={`text-[8px] ${textMutedClass} mt-0.5 flex items-center gap-1`}>
+                            <MapPin size={8} />
+                            {property.displayAddress?.substring(0, 30)}
                           </div>
-                        </td>
+                         </td>
 
-                        {/* Status */}
-                        <td className="px-4 py-3">
-                          {statusTab === "pending" ? (
-                            <select
-                              value={request.status}
-                              onChange={(e) => handleStatusChange(e.target.value, request._id)}
-                              className={`text-[9px] font-medium px-2 py-1 rounded-lg border ${inputClass} cursor-pointer`}
-                            >
-                              <option value="pending">⏳ Pending</option>
-                              <option value="approved">✅ Approve</option>
-                              <option value="rejected">❌ Reject</option>
-                            </select>
-                          ) : (
-                            <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider border ${statusBadge.color}`}>
-                              {statusBadge.icon}
-                              {statusBadge.label}
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Date */}
+                        {/* Submitted Date */}
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1">
                             <Calendar size={8} className={textMutedClass} />
                             <span className={`text-[9px] ${textMutedClass}`}>
-                              {new Date(request.createdAt).toLocaleDateString()}
+                              {new Date(property.submittedForApprovalAt || property.createdAt).toLocaleDateString()}
                             </span>
                           </div>
-                        </td>
-                      </tr>
+                         </td>
+
+                        {/* Actions */}
+                        <td className="px-4 py-3">
+                          <div className="flex gap-2">
+                            {/* 👁️ View Button */}
+                            <button
+                              onClick={() => handleViewProperty(property._id)}
+                              className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-colors"
+                              title="View Property Details"
+                            >
+                              <Eye size={14} />
+                            </button>
+                            {/* Approve Button */}
+                            <button
+                              onClick={() => {
+                                setSelectedProperty(property);
+                                setShowApproveModal(true);
+                              }}
+                              disabled={actionLoading}
+                              className="p-1.5 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20 transition-colors"
+                              title="Approve Property"
+                            >
+                              <CheckCircle size={14} />
+                            </button>
+                            {/* Reject Button */}
+                            <button
+                              onClick={() => {
+                                setSelectedProperty(property);
+                                setShowRejectModal(true);
+                              }}
+                              disabled={actionLoading}
+                              className="p-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+                              title="Reject Property"
+                            >
+                              <XCircle size={14} />
+                            </button>
+                          </div>
+                         </td>
+                       </tr>
                     );
                   })}
                 </tbody>
@@ -324,8 +375,8 @@ const GetShellPropertyRequest = () => {
               <div className={`px-5 py-4 flex flex-col md:flex-row items-center justify-between gap-4 border-t ${borderClass}`}>
                 <p className={`text-[9px] font-medium ${textMutedClass}`}>
                   Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-                  {Math.min(currentPage * itemsPerPage, totalRequests)} of{" "}
-                  <span className="text-amber-500">{totalRequests}</span> results
+                  {Math.min(currentPage * itemsPerPage, totalProperties)} of{" "}
+                  <span className="text-amber-500">{totalProperties}</span> properties
                 </p>
 
                 <div className="flex gap-1.5">
@@ -369,7 +420,6 @@ const GetShellPropertyRequest = () => {
                       </button>
                     );
                   })}
-
                   <button
                     onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
@@ -387,8 +437,162 @@ const GetShellPropertyRequest = () => {
           </>
         )}
       </div>
+
+      {/* Approve Modal */}
+      {showApproveModal && selectedProperty && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className={`max-w-md w-full rounded-xl ${cardClass} border ${borderClass} overflow-hidden`}>
+            <div className={`p-5 border-b ${borderClass} bg-green-500/10`}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <CheckCircle size={20} className="text-green-500" />
+                </div>
+                <div>
+                  <h3 className={`text-sm font-bold ${textClass}`}>
+                    Approve Property
+                  </h3>
+                  <p className={`text-[10px] ${textMutedClass} mt-1`}>
+                    Review and approve this property
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-5 space-y-4">
+              <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-800">
+                <p className={`text-xs font-medium ${textClass}`}>
+                  {selectedProperty.propertyTitleEn}
+                </p>
+                <p className={`text-[9px] ${textMutedClass} mt-1`}>
+                  Reference: {selectedProperty.refrenceNo}
+                </p>
+              </div>
+              
+              <div>
+                <label className={`text-[10px] font-bold uppercase ${textMutedClass} block mb-2`}>
+                  Assign to Verified Agent (Optional)
+                </label>
+                <select
+                  value={selectedAgentId}
+                  onChange={(e) => setSelectedAgentId(e.target.value)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm ${inputClass}`}
+                >
+                  <option value="">-- Keep Original Agent --</option>
+                  {agents.map(agent => (
+                    <option key={agent._id} value={agent._id}>
+                      {agent.name} - {agent.brnNumber || agent.reraLicenseNumber || "Verified"}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[8px] text-slate-400 mt-1">
+                  Leave empty to keep the original freelancer as the agent
+                </p>
+              </div>
+              
+              <div className="flex gap-3 pt-3">
+                <button
+                  onClick={handleApprove}
+                  disabled={actionLoading}
+                  className="flex-1 py-2 rounded-lg bg-green-500 text-white text-xs font-bold hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+                >
+                  {actionLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <CheckCircle size={14} /> Approve Property
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowApproveModal(false);
+                    setSelectedProperty(null);
+                    setSelectedAgentId("");
+                  }}
+                  className="flex-1 py-2 rounded-lg bg-gray-500 text-white text-xs font-bold hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Modal */}
+      {showRejectModal && selectedProperty && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className={`max-w-md w-full rounded-xl ${cardClass} border ${borderClass} overflow-hidden`}>
+            <div className={`p-5 border-b ${borderClass} bg-red-500/10`}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                  <XCircle size={20} className="text-red-500" />
+                </div>
+                <div>
+                  <h3 className={`text-sm font-bold ${textClass}`}>
+                    Reject Property
+                  </h3>
+                  <p className={`text-[10px] ${textMutedClass} mt-1`}>
+                    Provide a reason for rejection
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-5 space-y-4">
+              <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-800">
+                <p className={`text-xs font-medium ${textClass}`}>
+                  {selectedProperty.propertyTitleEn}
+                </p>
+                <p className={`text-[9px] ${textMutedClass} mt-1`}>
+                  Reference: {selectedProperty.refrenceNo}
+                </p>
+              </div>
+              
+              <div>
+                <label className={`text-[10px] font-bold uppercase ${textMutedClass} block mb-2`}>
+                  Rejection Reason <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  rows={3}
+                  className={`w-full px-3 py-2 rounded-lg text-sm ${inputClass}`}
+                  placeholder="Enter the reason for rejecting this property..."
+                />
+              </div>
+              
+              <div className="flex gap-3 pt-3">
+                <button
+                  onClick={handleReject}
+                  disabled={actionLoading}
+                  className="flex-1 py-2 rounded-lg bg-red-500 text-white text-xs font-bold hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+                >
+                  {actionLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <XCircle size={14} /> Reject Property
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowRejectModal(false);
+                    setSelectedProperty(null);
+                    setRejectionReason("");
+                  }}
+                  className="flex-1 py-2 rounded-lg bg-gray-500 text-white text-xs font-bold hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  );s
+  );
 };
 
-export default GetShellPropertyRequest;
+export default GetFreelancerProperties;

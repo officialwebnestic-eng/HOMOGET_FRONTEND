@@ -3,97 +3,52 @@ import { http } from "../axios/axios";
 import useDebounce from './useDebounce';
 import { useToast } from "../model/SuccessToasNotification";
 
-const useGetPropertyByUser = (page = 1, limit = 12, filters = {}) => {
+const useGetPropertyBuyUserId = (page = 1, limit = 12, filters = {}) => {
   const [propertyList, setPropertyList] = useState([]);
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { addToast } = useToast();
   
-  // Refs to prevent duplicate calls
-  const isMounted = useRef(true);
-  const isFetching = useRef(false);
-  const abortController = useRef(null);
-  const initialFetchDone = useRef(false);
-  const prevParamsRef = useRef({ page, limit, filters: {} });
+  const abortControllerRef = useRef(null);
+  const isFirstRender = useRef(true);
 
-  // Create a stable filters reference using JSON.stringify comparison
-  const filtersKey = JSON.stringify(filters);
-  const debouncedFiltersKey = useDebounce(filtersKey, 500);
-  
-  // Parse debounced filters back to object
-  const debouncedFilters = useMemo(() => {
-    try {
-      return JSON.parse(debouncedFiltersKey);
-    } catch {
-      return {};
-    }
-  }, [debouncedFiltersKey]);
+  const debouncedFilters = useDebounce(filters, 500);
 
   const fetchProperty = useCallback(async () => {
-    // Prevent multiple simultaneous requests
-    if (isFetching.current) {
-      console.log("Fetch already in progress, skipping...");
-      return;
-    }
-    
-    // Check if params actually changed
-    const currentParams = { page, limit, filters: debouncedFilters };
-    if (initialFetchDone.current && 
-        JSON.stringify(currentParams) === JSON.stringify(prevParamsRef.current)) {
-      console.log("Params unchanged, skipping fetch");
-      return;
-    }
-    prevParamsRef.current = currentParams;
-    
     // Cancel previous request
-    if (abortController.current) {
-      abortController.current.abort();
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
     
-    abortController.current = new AbortController();
-    isFetching.current = true;
+    abortControllerRef.current = new AbortController();
     
     setLoading(true);
     setError(null);
     
     try {
       // Clean filters - remove empty values
-      const cleanedFilters = Object.fromEntries(
-        Object.entries(debouncedFilters).filter(([_, v]) => 
-          v !== "" && v !== null && v !== undefined && v !== "all"
-        )
-      );
+      const cleanedFilters = {};
+      Object.entries(debouncedFilters).forEach(([key, value]) => {
+        if (value !== "" && value !== null && value !== undefined && value !== "all") {
+          cleanedFilters[key] = value;
+        }
+      });
       
-      const mappedFilters = {
-        propertyname: cleanedFilters.propertyname,
-        city: cleanedFilters.city,
-        state: cleanedFilters.state,
-        propertytype: cleanedFilters.propertytype,
-        bedroom: cleanedFilters.bedroom,
-        price: cleanedFilters.price,
-        sortBy: cleanedFilters.sortBy || "createdAt",
-        sortOrder: cleanedFilters.sortOrder || "desc"
-      };
-      
-      const finalFilters = Object.fromEntries(
-        Object.entries(mappedFilters).filter(([_, v]) => v !== undefined && v !== "")
-      );
-      
-      const query = new URLSearchParams({
+      const queryParams = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
-        ...finalFilters,
+        ...cleanedFilters
       }).toString();
 
-      console.log("Fetching properties with query:", query);
+      console.log("📡 Fetching properties:", queryParams);
 
-      const response = await http.get(`/getpropertybyuser?${query}`, {
+      const response = await http.get(`/getpropertybyuser?${queryParams}`, {
         withCredentials: true,
-        signal: abortController.current.signal
+        signal: abortControllerRef.current.signal
       });
 
-      if (!isMounted.current) return;
+      console.log("📥 API Response:", response.data);
 
       if (response.data.success) {
         setPropertyList(response.data.data || []);
@@ -103,50 +58,33 @@ const useGetPropertyByUser = (page = 1, limit = 12, filters = {}) => {
           limit: limit,
           totalPages: 1
         });
-        setError(null);
       } else {
         setError(response.data.message || "Failed to fetch properties");
         setPropertyList([]);
       }
     } catch (err) {
-      if (err.name === 'AbortError') {
-        console.log("Request aborted");
+      if (err.name === 'CanceledError' || err.name === 'AbortError') {
+        console.log("Request cancelled");
         return;
       }
       console.error("fetchProperty error:", err);
-      if (isMounted.current) {
-        setError(err.response?.data?.message || err.message || "Something went wrong");
-        setPropertyList([]);
-      }
+      setError(err.response?.data?.message || err.message || "Something went wrong");
+      setPropertyList([]);
     } finally {
-      if (isMounted.current) {
-        setLoading(false);
-      }
-      isFetching.current = false;
+      setLoading(false);
     }
   }, [page, limit, debouncedFilters]);
 
-  // Initial fetch - only once on mount
+  // Fetch on mount and when dependencies change
   useEffect(() => {
-    if (!initialFetchDone.current) {
-      initialFetchDone.current = true;
-      fetchProperty();
-    }
+    fetchProperty();
     
     return () => {
-      isMounted.current = false;
-      if (abortController.current) {
-        abortController.current.abort();
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
     };
-  }, []); // Empty dependency array - runs only once
-
-  // Refetch only when page, limit, or debouncedFilters actually change
-  useEffect(() => {
-    if (initialFetchDone.current) {
-      fetchProperty();
-    }
-  }, [page, limit, debouncedFilters]);
+  }, [fetchProperty]);
 
   const deletePropertyById = async (id) => {
     try {
@@ -156,8 +94,6 @@ const useGetPropertyByUser = (page = 1, limit = 12, filters = {}) => {
 
       if (response.data.success === true) {
         addToast(response.data.message || "Property deleted successfully", "success");
-        // Reset prev params to force refetch
-        prevParamsRef.current = {};
         await fetchProperty();
         return true;
       }
@@ -178,7 +114,6 @@ const useGetPropertyByUser = (page = 1, limit = 12, filters = {}) => {
 
       if (response.data.success === true) {
         addToast(response.data.message || "Property status updated successfully", "success");
-        prevParamsRef.current = {};
         await fetchProperty();
         return true;
       }
@@ -190,8 +125,6 @@ const useGetPropertyByUser = (page = 1, limit = 12, filters = {}) => {
     }
   };
 
-
-  
   return { 
     propertyList, 
     pagination, 
@@ -203,4 +136,4 @@ const useGetPropertyByUser = (page = 1, limit = 12, filters = {}) => {
   };
 };
 
-export default useGetPropertyByUser;
+export default useGetPropertyBuyUserId;

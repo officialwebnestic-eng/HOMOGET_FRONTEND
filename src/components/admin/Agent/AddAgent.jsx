@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -22,7 +22,7 @@ const stepSchemas = [
     nationality: yup.string().required("Nationality required"),
     gender: yup.string().required("Gender is required"),
     emiratesId: yup.string().required("Required").matches(/^784-\d{4}-\d{7}-\d{1}$/, "Format: 784-XXXX-XXXXXXX-X"),
-    reraLicenseNumber: yup.string().required("RERA BRN required"),
+    reraLicenseNumber: yup.string(),
     profilePhoto: yup.mixed().required("Portrait required"),
   }),
   yup.object({
@@ -40,7 +40,7 @@ const AddAgent = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const { addToast } = useToast();
-  const { RolesPermessionData } = useGetRole();
+  const { allRoles, loading: rolesLoading, fetchAllRoles } = useGetRole(); // ✅ Use allRoles instead of RolesPermessionData
   const fileInputRef = useRef(null);
   
   const [currentStep, setCurrentStep] = useState(0);
@@ -48,13 +48,18 @@ const AddAgent = () => {
   const [preview, setPreview] = useState(null);
   const [selectedLangs, setSelectedLangs] = useState(["English"]);
 
+  // Fetch roles on component mount
+  useEffect(() => {
+    fetchAllRoles();
+  }, [fetchAllRoles]);
+
   const { register, handleSubmit, trigger, setValue, formState: { errors }, reset } = useForm({
     resolver: yupResolver(stepSchemas[currentStep]),
     mode: "onTouched",
     defaultValues: { languages: ["English"], gender: "" }
   });
 
-  const brandColor = "#f59e0b"; // Amber color
+  const brandColor = "#f59e0b";
   const brandDark = "#d97706";
 
   const toggleLanguage = (lang) => {
@@ -229,7 +234,7 @@ const AddAgent = () => {
                       <ErrorMsg error={errors.nationality} />
                     </div>
                     
-                    {/* Gender Dropdown - NEW */}
+                    {/* Gender Dropdown */}
                     <div>
                       <Label label="Gender" icon={<Users size={12} />} brandColor={brandColor} />
                       <select {...register("gender")} className={InputClass(isDark, brandColor)}>
@@ -297,7 +302,16 @@ const AddAgent = () => {
                       <Label label="Designation" icon={<Briefcase size={12} />} brandColor={brandColor} />
                       <select {...register("role")} className={InputClass(isDark, brandColor)}>
                         <option value="">Select Role</option>
-                        {RolesPermessionData?.map(r => <option key={r._id} value={r.roleName}>{r.roleName}</option>)}
+                        {/* ✅ Use allRoles instead of RolesPermessionData */}
+                        {rolesLoading ? (
+                          <option disabled>Loading roles...</option>
+                        ) : (
+                          allRoles?.map(role => (
+                            <option key={role._id} value={role.roleName}>
+                              {role.roleName}
+                            </option>
+                          ))
+                        )}
                       </select>
                       <ErrorMsg error={errors.role} />
                     </div>

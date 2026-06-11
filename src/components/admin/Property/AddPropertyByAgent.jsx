@@ -22,17 +22,16 @@ import {
   CheckCircle2,
   Hash,
   DollarSign,
-  File,
   FileCheck,
-  FileWarning,
   UserCheck,
   Building,
   QrCode,
-  Info,
   ChevronRight,
   ChevronLeft,
   Save,
-  Calendar
+  Calendar,
+  Clock,
+  AlertCircle
 } from "lucide-react";
 import { useToast } from "../../../model/SuccessToasNotification";
 import { AMENITIES } from "../../../helpers/AddPropertyHelpers";
@@ -58,6 +57,9 @@ const AddPropertyByAgent = () => {
   const [dldQRFile, setDldQRFile] = useState(null);
   const [dldQRPreview, setDldQRPreview] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // Check if user is freelancer
+  const isFreelancer = user?.role?.toLowerCase() === 'freelancer';
 
   const filteredAmenities = AMENITIES.filter((item) =>
     item.toLowerCase().includes(searchAmenity.toLowerCase())
@@ -89,8 +91,6 @@ const AddPropertyByAgent = () => {
       currency: "AED",
       amenities: [],
       propertyAge: "Brand New",
-      status: "Active",
-      publishingStatus: "Published",
       trakheesiNumber: "",
       refrenceNo: generateReferenceNumber(),
       locationName: "",
@@ -104,7 +104,6 @@ const AddPropertyByAgent = () => {
       coordinates: {},
       nearByLocations: [{ locationName: "", distance: "", transportType: "Drive" }],
       nearByProjects: [],
-      // Off-Plan specific fields
       offPlanType: "Direct",
       deliveryDate: "",
       completionPercentage: "",
@@ -115,15 +114,15 @@ const AddPropertyByAgent = () => {
       offPlanSecondaryPermitNumber: "",
       originalOffPlanPermitNumber: "",
       assignmentContractNumber: "",
-      // Owner documents fields
       ownerIdNumber: "",
       ownerEmiratesId: "",
       ownerPassportNumber: "",
       ownerVisaCopy: "",
-      // DLD QR Code fields
       dldQRCode: "",
       dldExpiryDate: "",
-       zoneName:"",
+      listingStartDate: new Date().toISOString().split('T')[0],
+      listingEndDate: "",
+      zoneName: "",
     },
   });
 
@@ -132,7 +131,6 @@ const AddPropertyByAgent = () => {
     name: "nearByLocations",
   });
 
-  // --- Watchers ---
   const watchCategory = watch("category");
   const watchOffering = watch("offeringType");
   const watchPermit = watch("permitType");
@@ -140,7 +138,6 @@ const AddPropertyByAgent = () => {
   const isOffPlan = watchCategory === "Off-Plan";
   const watchOffPlanType = watch("offPlanType");
 
-  // --- Dynamic Enums ---
   const resTypes = [
     "Apartments", "Bulk Units", "Bungalow", "Compound", "Duplex",
     "Hotel Apartment", "Penthouse", "Townhouse", "Villa", "Whole Building"
@@ -158,17 +155,15 @@ const AddPropertyByAgent = () => {
     return resTypes;
   };
 
-  // Form steps configuration
   const formSteps = [
     { id: "basic", label: "Basic Info", icon: <Home size={16} /> },
-      { id: "listing", label: "Listing Period", icon: <Calendar size={16} /> },
-
+    { id: "listing", label: "Listing Period", icon: <Calendar size={16} /> },
     { id: "compliance", label: "Compliance", icon: <ShieldCheck size={16} /> },
     { id: "specs", label: "Specifications", icon: <Layers size={16} /> },
     { id: "location", label: "Location", icon: <MapPin size={16} /> },
     { id: "offplan", label: "Off-Plan", icon: <Building size={16} />, condition: isOffPlan },
     { id: "documents", label: "Documents", icon: <FileText size={16} /> },
-    { id: "dld", label: "DLD QR", icon: <QrCode size={16} />, condition: isOffPlan },
+    { id: "dld", label: "DLD QR", icon: <QrCode size={16} /> },
     { id: "media", label: "Media", icon: <Camera size={16} /> },
     { id: "amenities", label: "Amenities", icon: <Sparkles size={16} /> },
     { id: "pricing", label: "Pricing", icon: <DollarSign size={16} /> },
@@ -197,7 +192,6 @@ const AddPropertyByAgent = () => {
     }
   };
 
-  // --- Data Fetching ---
   useEffect(() => {
     const fetchDevelopers = async () => {
       try {
@@ -213,11 +207,9 @@ const AddPropertyByAgent = () => {
     fetchDevelopers();
   }, []);
 
-  // Handle location selection
   const handleLocationSelect = (location) => {
     if (location) {
       setSelectedLocationData(location);
-      
       setValue("locationId", location.id || location.location_id);
       setValue("locationPath", location.path || `${location.id}`);
       setValue("locationName", location.name);
@@ -252,7 +244,6 @@ const AddPropertyByAgent = () => {
     }
   };
 
-  // Handle DLD QR Code upload
   const handleDldQRUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -272,7 +263,6 @@ const AddPropertyByAgent = () => {
     setValue("dldQRCode", "");
   };
 
-  // Handle document uploads
   const handleOffPlanDocumentUpload = (e) => {
     const selectedFiles = Array.from(e.target.files);
     setOffPlanDocuments(prev => [...prev, ...selectedFiles]);
@@ -319,6 +309,9 @@ const AddPropertyByAgent = () => {
     try {
       const formData = new FormData();
       
+      // ✅ Approval logic based on user role
+      const requiresApproval = isFreelancer;
+      
       const payload = {
         propertyTitleEn: data.propertyTitleEn,
         propertyTitleAr: data.propertyTitleAr || "",
@@ -361,10 +354,12 @@ const AddPropertyByAgent = () => {
         videos: data.videos || "",
         virtualTour360: data.virtualTour360 || "",
         videoTourLink: data.videoTourLink || "",
-        status: data.status || "Active",
-        publishingStatus: data.publishingStatus || "Published",
         refrenceNo: data.refrenceNo,
-        userType: "agent",
+        userType: isFreelancer ? 'freelancer' : 'agent',
+        // Approval workflow fields
+        requiresApproval: requiresApproval,
+        isApproved: !requiresApproval,
+        submittedAt: new Date().toISOString(),
         // Off-Plan fields
         offPlanType: isOffPlan ? data.offPlanType : undefined,
         deliveryDate: data.deliveryDate || "",
@@ -376,16 +371,14 @@ const AddPropertyByAgent = () => {
         offPlanSecondaryPermitNumber: data.offPlanSecondaryPermitNumber || "",
         originalOffPlanPermitNumber: data.originalOffPlanPermitNumber || "",
         assignmentContractNumber: data.assignmentContractNumber || "",
-        // Owner document fields
         ownerIdNumber: data.ownerIdNumber || "",
         ownerEmiratesId: data.ownerEmiratesId || "",
         ownerPassportNumber: data.ownerPassportNumber || "",
         ownerVisaCopy: data.ownerVisaCopy || "",
-        // DLD QR fields
         dldExpiryDate: data.dldExpiryDate || "",
-         listingStartDate: data.listingStartDate || "",
-         listingEndDate: data.listingEndDate || "",
-         zoneName: data.zoneName || "",
+        listingStartDate: data.listingStartDate || new Date().toISOString().split('T')[0],
+        listingEndDate: data.listingEndDate || "",
+        zoneName: data.zoneName || "",
       };
       
       Object.keys(payload).forEach((key) => {
@@ -409,7 +402,11 @@ const AddPropertyByAgent = () => {
       const res = await http.post("/addproperty", formData, { withCredentials: true });
       
       if (res.data.success) {
-        addToast("Property Added Successfully", "success");
+        const successMessage = requiresApproval 
+          ? "Property submitted for admin approval. You will be notified once approved."
+          : "Property Added Successfully";
+        addToast(successMessage, "success");
+        
         reset();
         setFiles([]);
         setOffPlanDocuments([]);
@@ -437,8 +434,20 @@ const AddPropertyByAgent = () => {
   return (
     <div className={`min-h-screen ${isDark ? "bg-gradient-to-br from-[#0F1219] via-[#0F1219] to-[#1a1f2e]" : "bg-gradient-to-br from-[#F8FAFC] via-[#F8FAFC] to-[#f1f5f9]"}`}>
       
+      {/* Freelancer Warning Banner */}
+      {isFreelancer && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40 w-auto max-w-2xl">
+          <div className="px-6 py-3 rounded-full bg-amber-500/10 border border-amber-500/20 backdrop-blur-md flex items-center gap-3 shadow-lg">
+            <AlertCircle size={16} className="text-amber-500" />
+            <p className="text-[11px] font-medium text-amber-500">
+              ⚡ Freelancer Mode: Your property will be submitted for admin approval before publishing.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <header className={`sticky top-0  border-b backdrop-blur-xl transition-all duration-300 ${isDark ? "bg-[#0F1219]/95 border-white/5" : "bg-white/95 border-slate-200"}`}>
+      <header className={`sticky top-0 border-b backdrop-blur-xl transition-all duration-300 z-30 ${isDark ? "bg-[#0F1219]/95 border-white/5" : "bg-white/95 border-slate-200"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-between py-3 md:py-0 md:h-20">
             <div className="flex items-center gap-3 group">
@@ -469,15 +478,6 @@ const AddPropertyByAgent = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className={`hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider ${
-                watch("publishingStatus") === "Published" 
-                  ? "bg-green-500/10 text-green-500 border border-green-500/20" 
-                  : "bg-slate-500/10 text-slate-500 border border-slate-500/20"
-              }`}>
-                <div className={`w-1.5 h-1.5 rounded-full ${watch("publishingStatus") === "Published" ? "bg-green-500 animate-pulse" : "bg-slate-500"}`}></div>
-                {watch("publishingStatus") || "Draft"}
-              </div>
-
               <button
                 onClick={handleSubmit(onSubmit)}
                 disabled={isSubmitting}
@@ -576,20 +576,13 @@ const AddPropertyByAgent = () => {
               <SectionHeader icon={<Home />} title="Basic Information" currentStep={currentStep} stepIndex={0} />
               
               <div className="mb-6 grid grid-cols-1 lg:grid-cols-4 gap-4 items-end p-4 rounded-xl bg-gradient-to-br from-amber-500/[0.03] to-transparent border border-amber-500/10">
-                <div className="lg:col-span-3">
+                <div className="lg:col-span-4">
                   <label className={`${labelClass} flex items-center gap-1.5 mb-2`}>
                     <Hash size={14} className="text-amber-500" />
                     Reference Number {requiredStar}
                   </label>
-                  <input {...register("refrenceNo", { required: true })} className={`${inputClass} w-full font-mono tracking-wider`} />
+                  <input {...register("refrenceNo", { required: true })} className={`${inputClass} w-full font-mono tracking-wider`} readOnly />
                   {errors.refrenceNo && <p className="text-red-500 text-[9px] mt-1">Required</p>}
-                </div>
-                <div className="lg:col-span-1">
-                  <label className={`${labelClass} mb-2 block`}>Publishing Status</label>
-                  <select {...register("publishingStatus")} className={`${inputClass} w-full py-3 px-3 cursor-pointer`}>
-                    <option value="Published">Published</option>
-                    <option value="Unpublished">Unpublished</option>
-                  </select>
                 </div>
               </div>
               
@@ -637,84 +630,54 @@ const AddPropertyByAgent = () => {
                     </select>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* LISTING DATES SECTION */}
+            <div id="listing" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
+              <SectionHeader icon={<Calendar />} title="Listing Period" currentStep={currentStep} stepIndex={1} />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className={labelClass}>Status</label>
-                  <select {...register("status")} className={inputClass}>
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
+                  <label className={labelClass}>Listing Start Date</label>
+                  <input type="date" {...register("listingStartDate")} className={inputClass} />
+                  <p className="text-[8px] text-slate-400 mt-1">Date when the property becomes available</p>
+                </div>
+                <div>
+                  <label className={labelClass}>Listing End Date</label>
+                  <input type="date" {...register("listingEndDate")} className={inputClass} />
+                  <p className="text-[8px] text-slate-400 mt-1">Leave empty for no expiry</p>
+                </div>
+              </div>
+
+              <div className="mt-4 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-medium text-slate-500">Listing Status:</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    watch("listingEndDate") && new Date(watch("listingEndDate")) < new Date()
+                      ? "bg-red-500/20 text-red-500"
+                      : "bg-green-500/20 text-green-500"
+                  }`}>
+                    {watch("listingEndDate") && new Date(watch("listingEndDate")) < new Date() ? "Expired" : "Active"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-[8px] text-slate-400">Period:</span>
+                  <span className="text-[8px] font-mono">
+                    {watch("listingStartDate") 
+                      ? new Date(watch("listingStartDate")).toLocaleDateString() 
+                      : "Not set"} 
+                    {watch("listingEndDate") 
+                      ? ` → ${new Date(watch("listingEndDate")).toLocaleDateString()}` 
+                      : " → No expiry"}
+                  </span>
                 </div>
               </div>
             </div>
-            {/* LISTING DATES SECTION */}
-<div className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-  <SectionHeader icon={<Calendar />} title="Listing Period" currentStep={currentStep} stepIndex={4} />
-  
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-    {/* Listing Start Date */}
-    <div>
-      <label className={labelClass}>
-        <Calendar size={12} className="inline mr-1 text-amber-500" />
-        Listing Start Date
-      </label>
-      <input 
-        type="date" 
-        {...register("listingStartDate")} 
-        className={inputClass} 
-      />
-      <p className="text-[8px] text-slate-400 mt-1">
-        Date when the property becomes available for listing
-      </p>
-    </div>
-
-    {/* Listing End Date */}
-    <div>
-      <label className={labelClass}>
-        <Calendar size={12} className="inline mr-1 text-amber-500" />
-        Listing End Date
-      </label>
-      <input 
-        type="date" 
-        {...register("listingEndDate")} 
-        className={inputClass} 
-      />
-      <p className="text-[8px] text-slate-400 mt-1">
-        Leave empty for no expiry date
-      </p>
-    </div>
-  </div>
-
-  {/* Listing Status Preview */}
-  <div className="mt-4 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
-    <div className="flex items-center justify-between">
-      <span className="text-[9px] font-medium text-slate-500">Listing Status:</span>
-      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-        watch("listingEndDate") && new Date(watch("listingEndDate")) < new Date()
-          ? "bg-red-500/20 text-red-500"
-          : "bg-green-500/20 text-green-500"
-      }`}>
-        {watch("listingEndDate") && new Date(watch("listingEndDate")) < new Date()
-          ? "Expired"
-          : "Active"}
-      </span>
-    </div>
-    <div className="flex items-center justify-between mt-2">
-      <span className="text-[8px] text-slate-400">Listing Period:</span>
-      <span className="text-[8px] font-mono">
-        {watch("listingStartDate") 
-          ? new Date(watch("listingStartDate")).toLocaleDateString() 
-          : "Start date not set"} 
-        {watch("listingEndDate") 
-          ? ` → ${new Date(watch("listingEndDate")).toLocaleDateString()}` 
-          : " → No expiry"}
-      </span>
-    </div>
-  </div>
-</div>
 
             {/* SECTION 2: COMPLIANCE */}
             <div id="compliance" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<ShieldCheck />} title="License & Compliance" currentStep={currentStep} stepIndex={1} />
+              <SectionHeader icon={<ShieldCheck />} title="License & Compliance" currentStep={currentStep} stepIndex={2} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className={labelClass}>Permit Authority {requiredStar}</label>
@@ -728,7 +691,7 @@ const AddPropertyByAgent = () => {
                 </div>
                 {watchPermit === "RERA" && (
                   <div>
-                    <label className={labelClass}>PERMIT Number {requiredStar}</label>
+                    <label className={labelClass}>PERMIT Number</label>
                     <input {...register("trakheesiNumber")} className={inputClass} />
                   </div>
                 )}
@@ -750,7 +713,7 @@ const AddPropertyByAgent = () => {
 
             {/* SECTION 3: SPECIFICATIONS */}
             <div id="specs" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<Layers />} title="Physical Specifications" currentStep={currentStep} stepIndex={2} />
+              <SectionHeader icon={<Layers />} title="Physical Specifications" currentStep={currentStep} stepIndex={3} />
               <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
                 <div>
                   <label className={labelClass}>Bedrooms</label>
@@ -813,17 +776,7 @@ const AddPropertyByAgent = () => {
 
             {/* SECTION 4: LOCATION */}
             <div id="location" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<MapPin />} title="Location" currentStep={currentStep} stepIndex={3} />
-              
-              <input type="hidden" {...register("locationId")} />
-              <input type="hidden" {...register("locationPath")} />
-              <input type="hidden" {...register("locationName")} />
-              <input type="hidden" {...register("locationAddress")} />
-              <input type="hidden" {...register("locationPlaceId")} />
-              <input type="hidden" {...register("locationLat")} />
-              <input type="hidden" {...register("locationLng")} />
-              <input type="hidden" {...register("locationType")} />
-              <input type="hidden" {...register("coordinates")} />
+              <SectionHeader icon={<MapPin />} title="Location" currentStep={currentStep} stepIndex={4} />
               
               <LocationSearch 
                 onLocationSelect={handleLocationSelect}
@@ -872,138 +825,205 @@ const AddPropertyByAgent = () => {
               </div>
             </div>
 
-          {/* SECTION 6: DOCUMENTS */}
-<div id="documents" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-  <SectionHeader icon={<FileText />} title="Documents" currentStep={currentStep} stepIndex={isOffPlan ? 5 : 4} />
-  
-  {/* Off-Plan Documents Section - Only for Direct Off-Plan */}
-  {isOffPlan && watchOffPlanType === "Direct" && (
-    <div className={`mb-6 p-5 rounded-xl ${isDark ? 'bg-purple-500/5 border border-purple-500/20' : 'bg-purple-50 border border-purple-200'}`}>
-      <div className="flex items-center gap-3 mb-3">
-        <FileCheck size={18} className="text-purple-500" />
-        <h3 className="text-sm font-bold">Off-Plan Documents (NOC & Permit)</h3>
-        <p className="text-[9px] text-slate-500">Original developer documents</p>
-      </div>
-      <div  
-        className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
-          offPlanDocuments.length > 0 ? "border-purple-400 bg-purple-50 dark:bg-purple-950" : "border-gray-300"
-        }`}
-        onClick={() => document.getElementById("offPlanDocsInput")?.click()}
-      >
-        <input id="offPlanDocsInput" type="file" multiple className="hidden" onChange={handleOffPlanDocumentUpload} />
-        <Upload size={28} className="mx-auto mb-1 text-gray-400" />
-        <p className="text-xs">Upload NOC, Permit, Escrow documents</p>
-      </div>
-      {offPlanDocuments.length > 0 && (
-        <div className="mt-3 space-y-1 max-h-32 overflow-y-auto">
-          {offPlanDocuments.map((doc, idx) => (
-            <div key={idx} className="flex justify-between items-center p-2 rounded bg-gray-100 dark:bg-gray-700">
-              <span className="text-xs truncate">{doc.name}</span>
-              <button onClick={() => removeOffPlanDocument(idx)} className="text-red-500"><X size={12} /></button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )}
+            {/* OFF-PLAN DETAILS SECTION */}
+            {isOffPlan && (
+              <div id="offplan" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
+                <SectionHeader icon={<Building />} title="Off-Plan Details" currentStep={currentStep} stepIndex={5} />
+                
+                <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20">
+                  <label className={`${labelClass} text-purple-500`}>Off-Plan Type {requiredStar}</label>
+                  <select {...register("offPlanType", { required: true })} className={inputClass}>
+                    <option value="Direct">Direct</option>
+                    <option value="Secondary">Secondary</option>
+                    <option value="Resale">Resale</option>
+                    <option value="Assignment">Assignment</option>
+                  </select>
+                </div>
 
-  {/* Owner Documents Section - Shows only for Off-Plan with Secondary/Resale/Assignment */}
-  {/* Does NOT show for Residential, Commercial, or Direct Off-Plan */}
-  {isOffPlan && (watchOffPlanType === "Secondary" || watchOffPlanType === "Resale" || watchOffPlanType === "Assignment") && (
-    <div className={`p-5 rounded-xl ${isDark ? 'bg-blue-500/5 border border-blue-500/20' : 'bg-blue-50 border border-blue-200'}`}>
-      <div className="flex items-center gap-3 mb-4">
-        <UserCheck size={18} className="text-blue-500" />
-        <div>
-          <h3 className="text-sm font-bold">Secondary Market Documents</h3>
-          <p className="text-[9px] text-slate-500">Assignment contract, secondary NOC, and owner identification</p>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div><label className={labelClass}>Owner ID Number</label><input {...register("ownerIdNumber")} className={inputClass} placeholder="e.g., 784-2024-1234567" /></div>
-        <div><label className={labelClass}>Emirates ID</label><input {...register("ownerEmiratesId")} className={inputClass} placeholder="e.g., 784-2024-1234567-1" /></div>
-        <div><label className={labelClass}>Passport Number</label><input {...register("ownerPassportNumber")} className={inputClass} placeholder="e.g., A12345678" /></div>
-        <div><label className={labelClass}>Visa Copy Number</label><input {...register("ownerVisaCopy")} className={inputClass} placeholder="e.g., 1234567890" /></div>
-      </div>
-      <div className="mt-4">
-        <div className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
-          ownerDocuments.length > 0 ? "border-blue-400 bg-blue-50 dark:bg-blue-950" : "border-gray-300"
-        }`} onClick={() => document.getElementById("ownerDocsInput")?.click()}>
-          <input id="ownerDocsInput" type="file" multiple className="hidden" onChange={handleOwnerDocumentUpload} />
-          <Upload size={28} className="mx-auto mb-1 text-gray-400" />
-          <p className="text-xs">Upload assignment deed, secondary NOC, and owner documents</p>
-          <p className="text-[9px] text-gray-500 mt-1">PDF, DOC, JPG, PNG (Max 10 files)</p>
-        </div>
-        {ownerDocuments.length > 0 && (
-          <div className="mt-3 space-y-1 max-h-32 overflow-y-auto">
-            {ownerDocuments.map((doc, idx) => (
-              <div key={idx} className="flex justify-between items-center p-2 rounded bg-gray-100 dark:bg-gray-700">
-                <span className="text-xs truncate">{doc.name}</span>
-                <button onClick={() => removeOwnerDocument(idx)} className="text-red-500"><X size={12} /></button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )}
-</div>
-               <div id="dld" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-            <SectionHeader icon={<QrCode />} title="DLD QR Code" currentStep={currentStep} stepIndex={4} />
-          
-            {/* DLD QR Code Section */}
-            <div className="mt-2 p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-green-500/20">
-                  <QrCode size={18} className="text-green-500" />
-                </div>
-                <div>
-                  <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>DLD Verified QR Code</h3>
-                  <p className="text-[9px] text-slate-500">Upload official Dubai Land Department QR code</p>
-                </div>
-              </div>
-              
-              {/* Only Expiry Date Field */}
-              <div>
-                <label className={labelClass}>DLD QR Expiry Date</label>
-                <input type="date" {...register("dldExpiryDate")} className={inputClass} />
-              </div>
-               <div>
-                    <label className={labelClass}>Zone Name</label>
-                    <input type="text" {...register("zoneName")} className={inputClass} />
-                  </div>
-              
-              {/* QR Code Upload */}
-              <div className="mt-4">
-                <div
-                  className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
-                    dldQRPreview ? "border-green-400 bg-green-50 dark:bg-green-950" : "border-gray-300 dark:border-gray-600 hover:border-green-400"
-                  }`}
-                  onClick={() => document.getElementById("dldQRInput")?.click()}
-                >
-                  <input id="dldQRInput" type="file" accept="image/*" className="hidden" onChange={handleDldQRUpload} />
-                  {dldQRPreview ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <img src={dldQRPreview} alt="DLD QR" className="w-20 h-20 object-contain" />
-                      <p className="text-xs font-medium text-green-600">✓ QR Code uploaded</p>
-                      <button type="button" onClick={(e) => { e.stopPropagation(); removeDldQR(); }} className="text-xs text-red-500">Remove</button>
+                {watchOffPlanType === "Direct" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className={labelClass}>Off-Plan NOC Number</label>
+                      <input {...register("offPlanNocNumber")} className={inputClass} placeholder="e.g., DLD-NOC-2024-00123" />
                     </div>
-                  ) : (
-                    <>
-                      <Upload size={28} className="mx-auto mb-2 text-gray-400" />
-                      <p className="text-xs font-medium">Click to upload DLD QR Code</p>
-                      <p className="text-[9px] text-gray-500 mt-1">PNG, JPG, JPEG (Max 2MB)</p>
-                    </>
+                    <div>
+                      <label className={labelClass}>Off-Plan Permit Number</label>
+                      <input {...register("offPlanPermitNumber")} className={inputClass} placeholder="e.g., RERA-OPP-2024-456" />
+                    </div>
+                  </div>
+                )}
+
+                {(watchOffPlanType === "Secondary" || watchOffPlanType === "Resale" || watchOffPlanType === "Assignment") && (
+                  <div className="space-y-5">
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Info size={14} className="text-amber-500" />
+                        <span className="text-xs font-bold text-amber-500">Original Developer Details</span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className={labelClass}>Original Off-Plan Permit Number</label>
+                          <input {...register("originalOffPlanPermitNumber")} className={inputClass} />
+                        </div>
+                        <div>
+                          <label className={labelClass}>Assignment Contract Number</label>
+                          <input {...register("assignmentContractNumber")} className={inputClass} />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div>
+                        <label className={labelClass}>Secondary NOC Number</label>
+                        <input {...register("offPlanSecondaryNocNumber")} className={inputClass} />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Secondary Permit Number</label>
+                        <input {...register("offPlanSecondaryPermitNumber")} className={inputClass} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-6 pt-6 border-t border-purple-500/20">
+                  <div>
+                    <label className={labelClass}>Delivery Date</label>
+                    <input type="date" {...register("deliveryDate")} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Completion %</label>
+                    <input type="number" {...register("completionPercentage")} className={inputClass} placeholder="65" step="5" />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Payment Plan</label>
+                    <select {...register("paymentPlan")} className={inputClass}>
+                      <option value="">Select Payment Plan</option>
+                      <option value="50/50">50/50 Post Handover</option>
+                      <option value="60/40">60/40 Post Handover</option>
+                      <option value="70/30">70/30 Post Handover</option>
+                      <option value="80/20">80/20 Post Handover</option>
+                      <option value="Flexible">Flexible</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* DOCUMENTS SECTION */}
+            <div id="documents" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
+              <SectionHeader icon={<FileText />} title="Documents" currentStep={currentStep} stepIndex={isOffPlan ? 6 : 5} />
+              
+              {isOffPlan && watchOffPlanType === "Direct" && (
+                <div className={`mb-6 p-5 rounded-xl ${isDark ? 'bg-purple-500/5 border border-purple-500/20' : 'bg-purple-50 border border-purple-200'}`}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <FileCheck size={18} className="text-purple-500" />
+                    <h3 className="text-sm font-bold">Off-Plan Documents (NOC & Permit)</h3>
+                  </div>
+                  <div className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
+                    offPlanDocuments.length > 0 ? "border-purple-400 bg-purple-50 dark:bg-purple-950" : "border-gray-300"
+                  }`} onClick={() => document.getElementById("offPlanDocsInput")?.click()}>
+                    <input id="offPlanDocsInput" type="file" multiple className="hidden" onChange={handleOffPlanDocumentUpload} />
+                    <Upload size={28} className="mx-auto mb-1 text-gray-400" />
+                    <p className="text-xs">Upload NOC, Permit, Escrow documents</p>
+                  </div>
+                  {offPlanDocuments.length > 0 && (
+                    <div className="mt-3 space-y-1 max-h-32 overflow-y-auto">
+                      {offPlanDocuments.map((doc, idx) => (
+                        <div key={idx} className="flex justify-between items-center p-2 rounded bg-gray-100 dark:bg-gray-700">
+                          <span className="text-xs truncate">{doc.name}</span>
+                          <button onClick={() => removeOffPlanDocument(idx)} className="text-red-500"><X size={12} /></button>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
+              )}
+
+              {(watchOffPlanType === "Secondary" || watchOffPlanType === "Resale" || watchOffPlanType === "Assignment") && (
+                <div className={`p-5 rounded-xl ${isDark ? 'bg-blue-500/5 border border-blue-500/20' : 'bg-blue-50 border border-blue-200'}`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <UserCheck size={18} className="text-blue-500" />
+                    <h3 className="text-sm font-bold">Secondary Market Documents</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label className={labelClass}>Owner ID Number</label><input {...register("ownerIdNumber")} className={inputClass} /></div>
+                    <div><label className={labelClass}>Emirates ID</label><input {...register("ownerEmiratesId")} className={inputClass} /></div>
+                    <div><label className={labelClass}>Passport Number</label><input {...register("ownerPassportNumber")} className={inputClass} /></div>
+                    <div><label className={labelClass}>Visa Copy Number</label><input {...register("ownerVisaCopy")} className={inputClass} /></div>
+                  </div>
+                  <div className="mt-4">
+                    <div className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
+                      ownerDocuments.length > 0 ? "border-blue-400 bg-blue-50 dark:bg-blue-950" : "border-gray-300"
+                    }`} onClick={() => document.getElementById("ownerDocsInput")?.click()}>
+                      <input id="ownerDocsInput" type="file" multiple className="hidden" onChange={handleOwnerDocumentUpload} />
+                      <Upload size={28} className="mx-auto mb-1 text-gray-400" />
+                      <p className="text-xs">Upload assignment deed, secondary NOC, and owner documents</p>
+                    </div>
+                    {ownerDocuments.length > 0 && (
+                      <div className="mt-3 space-y-1 max-h-32 overflow-y-auto">
+                        {ownerDocuments.map((doc, idx) => (
+                          <div key={idx} className="flex justify-between items-center p-2 rounded bg-gray-100 dark:bg-gray-700">
+                            <span className="text-xs truncate">{doc.name}</span>
+                            <button onClick={() => removeOwnerDocument(idx)} className="text-red-500"><X size={12} /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* DLD QR CODE SECTION */}
+            <div id="dld" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
+              <SectionHeader icon={<QrCode />} title="DLD QR Code" currentStep={currentStep} stepIndex={7} />
+            
+              <div className="mt-2 p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-lg bg-green-500/20">
+                    <QrCode size={18} className="text-green-500" />
+                  </div>
+                  <div>
+                    <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>DLD Verified QR Code</h3>
+                    <p className="text-[9px] text-slate-500">Upload official Dubai Land Department QR code</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className={labelClass}>DLD QR Expiry Date</label>
+                  <input type="date" {...register("dldExpiryDate")} className={inputClass} />
+                </div>
+                <div className="mt-4">
+                  <label className={labelClass}>Zone Name</label>
+                  <input type="text" {...register("zoneName")} className={inputClass} placeholder="e.g., Dubai Marina, Downtown Dubai" />
+                </div>
+                
+                <div className="mt-4">
+                  <div className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
+                    dldQRPreview ? "border-green-400 bg-green-50 dark:bg-green-950" : "border-gray-300 dark:border-gray-600 hover:border-green-400"
+                  }`} onClick={() => document.getElementById("dldQRInput")?.click()}>
+                    <input id="dldQRInput" type="file" accept="image/*" className="hidden" onChange={handleDldQRUpload} />
+                    {dldQRPreview ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <img src={dldQRPreview} alt="DLD QR" className="w-20 h-20 object-contain" />
+                        <p className="text-xs font-medium text-green-600">✓ QR Code uploaded</p>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); removeDldQR(); }} className="text-xs text-red-500">Remove</button>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload size={28} className="mx-auto mb-2 text-gray-400" />
+                        <p className="text-xs font-medium">Click to upload DLD QR Code</p>
+                        <p className="text-[9px] text-gray-500 mt-1">PNG, JPG, JPEG (Max 2MB)</p>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-                    
 
-            {/* SECTION 8: DESCRIPTION */}
+            {/* DESCRIPTION SECTION */}
             <div className={`p-6 md:p-8 rounded-2xl border ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
               <div className="flex justify-between items-center mb-5">
-                <SectionHeader icon={<FileText />} title="Description" currentStep={currentStep} stepIndex={isOffPlan ? 7 : 5} />
+                <SectionHeader icon={<FileText />} title="Description" currentStep={currentStep} stepIndex={isOffPlan ? 8 : 6} />
                 <div className="flex gap-1 p-1 rounded-lg bg-black/10 dark:bg-white/10">
                   {["en", "ar"].map((l) => (
                     <button key={l} type="button" onClick={() => setLangTab(l)} className={`px-3 py-1 rounded-md text-[9px] font-bold transition-all ${langTab === l ? "bg-amber-500 text-black" : "text-slate-500"}`}>
@@ -1019,9 +1039,9 @@ const AddPropertyByAgent = () => {
               </AnimatePresence>
             </div>
 
-            {/* SECTION 9: MEDIA */}
+            {/* MEDIA SECTION */}
             <div id="media" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<Camera />} title="Media" currentStep={currentStep} stepIndex={isOffPlan ? 8 : 6} />
+              <SectionHeader icon={<Camera />} title="Media" currentStep={currentStep} stepIndex={isOffPlan ? 9 : 7} />
               <div className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer hover:bg-amber-500/5 transition-all" onClick={() => document.getElementById("file-up")?.click()}>
                 <Upload className="mx-auto mb-2 text-amber-500" size={28} />
                 <p className="text-[10px] font-bold uppercase">Drop Images Here {requiredStar}</p>
@@ -1046,9 +1066,9 @@ const AddPropertyByAgent = () => {
               </div>
             </div>
 
-            {/* SECTION 10: AMENITIES */}
+            {/* AMENITIES SECTION */}
             <div id="amenities" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<Sparkles />} title="Amenities" currentStep={currentStep} stepIndex={isOffPlan ? 9 : 7} />
+              <SectionHeader icon={<Sparkles />} title="Amenities" currentStep={currentStep} stepIndex={isOffPlan ? 10 : 8} />
               <input type="text" placeholder="Search amenities..." value={searchAmenity} onChange={(e) => setSearchAmenity(e.target.value)} className={inputClass} />
               <div className="max-h-80 overflow-y-auto mt-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
@@ -1067,9 +1087,9 @@ const AddPropertyByAgent = () => {
               </div>
             </div>
 
-            {/* SECTION 11: PRICING */}
+            {/* PRICING SECTION */}
             <div id="pricing" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<Wallet />} title="Pricing" currentStep={currentStep} stepIndex={isOffPlan ? 10 : 8} />
+              <SectionHeader icon={<Wallet />} title="Pricing" currentStep={currentStep} stepIndex={isOffPlan ? 11 : 9} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className={labelClass}>Price {requiredStar}</label>

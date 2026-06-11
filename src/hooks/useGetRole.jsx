@@ -1,37 +1,52 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { http } from "../axios/axios";
 import useDebounce from './useDebounce';
 import { useToast } from "../model/SuccessToasNotification";
 
 const useGetRole = (page, limit, filters) => {
-  const [Roles, setRole] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [RolesPermessionData, setRolesPermissionData] = useState([]);
+  const [rolesPermissionData, setRolesPermissionData] = useState([]);
   const { addToast } = useToast();
-  const [permissions, setPermissions] = useState(new Map());
+  const [permissions, setPermissions] = useState({ permissions: [], roleName: null, roleId: null });
+  const [allRoles, setAllRoles] = useState([]); // For dropdown
 
   const debouncedFilters = useDebounce(filters, 200);
-  // create Role
-  const createRole = async (data) => {
+
+  // Fetch all roles (for dropdown/selection)
+  const fetchAllRoles = useCallback(async () => {
     try {
-      const res = await http.post("/createrolesroute", data, { withCredentials: true });
-
-
-      console.log(res.data, "this is success")
-      if (res.data.success === true) {
-
-        addToast(res.data.message || "Role created successfully", "success");
-        await fetchRole(); // ✅ works now
+      const response = await http.get("/all-roles", { 
+        withCredentials: true
+      });
+      if (response.data?.success === true) {
+        setAllRoles(response.data.data || []);
       }
     } catch (error) {
-      addToast(error.message || "Error creating role", "error");
+      console.error("Error fetching all roles:", error);
+    }
+  }, []);
+
+  // Create Role
+  const createRole = async (data) => {
+    try {
+      const res = await http.post("/create-role", data, { 
+        withCredentials: true
+      });
+      if (res.data.success === true) {
+        addToast(res.data.message || "Role created successfully", "success");
+        await fetchRoles();
+        await fetchAllRoles();
+      }
+    } catch (error) {
+      addToast(error.response?.data?.message || error.message || "Error creating role", "error");
     }
   };
 
-  // fetch Role
-  const fetchRole = async () => {
+  // Fetch Roles (with pagination)
+  const fetchRoles = useCallback(async () => {
     setLoading(true);
     try {
       const cleanedFilters = Object.fromEntries(
@@ -44,11 +59,11 @@ const useGetRole = (page, limit, filters) => {
         ...cleanedFilters,
       });
 
-      const response = await http.get(`/getrole?${query}`, {
-        withCredentials: true,
+      const response = await http.get(`/roles?${query}`, { 
+        withCredentials: true
       });
 
-      setRole(response.data.data || []);
+      setRoles(response.data.data || []);
       setPagination(response.data.pagination || {});
       setError(null);
     } catch (err) {
@@ -56,91 +71,95 @@ const useGetRole = (page, limit, filters) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchRole();
   }, [page, limit, debouncedFilters]);
 
+  useEffect(() => {
+    fetchRoles();
+    fetchAllRoles();
+  }, [fetchRoles, fetchAllRoles]);
 
-
-  const updateRole = async (id, roleName) => {
+  // Update Role
+  const updateRole = async (id, roleName, description) => {
     try {
-      const response = await http.put(`/updaterole/${id}`, { roleName }, {
-        withCredentials: true,
+      const response = await http.put(`/update-role/${id}`, { roleName, description }, {
+        withCredentials: true
       });
       if (response.data.success === true) {
         addToast("Role Updated Successfully", "success");
-        fetchRole()
+        await fetchRoles();
+        await fetchAllRoles();
       } else {
-        // Handle case where success is false or not provided
         addToast("Failed to update role", "error");
       }
     } catch (error) {
       console.error(error);
-      addToast("Error Updating Role", "error");
-    }
-  };
-  //  deleteRole
-  const deleteRole = async (id) => {
-    try {
-      const response = await http.delete(`/deleterole/${id}`, {
-        withCredentials: true,
-      });
-      if (response.data.success === true) {
-        await fetchRole(); // ✅ works now
-        addToast(response.data.message || "Role deleted successfully", "success");
-      }
-    } catch (err) {
-      addToast(err.message || "Error deleting role", "error");
+      addToast(error.response?.data?.message || "Error Updating Role", "error");
     }
   };
 
-  const fetchRolePermessionData = async () => {
+  // Delete Role
+  const deleteRole = async (id) => {
     try {
-      const res = await http.get("/getpermessionrole", {
-        withCredentials: true,
+      const response = await http.delete(`/delete-role/${id}`, {
+        withCredentials: true
+      });
+      if (response.data.success === true) {
+        await fetchRoles();
+        await fetchAllRoles();
+        addToast(response.data.message || "Role deleted successfully", "success");
+      }
+    } catch (err) {
+      addToast(err.response?.data?.message || err.message || "Error deleting role", "error");
+    }
+  };
+
+  // Fetch Role Permission Data (legacy)
+  const fetchRolePermissionData = useCallback(async () => {
+    try {
+      const res = await http.get("/get-permission-role", { 
+        withCredentials: true
       });
       if (res.data?.success === true) {
         setRolesPermissionData(res.data.data);
       }
     } catch (error) {
-      console.log("internal server error");
+      console.log("Internal server error", error);
     }
-  };
+  }, []);
 
+  // Create Permission
   const createPermission = async (roleId, permissionName) => {
     try {
       const payload = { roleId, permissionName };
-      const res = await http.post("/craeterolepermession", payload, {
-        withCredentials: true,
+      const res = await http.post("/create-role-permission", payload, {
+        withCredentials: true
       });
       if (res.data.success === true) {
-        addToast(res.data.message || "Role Permission created successfully", "success");
+        addToast(res.data.message || "Permission created successfully", "success");
         await fetchPermissions(roleId);
       }
     } catch (error) {
-      addToast(error.message || "Error creating permission", "error");
+      addToast(error.response?.data?.message || error.message || "Error creating permission", "error");
     }
   };
 
-  const fetchPermissions = async (roleId, roleName) => {
+  // Fetch Permissions by Role
+  const fetchPermissions = useCallback(async (roleId, roleName) => {
     try {
       const params = {};
       if (roleId) params.roleId = roleId;
       if (roleName) params.roleName = roleName;
 
-      const response = await http.get('/getrolepermession', {
+      const response = await http.get('/role-permissions', {
         params,
-        withCredentials: true,
+        withCredentials: true
       });
 
       if (response.data?.success === true) {
         const roleData = response.data.data?.[0] || {};
         const result = {
-          adminId: roleData.adminId || null,
-          roleName: roleData.roleName || null,
-          _id: roleData._id,
+          roleId: roleData._id || roleId,
+          roleName: roleData.roleName || roleName || null,
           permissions: (roleData.permissions || [])
             .map(perm => ({
               id: perm?._id,
@@ -148,49 +167,118 @@ const useGetRole = (page, limit, filters) => {
             }))
             .filter(perm => perm.id && perm.name)
         };
-
         setPermissions(result);
         return result;
       }
-
-      return { adminId: null, roleName: null, permissions: [] };
+      return { roleId: null, roleName: null, permissions: [] };
     } catch (error) {
       console.error("Error fetching permissions:", error);
-      return { adminId: null, roleName: null, permissions: [] };
+      return { roleId: null, roleName: null, permissions: [] };
     }
-  };
-
-  const deletePermission = async (id) => {
-    try {
-      const res = await http.delete(`/deleterolepermession/${id}`, {
-        withCredentials: true,
-      });
-      if (res.data.success === true) {
-        addToast(res.data.message || "Role Permission removed successfully", "success");
-      }
-    } catch (error) {
-      addToast(error.message || "Error deleting permission", "error");
-    }
-  };
-
-  useEffect(() => {
-    fetchRolePermessionData();
   }, []);
 
+  // Delete Permission
+  const deletePermission = async (id) => {
+    try {
+      const res = await http.delete(`/delete-role-permission/${id}`, {
+        withCredentials: true
+      });
+      if (res.data.success === true) {
+        addToast(res.data.message || "Permission removed successfully", "success");
+        // Refresh permissions for current role
+        if (permissions.roleId) {
+          await fetchPermissions(permissions.roleId);
+        }
+      }
+    } catch (error) {
+      addToast(error.response?.data?.message || error.message || "Error deleting permission", "error");
+    }
+  };
+
+  // Assign role to agent
+  const assignRoleToAgent = async (agentId, roleId) => {
+    try {
+      const response = await http.post("/assign-role-to-agent", { agentId, roleId }, {
+        withCredentials: true
+      });
+      if (response.data.success === true) {
+        addToast(response.data.message || "Role assigned successfully", "success");
+        return true;
+      }
+      return false;
+    } catch (error) {
+      addToast(error.response?.data?.message || error.message || "Error assigning role", "error");
+      return false;
+    }
+  };
+
+  // Get agents with their roles
+  const getAgentsWithRoles = useCallback(async () => {
+    try {
+      const response = await http.get("/agents-with-roles", { 
+        withCredentials: true 
+      });
+      if (response.data.success === true) {
+        return response.data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error("Error fetching agents with roles:", error);
+      return [];
+    }
+  }, []);
+
+  // Get current user's permissions (for sidebar)
+  const getUserPermissions = useCallback(async () => {
+    try {
+      const response = await http.get("/my-permissions", { 
+        withCredentials: true 
+      });
+      if (response.data.success === true) {
+        return {
+          permissions: response.data.permissions || [],
+          role: response.data.role,
+          isAdmin: response.data.isAdmin || false
+        };
+      }
+      return { permissions: [], role: null, isAdmin: false };
+    } catch (error) {
+      console.error("Error fetching user permissions:", error);
+      return { permissions: [], role: null, isAdmin: false };
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRolePermissionData();
+  }, [fetchRolePermissionData]);
+
   return {
-    deletePermission,
-    Roles,
-    createPermission,
+    // Role management
+    roles,
+    allRoles,
     pagination,
-    RolesPermessionData,
     loading,
     error,
     createRole,
+    updateRole,
     deleteRole,
-    fetchPermissions,
+    fetchRoles,
+    fetchAllRoles,
+    
+    // Permission management
     permissions,
+    rolesPermissionData,
+    createPermission,
+    deletePermission,
+    fetchPermissions,
     setPermissions,
-    updateRole
+    
+    // Agent role assignment
+    assignRoleToAgent,
+    getAgentsWithRoles,
+    
+    // User permissions
+    getUserPermissions,
   };
 };
 

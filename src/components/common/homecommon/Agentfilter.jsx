@@ -26,6 +26,7 @@ import AgentHero from "./AgentHero";
 import { filterFields } from "../../../helpers/FiltersHelpers";
 import ShareModal from "../../../model/ShareModal";
 import CurrencyDisplay from "./CurrencyDisplay";
+import WatermarkedImage from "../../../helpers/WatermarkedImage";
 
 const themeColors = {
   light: {
@@ -423,9 +424,8 @@ const Agentfilter = () => {
               const agentImage = property.agentId?.profilePhoto || property.name;
               const agentRating = property.agentId?.rating || 4.8;
               const locationQuery = property?.displayAddress;
-
-
               if (viewMode === "list") {
+                
                 return (
                   <div
                     key={property._id}
@@ -433,11 +433,13 @@ const Agentfilter = () => {
                     className={`flex flex-col md:flex-row gap-4 p-4 rounded-2xl ${colors.card} ${colors.shadow} border ${colors.border} cursor-pointer hover:shadow-lg transition-all`}
                   >
                     <div className="md:w-48 h-32 rounded-xl overflow-hidden shrink-0">
-                      <img
+                      <WatermarkedImage
                         src={property.image?.[0] || "https://images.pexels.com/photos/2587054/pexels-photo-2587054.jpeg"}
                         alt={propertyTitle}
                         className="w-full h-full object-cover"
                       />
+
+
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between flex-wrap gap-2 mb-2">

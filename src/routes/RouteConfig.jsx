@@ -40,7 +40,7 @@ import PaymentConfirmationForm from "../components/agent/Booking/PaymentConfirma
 import PropertyByAgent from "../components/agent/property/PropertyByAgent";
 import BookingUpdateForm from "../components/agent/Booking/BookingUpdateForm";
 import PropertyRegistrationForm from "../components/ShellProperty/PropertyRegistrationForm";
-import GetShellPropertyRequest from "../components/ShellProperty/GetShellPropertyRequest";
+import GetFreelancerProperties from "../components/ShellProperty/GetShellPropertyRequest";
 import ViewSherBooking from "../components/agent/Booking/ViewShereBooking";
 import ViewAllTransationData from "../components/admin/Transation/ViewAllTransationData";
 import LatestAgentBookingDetails from "../components/agent/Booking/LatestAgentBookingDetails";
@@ -113,7 +113,7 @@ export const AdminRoutes = () => {
                 <Route path="/updatedeveloper/:id" element={<AddDeveloperForm />} />
                
                 <Route path="/bookings" element={<CreateBooking />} />
-                <Route path="/viewpropertyrequest" element={<GetShellPropertyRequest />} />
+                <Route path="/viewpropertyrequest" element={<GetFreelancerProperties />} />
                 <Route path="/confirmBooking" element={<PaymentConfirmationForm />} />
                 <Route path="/viewsherebooking" element={<ViewSherBooking />} />
                 <Route path="/getresquset" element={<RequestTable />} />

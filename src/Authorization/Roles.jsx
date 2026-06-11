@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Pencil, Trash2, Search, Filter, ChevronLeft, ChevronRight, 
-  ShieldCheck, Plus, X, AlertCircle 
+  ShieldCheck, Plus, X, AlertCircle, RefreshCw
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import useGetRole from '../hooks/useGetRole';
@@ -27,13 +27,36 @@ const Roles = () => {
 
   // Custom hook
   const limit = 5;
-  const { Roles, loading, error, createRole, deleteRole, updateRole, pagination } = 
-    useGetRole(currentPage, limit, filters);
+  const { 
+    roles,           // Paginated roles for table
+    allRoles,        // All roles for dropdown (if needed)
+    loading, 
+    error, 
+    createRole, 
+    deleteRole, 
+    updateRole, 
+    pagination,
+    fetchRoles,      // Manual fetch function
+    fetchAllRoles    // Fetch all roles
+  } = useGetRole(currentPage, limit, filters);
 
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm();
 
   const LoadingModel = useLoading({ type: "list", count: 3, showIcon: true });
-  const brandColor = "#f59e0b"; // amber-500
+  const brandColor = "#f59e0b";
+
+  // Debug: Log what data we have
+  useEffect(() => {
+    console.log("🔍 Roles component - roles:", roles);
+    console.log("🔍 Roles component - allRoles:", allRoles);
+    console.log("🔍 Roles component - pagination:", pagination);
+    console.log("🔍 Roles component - loading:", loading);
+    console.log("🔍 Roles component - error:", error);
+  }, [roles, allRoles, pagination, loading, error]);
+
+  // Safe access to pagination values
+  const totalItems = pagination?.totalItems || 0;
+  const totalPages = pagination?.totalPages || 1;
 
   // Debounced search – updates filters only after typing stops
   useEffect(() => {
@@ -72,7 +95,7 @@ const Roles = () => {
 
   const handleUpdate = (data) => {
     if (roleToUpdate) {
-      updateRole(roleToUpdate._id, data);
+      updateRole(roleToUpdate._id, data.roleName);
       handleCloseUpdateModal();
     }
   };
@@ -87,6 +110,11 @@ const Roles = () => {
     setSearchInput('');
     setFilters({ roleName: '' });
     setCurrentPage(1);
+  };
+
+  const refreshData = () => {
+    fetchRoles();
+    fetchAllRoles();
   };
 
   const themeStyles = {
@@ -135,15 +163,24 @@ const Roles = () => {
               Access <span style={{ color: brandColor }}>Privileges</span>
             </h1>
             <p className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${currentTheme.textSecondary}`}>
-              {pagination?.totalItems || 0} Roles Defined • Homoget Registry
+              {totalItems} Roles Defined • Homoget Registry
             </p>
           </div>
-          <button
-            onClick={handleOpenModal}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-md ${currentTheme.buttonPrimary}`}
-          >
-            <Plus size={14} /> Add Role
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={refreshData}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-md ${currentTheme.buttonSecondary}`}
+              title="Refresh"
+            >
+              <RefreshCw size={14} /> Refresh
+            </button>
+            <button
+              onClick={handleOpenModal}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-md ${currentTheme.buttonPrimary}`}
+            >
+              <Plus size={14} /> Add Role
+            </button>
+          </div>
         </div>
 
         {/* Card */}
@@ -205,11 +242,17 @@ const Roles = () => {
             <div className="p-12"><LoadingModel loading={true} /></div>
           ) : error ? (
             <div className="p-12 text-center">
-              <EmptyStateModel title="Error" message="Could not load roles. Please try again later." />
+              <EmptyStateModel 
+                title="Error" 
+                message={error || "Could not load roles. Please try again later."} 
+              />
             </div>
-          ) : Roles.length === 0 ? (
+          ) : !roles || roles.length === 0 ? (
             <div className="p-12">
-              <EmptyStateModel title="No roles found" message="Try a different search term or create a new role." />
+              <EmptyStateModel 
+                title="No roles found" 
+                message={searchInput ? "No roles match your search. Try a different term." : "Create your first role to get started."} 
+              />
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -218,11 +261,12 @@ const Roles = () => {
                   <tr className={`text-[9px] font-bold uppercase tracking-wider border-b ${currentTheme.tableHeader} ${currentTheme.textSecondary}`}>
                     <th className="px-6 py-4">Role ID</th>
                     <th className="px-6 py-4">Role Name</th>
+                    <th className="px-6 py-4">Description</th>
                     <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className={`divide-y ${currentTheme.divider}`}>
-                  {Roles.map((role) => (
+                  {roles.map((role) => (
                     <tr key={role._id} className={`transition-colors ${currentTheme.rowHover}`}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
@@ -230,13 +274,18 @@ const Roles = () => {
                             <ShieldCheck size={14} className="text-amber-500" />
                           </div>
                           <span className={`text-[11px] font-mono ${currentTheme.textTertiary}`}>
-                            {role._id.slice(-8).toUpperCase()}
+                            {role._id?.slice(-8).toUpperCase() || 'N/A'}
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-block px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${isDark ? 'bg-white/5 text-amber-400' : 'bg-amber-50 text-amber-600'}`}>
                           {role.roleName}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`text-[10px] ${currentTheme.textTertiary}`}>
+                          {role.description || '—'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -265,10 +314,10 @@ const Roles = () => {
           )}
 
           {/* Pagination */}
-          {pagination && pagination.totalPages > 1 && (
+          {!loading && totalPages > 1 && (
             <div className={`px-6 py-4 border-t flex flex-col sm:flex-row justify-between items-center gap-4 ${currentTheme.border} ${currentTheme.textSecondary}`}>
               <span className="text-[9px] font-medium">
-                Showing {((currentPage - 1) * limit) + 1} – {Math.min(currentPage * limit, pagination.totalItems)} of {pagination.totalItems} entries
+                Showing {((currentPage - 1) * limit) + 1} – {Math.min(currentPage * limit, totalItems)} of {totalItems} entries
               </span>
               <div className="flex gap-2">
                 <button
@@ -279,11 +328,11 @@ const Roles = () => {
                   <ChevronLeft size={14} />
                 </button>
                 <div className="flex gap-1">
-                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     let pageNum;
-                    if (pagination.totalPages <= 5) pageNum = i + 1;
+                    if (totalPages <= 5) pageNum = i + 1;
                     else if (currentPage <= 3) pageNum = i + 1;
-                    else if (currentPage >= pagination.totalPages - 2) pageNum = pagination.totalPages - 4 + i;
+                    else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
                     else pageNum = currentPage - 2 + i;
                     return (
                       <button
@@ -301,8 +350,8 @@ const Roles = () => {
                   })}
                 </div>
                 <button
-                  onClick={() => setCurrentPage(p => Math.min(p + 1, pagination.totalPages))}
-                  disabled={currentPage === pagination.totalPages}
+                  onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                  disabled={currentPage === totalPages}
                   className={`p-2 rounded-lg border transition-all disabled:opacity-30 ${currentTheme.buttonSecondary}`}
                 >
                   <ChevronRight size={14} />
@@ -352,6 +401,17 @@ const Roles = () => {
                       </p>
                     )}
                   </div>
+                  <div>
+                    <label className={`text-[9px] font-bold uppercase tracking-wider block mb-1.5 ${currentTheme.textSecondary}`}>
+                      Description (Optional)
+                    </label>
+                    <textarea
+                      {...register('description')}
+                      className={`w-full px-4 py-2.5 rounded-xl border outline-none focus:ring-1 focus:ring-amber-500 transition-all ${currentTheme.input}`}
+                      placeholder="Brief description of this role"
+                      rows={3}
+                    />
+                  </div>
                 </div>
                 <div className="p-6 border-t flex gap-3">
                   <button
@@ -376,5 +436,5 @@ const Roles = () => {
     </div>
   );
 };
-
+  
 export default Roles;
