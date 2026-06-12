@@ -81,6 +81,21 @@ const AgentSupport = () => {
   }, [agentList, searchQuery]);
 
   
+  // Add this helper function at the top of your component (after imports)
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return null;
+  if (imagePath.startsWith('http')) return imagePath;
+  
+  // Get base URL from environment or window location
+  const baseUrl = import.meta.env.VITE_APP_BASE_URL || 
+                  (typeof window !== 'undefined' ? window.location.origin : '');
+  
+  // Remove trailing slash if exists
+  const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+  const cleanPath = imagePath.replace(/^\//, '');
+  
+  return `${cleanBaseUrl}/${cleanPath}`;
+};
 
   // Handle click outside
   useEffect(() => {
@@ -136,11 +151,14 @@ const AgentSupport = () => {
         <div className="relative flex justify-between items-start mb-10">
           <div className="relative">
             <div className="absolute inset-0 bg-amber-500/20 blur-xl rounded-full" />
-            <img 
-              src={agent.profilePhotoUrl || agent.profilePhoto || `https://ui-avatars.com/api/?name=${agent.name}&background=C5A059&color=fff`} 
-              className="w-24 h-24 rounded-[2rem] object-cover relative z-10 border-2 border-amber-500/20"
-              alt={agent.name}
-            />
+         <img 
+  src={getImageUrl(agent.profilePhotoUrl || agent.profilePhoto)} 
+  className="w-24 h-24 rounded-[2rem] object-cover relative z-10 border-2 border-amber-500/20"
+  alt={agent.name}
+  onError={(e) => {
+    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(agent.name)}&background=C5A059&color=fff`;
+  }}
+/>
           </div>
           
           {/* Floating Contact Icons */}
