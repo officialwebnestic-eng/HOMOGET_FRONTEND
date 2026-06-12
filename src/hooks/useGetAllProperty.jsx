@@ -106,21 +106,21 @@ const useGetAllProperty = (page, limit, filters) => {
     }
   };
 
-  const getProperty = async () => {
-    try {
-      const response = await http.get("/getproperty");
-      if (response.data.success === true) {
-        setReviewsPropertyData(response.data.data);
-      }
-    } catch (error) {
-      console.error("getProperty error:", error);
-      throw error;
-    }
-  };
+  // const getProperty = async () => {
+  //   try {
+  //     const response = await http.get("/getproperty");
+  //     if (response.data.success === true) {
+  //       setReviewsPropertyData(response.data.data);
+  //     }
+  //   } catch (error) {
+  //     console.error("getProperty error:", error);
+  //     throw error;
+  //   }
+  // };
 
-  useEffect(() => {
-    getProperty();
-  }, []);
+  // useEffect(() => {
+  //   getProperty();
+  // }, []);
 
   const refetch = () => {
     fetchProperty();
@@ -132,7 +132,6 @@ const useGetAllProperty = (page, limit, filters) => {
     loading, 
     error, 
     deletePropertyById, 
-    reviewsPropertyData,
     refetch 
   };
 };
