@@ -717,9 +717,54 @@ const AddPropertyByAgent = () => {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
                 <div>
                   <label className={labelClass}>Bedrooms</label>
-                  <select {...register("bedroom")} className={inputClass}>
-                    {[...Array(21).keys()].map((i) => (<option key={i} value={i}>{i === 0 ? "Studio" : i}</option>))}
-                  </select>
+                <select {...register("bedroom")} className={inputClass}>
+                       <option value="0">Studio</option>
+                       <option value="1">1</option>
+                       <option value="2">2</option>
+                       <option value="3">3</option>
+                       <option value="4">4</option>
+                       <option value="5">5</option>
+                       <option value="6">6</option>
+                       <option value="7">7</option>
+                       <option value="8">8</option>
+                       <option value="9">9</option>
+                       <option value="10">10+</option>
+                       {/* Maid Room Options */}
+                       <option value="1+Maid">1 + Maid</option>
+                       <option value="2+Maid">2 + Maid</option>
+                       <option value="3+Maid">3 + Maid</option>
+                       <option value="4+Maid">4 + Maid</option>
+                       <option value="5+Maid">5 + Maid</option>
+                       <option value="6+Maid">6 + Maid</option>
+                       <option value="7+Maid">7 + Maid</option>
+                       <option value="8+Maid">8 + Maid</option>
+                       <option value="9+Maid">9 + Maid</option>
+                       <option value="10+Maid">10 + Maid</option>
+                     
+                       {/* Study Room Options */}
+                       <option value="1+Study">1 + Study</option>
+                       <option value="2+Study">2 + Study</option>
+                       <option value="3+Study">3 + Study</option>
+                       <option value="4+Study">4 + Study</option>
+                       <option value="5+Study">5 + Study</option>
+                       <option value="6+Study">6 + Study</option>
+                       <option value="7+Maid">7 + Maid</option>
+                       <option value="8+Maid">8 + Maid</option>
+                       <option value="9+Maid">9 + Maid</option>
+                         <option value="10+Maid">10 + Maid</option>
+                       {/* Combined Options */}
+                        <option value="1+Maid+Study">1 + Maid + Study</option>
+                         <option value="2+Maid+Study">2 + Maid + Study</option>
+                   
+                       <option value="3+Maid+Study">3 + Maid + Study</option>
+                       <option value="4+Maid+Study">4 + Maid + Study</option>
+                       <option value="5+Maid+Study">5 + Maid + Study</option>
+                       <option value="6+Maid+Study">6 + Maid + Study</option>
+                         <option value="7+Maid+Study">7 + Maid + Study</option>
+                           <option value="8+Maid+Study">8 + Maid + Study</option>
+                             <option value="9+Maid+Study">9 + Maid + Study</option>
+                               <option value="10+Maid+Study">10 + Maid + Study</option>
+                     </select>
                 </div>
                 <div>
                   <label className={labelClass}>Bathrooms</label>

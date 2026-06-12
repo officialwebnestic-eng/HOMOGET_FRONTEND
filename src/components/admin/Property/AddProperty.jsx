@@ -759,67 +759,131 @@ const AddProperty = () => {
             </div>
 
             {/* SECTION 3: SPECIFICATIONS */}
-            <div id="specs" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<Layers />} title="Physical Specifications" currentStep={currentStep} stepIndex={2} />
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
-                <div>
-                  <label className={labelClass}>Bedrooms</label>
-                  <select {...register("bedroom")} className={inputClass}>
-                    {[...Array(21).keys()].map((i) => (<option key={i} value={i}>{i === 0 ? "Studio" : i}</option>))}
-                  </select>
-                </div>
-                <div>
-                  <label className={labelClass}>Bathrooms</label>
-                  <select {...register("bathroom")} className={inputClass}>
-                    {[...Array(11).keys()].map((i) => (<option key={i} value={i}>{i}</option>))}
-                  </select>
-                </div>
-                <div>
-                  <label className={labelClass}>Total Floors</label>
-                  <input type="number" {...register("totalFloor")} className={inputClass} />
-                </div>
-                <div>
-                  <label className={labelClass}>Area (sqft) {requiredStar}</label>
-                  <input type="number" {...register("squarefoot", { required: true })} className={inputClass} />
-                  {errors.squarefoot && <p className="text-red-500 text-[9px] mt-1">Required</p>}
-                </div>
-                <div>
-                  <label className={labelClass}>Unit/Suite No</label>
-                  <input {...register("unitNo")} className={inputClass} />
-                </div>
-                <div>
-                  <label className={labelClass}>Parking Slots</label>
-                  <input type="number" {...register("parkingSlots")} className={inputClass} defaultValue={0} />
-                </div>
-                <div>
-                  <label className={labelClass}>Furnishing Type</label>
-                  <select {...register("furnishingType")} className={inputClass}>
-                    <option value="Unfurnished">Unfurnished</option>
-                    <option value="Semi-Furnished">Semi-Furnished</option>
-                    <option value="Furnished">Furnished</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={labelClass}>Property Age</label>
-                  <select {...register("propertyAge")} className={inputClass}>
-                    <option value="Brand New">Brand New</option>
-                    <option value="1-2 Years">1-2 Years</option>
-                    <option value="3-5 Years">3-5 Years</option>
-                    <option value="5-10 Years">5-10 Years</option>
-                    <option value="10+ Years">10+ Years</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={labelClass}>Availability</label>
-                  <select {...register("availability")} className={inputClass}>
-                    <option value="Immediately">Immediately</option>
-                    <option value="Ready to Move">Ready to Move</option>
-                    <option value="Under Construction">Under Construction</option>
-                    <option value="Coming Soon">Coming Soon</option>
-                  </select>
-                </div>
-              </div>
-            </div>
+           {/* SECTION 3: SPECIFICATIONS */}
+<div id="specs" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
+  <SectionHeader icon={<Layers />} title="Physical Specifications" currentStep={currentStep} stepIndex={2} />
+  <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+    
+    {/* Bedrooms - Updated with +Maid and +Study options */}
+    <div>
+      <label className={labelClass}>Bedrooms</label>
+      <select {...register("bedroom")} className={inputClass}>
+        <option value="0">Studio</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10+</option>
+        {/* Maid Room Options */}
+        <option value="1+Maid">1 + Maid</option>
+        <option value="2+Maid">2 + Maid</option>
+        <option value="3+Maid">3 + Maid</option>
+        <option value="4+Maid">4 + Maid</option>
+        <option value="5+Maid">5 + Maid</option>
+        <option value="6+Maid">6 + Maid</option>
+        <option value="7+Maid">7 + Maid</option>
+        <option value="8+Maid">8 + Maid</option>
+        <option value="9+Maid">9 + Maid</option>
+        <option value="10+Maid">10 + Maid</option>
+      
+        {/* Study Room Options */}
+        <option value="1+Study">1 + Study</option>
+        <option value="2+Study">2 + Study</option>
+        <option value="3+Study">3 + Study</option>
+        <option value="4+Study">4 + Study</option>
+        <option value="5+Study">5 + Study</option>
+        <option value="6+Study">6 + Study</option>
+        <option value="7+Maid">7 + Maid</option>
+        <option value="8+Maid">8 + Maid</option>
+        <option value="9+Maid">9 + Maid</option>
+          <option value="10+Maid">10 + Maid</option>
+        {/* Combined Options */}
+         <option value="1+Maid+Study">1 + Maid + Study</option>
+          <option value="2+Maid+Study">2 + Maid + Study</option>
+    
+        <option value="3+Maid+Study">3 + Maid + Study</option>
+        <option value="4+Maid+Study">4 + Maid + Study</option>
+        <option value="5+Maid+Study">5 + Maid + Study</option>
+        <option value="6+Maid+Study">6 + Maid + Study</option>
+          <option value="7+Maid+Study">7 + Maid + Study</option>
+            <option value="8+Maid+Study">8 + Maid + Study</option>
+              <option value="9+Maid+Study">9 + Maid + Study</option>
+                <option value="10+Maid+Study">10 + Maid + Study</option>
+      </select>
+    </div>
+    
+    {/* Bathrooms - Keep as is */}
+    <div>
+      <label className={labelClass}>Bathrooms</label>
+      <select {...register("bathroom")} className={inputClass}>
+        {[...Array(11).keys()].map((i) => (<option key={i} value={i}>{i}</option>))}
+      </select>
+    </div>
+    
+    {/* Total Floors */}
+    <div>
+      <label className={labelClass}>Total Floors</label>
+      <input type="number" {...register("totalFloor")} className={inputClass} />
+    </div>
+    
+    {/* Area */}
+    <div>
+      <label className={labelClass}>Area (sqft) {requiredStar}</label>
+      <input type="number" {...register("squarefoot", { required: true })} className={inputClass} />
+      {errors.squarefoot && <p className="text-red-500 text-[9px] mt-1">Required</p>}
+    </div>
+    
+    {/* Unit/Suite No */}
+    <div>
+      <label className={labelClass}>Unit/Suite No</label>
+      <input {...register("unitNo")} className={inputClass} />
+    </div>
+    
+    {/* Parking Slots */}
+    <div>
+      <label className={labelClass}>Parking Slots</label>
+      <input type="number" {...register("parkingSlots")} className={inputClass} defaultValue={0} />
+    </div>
+    
+    {/* Furnishing Type */}
+    <div>
+      <label className={labelClass}>Furnishing Type</label>
+      <select {...register("furnishingType")} className={inputClass}>
+        <option value="Unfurnished">Unfurnished</option>
+        <option value="Semi-Furnished">Semi-Furnished</option>
+        <option value="Furnished">Furnished</option>
+      </select>
+    </div>
+    
+    {/* Property Age */}
+    <div>
+      <label className={labelClass}>Property Age</label>
+      <select {...register("propertyAge")} className={inputClass}>
+        <option value="Brand New">Brand New</option>
+        <option value="1-2 Years">1-2 Years</option>
+        <option value="3-5 Years">3-5 Years</option>
+        <option value="5-10 Years">5-10 Years</option>
+        <option value="10+ Years">10+ Years</option>
+      </select>
+    </div>
+    
+    {/* Availability */}
+    <div>
+      <label className={labelClass}>Availability</label>
+      <select {...register("availability")} className={inputClass}>
+        <option value="Immediately">Immediately</option>
+        <option value="Ready to Move">Ready to Move</option>
+        <option value="Under Construction">Under Construction</option>
+        <option value="Coming Soon">Coming Soon</option>
+      </select>
+    </div>
+  </div>
+</div>
 
             {/* SECTION 4: LOCATION */}
             <div id="location" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
