@@ -85,7 +85,7 @@ const AgentSupport = () => {
   if (imagePath.startsWith('http')) return imagePath;
   
   const isProduction = import.meta.env.VITE_APP_ENV === 'production';
-  const baseUrl = isProduction ? 'https://homoget.ae' : 'http://localhost:3000';
+  const baseUrl = isProduction ? 'https://homoget.ae/' : 'http://localhost:3000';
   
   const cleanPath = imagePath.replace(/^\//, '');
   return `${baseUrl}/${cleanPath}`;

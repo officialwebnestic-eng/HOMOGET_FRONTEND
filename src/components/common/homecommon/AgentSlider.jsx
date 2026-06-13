@@ -267,7 +267,7 @@ const AgentSlider = () => {
                     <div className="flex items-start justify-between mb-8">
                       <div className="relative">
                         <div className="absolute inset-0 bg-amber-500 rounded-2xl rotate-6 group-hover:rotate-12 transition-transform" />
-                        <img src={agent.profilePhotoUrl || agent.profilePhoto || getAvatarFallback(agent.name)} className="relative w-24 h-24 object-cover rounded-2xl border-2 border-white dark:border-slate-900 shadow-xl" alt={agent.name} />
+                        <img src={agent.profilePhoto || agent.profilePhoto || getAvatarFallback(agent.name)} className="relative w-24 h-24 object-cover rounded-2xl border-2 border-white dark:border-slate-900 shadow-xl" alt={agent.name} />
                       </div>
                     </div>
 
