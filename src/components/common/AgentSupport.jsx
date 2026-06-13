@@ -79,18 +79,8 @@ const AgentSupport = () => {
     });
   }, [agentList, searchQuery]);
 
-  // utils/imageUtils.js
- const getImageUrl = (imagePath) => {
-  if (!imagePath) return null;
-  if (imagePath.startsWith('http')) return imagePath;
   
-  const isProduction = import.meta.env.VITE_APP_ENV === 'production';
-  const baseUrl = isProduction ? 'https://homoget.ae/' : 'http://localhost:3000';
-  
-  const cleanPath = imagePath.replace(/^\//, '');
-  return `${baseUrl}/${cleanPath}`;
-};
-
+ 
   // Handle click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -132,7 +122,13 @@ const AgentSupport = () => {
     }
   };
 
-  // Memoize agent card render to prevent unnecessary re-renders
+
+const getAvatarFallback = (name) => {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Agent')}&background=C5A059&color=fff&bold=true`;
+};
+
+// Fix the base URL construction - remove the incorrect template literal
+const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000/";  // Memoize agent card render to prevent unnecessary re-renders
   const renderAgentCard = useCallback((agent) => {
     const cleanPhone = agent.phone?.replace(/\s+/g, '') || "";
     
@@ -146,8 +142,9 @@ const AgentSupport = () => {
           <div className="relative">
             <div className="absolute inset-0 bg-amber-500/20 blur-xl rounded-full" />
             <img 
-  src={getImageUrl(agent.profilePhotoUrl || agent.profilePhoto)} 
-              className="w-24 h-24 rounded-[2rem] object-cover relative z-10 border-2 border-amber-500/20"
+src={agent.profilePhoto 
+  ? `${baseUrl}/agents/${agent.profilePhoto}`
+  : getAvatarFallback(agent.name)}              className="w-24 h-24 rounded-[2rem] object-cover relative z-10 border-2 border-amber-500/20"
               alt={agent.name}
             />
           </div>
