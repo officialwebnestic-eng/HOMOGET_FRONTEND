@@ -2,12 +2,13 @@ import React, { useState, useContext, useEffect, useRef } from "react";
 import { ChevronDownIcon, Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useTheme } from "../../context/ThemeContext";
 import { useSidebar } from "../../context/SidebarContext";
-import { MoonIcon, SunIcon, LogOut, ChevronRight, Settings, Menu as MenuLucide, Home, TrendingUp, Building2, MapPin, User, Heart, DollarSign } from "lucide-react";
+import { MoonIcon, SunIcon, LogOut, ChevronRight, Settings, Menu as MenuLucide, Home, TrendingUp, Building2, MapPin, User, Heart, DollarSign, Calendar } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { navbarlogo } from "../../ExportImages";
 import { motion, AnimatePresence } from "framer-motion";
 import { sidebarLinks } from "../../helpers/NavbarHelpers";
+import ScheduleAppointmentModal from "../../model/ScheduleAppointmentModal";
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
@@ -18,6 +19,7 @@ export default function Navbar() {
   const [activeMegaMenu, setActiveMegaMenu] = useState(null);
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -57,7 +59,7 @@ export default function Navbar() {
     if (!isAuthenticated || user?.role === "user") {
       return ["Home", "About Us", "Buy", "Rent", "Off-Plan", "Resources", "Blogs", "Contact Us"];
     }
-     return  []
+     return []
   
   };
 
@@ -199,7 +201,7 @@ export default function Navbar() {
             {/* Left Section */}
             <div className="flex items-center gap-2 flex-shrink-0">
               {showSidebarToggle && (
-                <button onClick={toggleSidebar} className="p-1.5 rounded-lg  hover:bg-[#f59e0b]  text-black  transition-all">
+                <button onClick={toggleSidebar} className="p-1.5 rounded-lg hover:bg-[#f59e0b] text-black transition-all">
                   <MenuLucide size={16} />
                 </button>
               )}
@@ -233,9 +235,9 @@ export default function Navbar() {
                   if (item === "Blogs") {
                     return (
                       <Link key={item} to="/blog" className={navLinkClass}>
-        {item}
-        <span className="bg-amber-500 text-black text-[6px] px-1.5 py-0.5 rounded-full font-bold ml-1">NEW</span>
-      </Link>
+                        {item}
+                        <span className="bg-amber-500 text-black text-[6px] px-1.5 py-0.5 rounded-full font-bold ml-1">NEW</span>
+                      </Link>
                     );
                   }
                   
@@ -381,292 +383,285 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* Right Section */}
-           {/* Right Section - Fixed Profile Dropdown Z-Index */}
-<div className="flex items-center gap-2 lg:gap-2 flex-shrink-0">
-  <button onClick={toggleTheme} className={`p-1.5 rounded-full transition-all ${isDark ? "text-amber-400 bg-white/5" : "text-slate-600 bg-slate-100"}`}>
-    {isDark ? <SunIcon size={14} /> : <MoonIcon size={14} />}
-  </button>
+            {/* Right Section with Schedule Appointment Button */}
+            <div className="flex items-center gap-2 lg:gap-2 flex-shrink-0">
+              {/* Schedule Appointment Button */}
+              <button
+                onClick={() => setShowAppointmentModal(true)}
+                className="px-3 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md hover:shadow-lg transition-all flex items-center gap-1.5"
+              >
+                <Calendar size={12} /> Schedule
+              </button>
 
-  {!isAuthenticated ? (
-    <Link to="/login" className="px-4 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-full bg-amber-500 text-white shadow-md hover:bg-amber-600 transition-all">
-      Login
-    </Link>
-  ) : (
-    <div className="relative" ref={profileDropdownRef}>
-      <button 
-        onClick={() => setIsProfileOpen(!isProfileOpen)} 
-        className="h-7 w-7 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 border-2 border-white/20 flex items-center justify-center text-white font-bold text-[11px] hover:scale-105 transition-all"
-      >
-        {user?.firstname?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
-      </button>
-      
-      <AnimatePresence>
-        {isProfileOpen && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-56 rounded-xl border overflow-hidden shadow-2xl bg-white dark:bg-[#161B26] border-slate-200 dark:border-white/10"
-            style={{ zIndex: 9999 }}
-          >
-            <div className="p-3 border-b border-slate-100 dark:border-white/10">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-[11px]">
-                  {user?.firstname?.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex-1">
-                  <p className="text-[11px] font-bold truncate">{user?.firstname} {user?.lastname}</p>
-                  <p className="text-[8px] text-slate-500 truncate">{user?.email}</p>
-                </div>
-              </div>
-              <span className="inline-block mt-1.5 px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[6px] font-bold uppercase tracking-wider">
-                {user?.role || "USER"}
-              </span>
-            </div>
-            
-            <div className="p-1">
-              {user?.role === "user" && (
-                <>
-                  <Link to="/user-profile" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
-                    <User size={12} className="text-amber-500" /> Profile
-                  </Link>
-                  <Link to="/my-properties" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
-                    <Home size={12} className="text-amber-500" /> My Properties
-                  </Link>
-                  <Link to="/wishlist" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
-                    <Heart size={12} className="text-amber-500" /> Wishlist
-                  </Link>
-                </>
-              )}
+              <button onClick={toggleTheme} className={`p-1.5 rounded-full transition-all ${isDark ? "text-amber-400 bg-white/5" : "text-slate-600 bg-slate-100"}`}>
+                {isDark ? <SunIcon size={14} /> : <MoonIcon size={14} />}
+              </button>
 
-              {user?.role !== "user" && (
-                <Link to={`/${user?.role?.toLowerCase()}-dashboard`} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
-                  <Home size={12} className="text-amber-500" /> Dashboard
+              {!isAuthenticated ? (
+                <Link to="/login" className="px-4 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-full bg-amber-500 text-white shadow-md hover:bg-amber-600 transition-all">
+                  Login
                 </Link>
+              ) : (
+                <div className="relative" ref={profileDropdownRef}>
+                  <button 
+                    onClick={() => setIsProfileOpen(!isProfileOpen)} 
+                    className="h-7 w-7 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 border-2 border-white/20 flex items-center justify-center text-white font-bold text-[11px] hover:scale-105 transition-all"
+                  >
+                    {user?.firstname?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
+                  </button>
+                  
+                  <AnimatePresence>
+                    {isProfileOpen && (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute right-0 mt-2 w-56 rounded-xl border overflow-hidden shadow-2xl bg-white dark:bg-[#161B26] border-slate-200 dark:border-white/10"
+                        style={{ zIndex: 9999 }}
+                      >
+                        <div className="p-3 border-b border-slate-100 dark:border-white/10">
+                          <div className="flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-[11px]">
+                              {user?.firstname?.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-[11px] font-bold truncate">{user?.firstname} {user?.lastname}</p>
+                              <p className="text-[8px] text-slate-500 truncate">{user?.email}</p>
+                            </div>
+                          </div>
+                          <span className="inline-block mt-1.5 px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[6px] font-bold uppercase tracking-wider">
+                            {user?.role || "USER"}
+                          </span>
+                        </div>
+                        
+                        <div className="p-1">
+                          {user?.role === "user" && (
+                            <>
+                              <Link to="/user-profile" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+                                <User size={12} className="text-amber-500" /> Profile
+                              </Link>
+                              <Link to="/my-properties" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+                                <Home size={12} className="text-amber-500" /> My Properties
+                              </Link>
+                              <Link to="/wishlist" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+                                <Heart size={12} className="text-amber-500" /> Wishlist
+                              </Link>
+                            </>
+                          )}
+
+                          {user?.role !== "user" && (
+                            <Link to={`/${user?.role?.toLowerCase()}-dashboard`} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+                              <Home size={12} className="text-amber-500" /> Dashboard
+                            </Link>
+                          )}
+
+                          <Link to="/settings" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+                            <Settings size={12} className="text-amber-500" /> Settings
+                          </Link>
+                          
+                          <div className="border-t my-1 border-slate-100 dark:border-white/10" />
+                          <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold text-red-500 hover:bg-red-500/10 transition-all">
+                            <LogOut size={12} /> Sign Out
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               )}
 
-              <Link to="/settings" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
-                <Settings size={12} className="text-amber-500" /> Settings
-              </Link>
-              
-              <div className="border-t my-1 border-slate-100 dark:border-white/10" />
-              <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold text-red-500 hover:bg-red-500/10 transition-all">
-                <LogOut size={12} /> Sign Out
+              <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-1.5 text-current">
+                <Bars3Icon className="h-6 w-6" />
               </button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )}
-
-  <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-1.5 text-current">
-    <Bars3Icon className="h-6 w-6" />
-  </button>
-</div>
           </div>
         </div>
       </nav>
 
-     {/* Mobile Menu with Dropdowns */}
-<AnimatePresence>
-  {isMobileMenuOpen && (
-    <motion.div
-      initial={{ x: "100%" }}
-      animate={{ x: 0 }}
-      exit={{ x: "100%" }}
-      transition={{ type: "spring", damping: 25 }}
-      className={`fixed inset-0 z-[200] flex flex-col ${isDark ? "bg-[#0a0a0c]" : "bg-white"}`}
-    >
-      <div className="p-4 flex items-center justify-between border-b border-slate-200 dark:border-white/10">
-        <img src={navbarlogo} alt="Logo" className="h-10" />
-        <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-full bg-red-500/10 text-red-500">
-          <XMarkIcon className="h-5 w-5" />
-        </button>
-      </div>
-      
-      <div className="flex-1 overflow-y-auto p-4 space-y-1">
-        {/* Home */}
-        <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="block py-3 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
-          Home
-        </Link>
-        
-        {/* About Us */}
-        <Link to="/about-us" onClick={() => setIsMobileMenuOpen(false)} className="block py-3 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
-          About Us
-        </Link>
-        
-        {/* Buy Dropdown */}
-        <MobileDropdown
-          title="Buy"
-          isOpen={activeMobileDropdown === "Buy"}
-          onToggle={() => toggleMobileDropdown("Buy")}
-        >
-          <div className="space-y-4">
-            {/* Residential and Commercial in Grid Layout */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* Residential Sale */}
-              <div>
-                <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">Residential Sale</p>
-                <div className="space-y-1">
-                  {buyMenuItems.sections[0].items.map((item) => (
-                    <button key={item} onClick={() => handleBuyClick(item)} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
-                      {item}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Commercial Sale */}
-              <div>
-                <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">Commercial Sale</p>
-                <div className="space-y-1">
-                  {buyMenuItems.sections[1].items.map((item) => (
-                    <button key={item} onClick={() => handleCommercialClick(item, "Sale")} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
-                      {item}
-                    </button>
-                  ))}
-                </div>
-              </div>
+      {/* Mobile Menu with Dropdowns */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 25 }}
+            className={`fixed inset-0 z-[200] flex flex-col ${isDark ? "bg-[#0a0a0c]" : "bg-white"}`}
+          >
+            <div className="p-4 flex items-center justify-between border-b border-slate-200 dark:border-white/10">
+              <img src={navbarlogo} alt="Logo" className="h-10" />
+              <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-full bg-red-500/10 text-red-500">
+                <XMarkIcon className="h-5 w-5" />
+              </button>
             </div>
             
-            {/* Promo Button */}
-            <button onClick={buyMenuItems.promo.action} className="mt-2 w-full py-2 rounded-lg bg-[#2D2D6E] text-white text-[9px] font-bold uppercase">
-              {buyMenuItems.promo.title}
-            </button>
-          </div>
-        </MobileDropdown>
-        
-        {/* Rent Dropdown */}
-        <MobileDropdown
-          title="Rent"
-          isOpen={activeMobileDropdown === "Rent"}
-          onToggle={() => toggleMobileDropdown("Rent")}
-        >
-          <div className="space-y-4">
-            {/* Residential and Commercial in Grid Layout */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* Residential Rent */}
-              <div>
-                <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">Residential Rent</p>
-                <div className="space-y-1">
-                  {rentMenuItems.sections[0].items.map((item) => (
-                    <button key={item} onClick={() => handleRentClick(item)} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
-                      {item}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Commercial Rent */}
-              <div>
-                <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">Commercial Rent</p>
-                <div className="space-y-1">
-                  {rentMenuItems.sections[1].items.map((item) => (
-                    <button key={item} onClick={() => handleCommercialClick(item, "Rent")} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
-                      {item}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            
-            {/* Promo Button */}
-            <button onClick={rentMenuItems.promo.action} className="mt-2 w-full py-2 rounded-lg bg-[#5D46A0] text-white text-[9px] font-bold uppercase">
-              {rentMenuItems.promo.title}
-            </button>
-          </div>
-        </MobileDropdown>
-        
-        {/* Off-Plan Dropdown */}
-        <MobileDropdown
-          title="Off-Plan"
-          isOpen={activeMobileDropdown === "Off-Plan"}
-          onToggle={() => toggleMobileDropdown("Off-Plan")}
-        >
-          <div className="space-y-4">
-            {/* New Launches and By Handover in Grid Layout */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* New Launches */}
-              <div>
-                <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">New Launches</p>
-                <div className="space-y-1">
-                  {offplanMenuItems.sections[0].items.map((item) => (
-                    <button key={item} onClick={() => handleOffPlanClick(item.split(" ")[0])} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
-                      {item}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              {/* By Handover */}
-              <div>
-                <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">By Handover</p>
-                <div className="space-y-1">
-                  {offplanMenuItems.sections[1].items.map((item) => (
-                    <button key={item} onClick={() => navigateWithFilters({ category: "Off-Plan", deliveryDate: item.split(" ")[1] })} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
-                      {item}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            
-            {/* Promo Button */}
-            <button onClick={offplanMenuItems.promo.action} className="mt-2 w-full py-2 rounded-lg bg-[#f59e0b] text-black text-[9px] font-bold uppercase">
-              {offplanMenuItems.promo.title}
-            </button>
-          </div>
-        </MobileDropdown>
-        
-        {/* Resources Dropdown */}
-        <MobileDropdown
-          title="Resources"
-          isOpen={activeMobileDropdown === "Resources"}
-          onToggle={() => toggleMobileDropdown("Resources")}
-        >
-          <div className="grid grid-cols-1 gap-1 pl-2">
-            {sidebarLinks.map((link) => (
-              <Link key={link.name} to={link.href} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between py-2 text-[10px] font-medium hover:text-amber-500">
-                {link.name} {renderBadge(link.badge)}
+            <div className="flex-1 overflow-y-auto p-4 space-y-1">
+              {/* Home */}
+              <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="block py-3 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
+                Home
               </Link>
-            ))}
-          </div>
-        </MobileDropdown>
+              
+              {/* About Us */}
+              <Link to="/about-us" onClick={() => setIsMobileMenuOpen(false)} className="block py-3 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
+                About Us
+              </Link>
+              
+              {/* Buy Dropdown */}
+              <MobileDropdown
+                title="Buy"
+                isOpen={activeMobileDropdown === "Buy"}
+                onToggle={() => toggleMobileDropdown("Buy")}
+              >
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">Residential Sale</p>
+                      <div className="space-y-1">
+                        {buyMenuItems.sections[0].items.map((item) => (
+                          <button key={item} onClick={() => handleBuyClick(item)} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">Commercial Sale</p>
+                      <div className="space-y-1">
+                        {buyMenuItems.sections[1].items.map((item) => (
+                          <button key={item} onClick={() => handleCommercialClick(item, "Sale")} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={buyMenuItems.promo.action} className="mt-2 w-full py-2 rounded-lg bg-[#2D2D6E] text-white text-[9px] font-bold uppercase">
+                    {buyMenuItems.promo.title}
+                  </button>
+                </div>
+              </MobileDropdown>
+              
+              {/* Rent Dropdown */}
+              <MobileDropdown
+                title="Rent"
+                isOpen={activeMobileDropdown === "Rent"}
+                onToggle={() => toggleMobileDropdown("Rent")}
+              >
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">Residential Rent</p>
+                      <div className="space-y-1">
+                        {rentMenuItems.sections[0].items.map((item) => (
+                          <button key={item} onClick={() => handleRentClick(item)} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">Commercial Rent</p>
+                      <div className="space-y-1">
+                        {rentMenuItems.sections[1].items.map((item) => (
+                          <button key={item} onClick={() => handleCommercialClick(item, "Rent")} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={rentMenuItems.promo.action} className="mt-2 w-full py-2 rounded-lg bg-[#5D46A0] text-white text-[9px] font-bold uppercase">
+                    {rentMenuItems.promo.title}
+                  </button>
+                </div>
+              </MobileDropdown>
+              
+              {/* Off-Plan Dropdown */}
+              <MobileDropdown
+                title="Off-Plan"
+                isOpen={activeMobileDropdown === "Off-Plan"}
+                onToggle={() => toggleMobileDropdown("Off-Plan")}
+              >
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">New Launches</p>
+                      <div className="space-y-1">
+                        {offplanMenuItems.sections[0].items.map((item) => (
+                          <button key={item} onClick={() => handleOffPlanClick(item.split(" ")[0])} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold text-amber-500 uppercase mb-2">By Handover</p>
+                      <div className="space-y-1">
+                        {offplanMenuItems.sections[1].items.map((item) => (
+                          <button key={item} onClick={() => navigateWithFilters({ category: "Off-Plan", deliveryDate: item.split(" ")[1] })} className="block text-[10px] font-medium py-1 hover:text-amber-500 w-full text-left">
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={offplanMenuItems.promo.action} className="mt-2 w-full py-2 rounded-lg bg-[#f59e0b] text-black text-[9px] font-bold uppercase">
+                    {offplanMenuItems.promo.title}
+                  </button>
+                </div>
+              </MobileDropdown>
+              
+              {/* Resources Dropdown */}
+              <MobileDropdown
+                title="Resources"
+                isOpen={activeMobileDropdown === "Resources"}
+                onToggle={() => toggleMobileDropdown("Resources")}
+              >
+                <div className="grid grid-cols-1 gap-1 pl-2">
+                  {sidebarLinks.map((link) => (
+                    <Link key={link.name} to={link.href} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between py-2 text-[10px] font-medium hover:text-amber-500">
+                      {link.name} {renderBadge(link.badge)}
+                    </Link>
+                  ))}
+                </div>
+              </MobileDropdown>
+              
+              {/* Contact Us */}
+              <Link to="/contact-us" onClick={() => setIsMobileMenuOpen(false)} className="block py-3 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
+                Contact Us
+              </Link>
+              
+              {/* Careers */}
+              <Link to="/careers" onClick={() => setIsMobileMenuOpen(false)} className="block py-3 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
+                Careers <span className="ml-1 bg-amber-500 text-black text-[6px] px-1.5 py-0.5 rounded-full font-bold">HIRING</span>
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Schedule Appointment Modal */}
+      <ScheduleAppointmentModal
+        isOpen={showAppointmentModal}
+        onClose={() => setShowAppointmentModal(false)}
+        isDark={isDark}
+      />
+
+      <style jsx>{`
+        .relative {
+          position: relative;
+        }
         
-        {/* Contact Us */}
-        <Link to="/contact-us" onClick={() => setIsMobileMenuOpen(false)} className="block py-3 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
-          Contact Us
-        </Link>
+        .absolute {
+          position: absolute;
+        }
         
-        {/* Careers */}
-        <Link to="/careers" onClick={() => setIsMobileMenuOpen(false)} className="block py-3 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
-          Careers <span className="ml-1 bg-amber-500 text-black text-[6px] px-1.5 py-0.5 rounded-full font-bold">HIRING</span>
-        </Link>
-      </div>
-    </motion.div>
-
-
-  )}
-</AnimatePresence>
-
-
-<style jsx>{`
-  .relative {
-    position: relative;
-  }
-  
-  .absolute {
-    position: absolute;
-  }
-  
-  /* Ensure dropdown appears above all content */
-  [style*="zIndex: 9999"] {
-    z-index: 9999 !important;
-  }
-`}</style>
+        /* Ensure dropdown appears above all content */
+        [style*="zIndex: 9999"] {
+          z-index: 9999 !important;
+        }
+      `}</style>
     </>
   );
 }

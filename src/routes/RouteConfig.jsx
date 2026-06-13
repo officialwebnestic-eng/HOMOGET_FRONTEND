@@ -80,6 +80,7 @@ import AboutFounder from "../components/common/AboutFounder .jsx";
 import BlogDetails from "../components/common/homecommon/BlogDetails.jsx";
 import HelpCenter from "../components/common/homecommon/HelpCenter .jsx";
 import UserAgentDetails from "../components/common/homecommon/UserAgentDetails.jsx";
+import GetAppoinment from "../components/Appoinment/GetAppoinment.jsx";
 
 
 export const AdminRoutes = () => {
@@ -98,9 +99,6 @@ export const AdminRoutes = () => {
                 <Route path="/addproperty" element={<AddProperty />} />
                 <Route path="/viewpropertylist" element={<ViewPropertyList />} />
                 <Route path="/propertydetails" element={<PropertyDetails />} />
-                <Route path="/session/:roomName" element={<VideoCallRoom />} />
-                <Route path="/viewallsession" element={<ViewAllSession />} />
-                <Route path="/createsession" element={<CreateSession isOpen={true} onClose={() => navigate(-1)} />} />
                 <Route path="/customerreviews" element={<CustomerReviews />} />
                 <Route path="/createblog" element={<CraeteBlog />} />
                 <Route path="/viewbloglist" element={<ViewBlogList />} />
@@ -111,6 +109,8 @@ export const AdminRoutes = () => {
                 <Route path="/createdeveloper" element={<AddDeveloperForm />} />
                 <Route path="/viewdevelopers" element={<ViewAllDeveloperList />} />
                 <Route path="/updatedeveloper/:id" element={<AddDeveloperForm />} />
+                 <Route path="/appoinments-lists"  element={<GetAppoinment/>}/>
+
                
                 <Route path="/bookings" element={<CreateBooking />} />
                 <Route path="/viewpropertyrequest" element={<GetFreelancerProperties />} />

@@ -152,7 +152,7 @@ export default function Sidebar() {
           <DropdownMenu
             icon={<Users size={20} />}
             label="Broker Property List"
-            menuKey="Users"
+            menuKey="Broker"
             openDropdown={openDropdown}
             toggleDropdown={toggleDropdown}
             ct={ct}
@@ -182,19 +182,7 @@ export default function Sidebar() {
           {/* Section: Operations */}
           <SectionLabel label="Operations" isOpen={isOpen} />
 
-          {/* Bookings Dropdown */}
-          <DropdownMenu
-            icon={<ShoppingCart size={20} />}
-            label="Bookings"
-            menuKey="Book"
-            openDropdown={openDropdown}
-            toggleDropdown={toggleDropdown}
-            ct={ct}
-            isOpen={isOpen}
-            items={[
-              { to: "/viewallbookings", label: "Sales Logs", icon: <FileText size={14} /> }
-            ]}
-          />
+          <NavItem to="/appoinments-lists" icon={<ClipboardList size={20} />} label="Appointments" ct={ct} isOpen={isOpen} />
 
           <NavItem to="/getresquset" icon={<ClipboardList size={20} />} label="Call Logs" ct={ct} isOpen={isOpen} />
 

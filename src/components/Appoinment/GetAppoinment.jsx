@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { Eye, Pencil, Trash2, Check, X, IndianRupee, Search, Calendar, MapPin, Link as LinkIcon, MoreHorizontal } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Eye, Pencil, Trash2, Check, X, IndianRupee, Search, Calendar, MapPin, Link as LinkIcon, ChevronLeft, ChevronRight, Phone, Mail, User, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import usegetAppoinment from './../../hooks/usegetAppoinment';
-import formatToLocalDateTime from '../../utils/DateConverter';
 import { http } from "../../axios/axios";
 import { useTheme } from '../../context/ThemeContext';
 import PermissionProtectedAction from '../../Authorization/PermissionProtectedActions';
@@ -11,291 +9,357 @@ import EmptyStateModel from '../../model/EmptyStateModel';
 const GetAppoinment = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [editingMeetingLinkId, setEditingMeetingLinkId] = useState(null);
-  const [meetingLinkInput, setMeetingLinkInput] = useState('');
   const [editingStatusId, setEditingStatusId] = useState(null);
   const [statusInput, setStatusInput] = useState('');
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
   const limit = 10;
   const { Appointment, loading, error, pagination, refetch, handleDeleteAppointment } = usegetAppoinment(currentPage, limit, searchTerm);
 
-  // --- HOMOGET BRAND TOKENS ---
-  const brandGold = "#C5A059";
-  const bgColor = isDark ? "bg-[#0F1219]" : "bg-[#F9FAFB]";
-  const cardBg = isDark ? "bg-[#1A1F2B]" : "bg-white";
-  const textColor = isDark ? "text-white" : "text-[#1A1A1A]";
-  const subTextColor = isDark ? "text-slate-400" : "text-slate-500";
-  const borderColor = isDark ? "border-white/5" : "border-slate-200";
+  // Theme classes
+  const bgClass = isDark ? "bg-[#0a0a0c]" : "bg-slate-50";
+  const cardClass = isDark ? "bg-[#11141B]" : "bg-white";
+  const textClass = isDark ? "text-gray-200" : "text-gray-800";
+  const textMuted = isDark ? "text-gray-500" : "text-gray-400";
+  const borderClass = isDark ? "border-gray-800" : "border-gray-200";
+  const inputClass = isDark
+    ? "bg-[#1A1F2B] text-white border-gray-700 focus:ring-amber-500 focus:border-amber-500"
+    : "bg-white text-gray-900 border-gray-200 focus:ring-amber-500 focus:border-amber-500";
+
+  const getStatusConfig = (status) => {
+    const statusLower = status?.toLowerCase();
+    switch(statusLower) {
+      case 'confirmed':
+        return { 
+          color: 'bg-green-500/10 text-green-500 border-green-500/20', 
+          icon: <CheckCircle size={10} />,
+          label: 'Confirmed'
+        };
+      case 'complete':
+        return { 
+          color: 'bg-blue-500/10 text-blue-500 border-blue-500/20', 
+          icon: <CheckCircle size={10} />,
+          label: 'Completed'
+        };
+      case 'cancelled':
+        return { 
+          color: 'bg-red-500/10 text-red-500 border-red-500/20', 
+          icon: <XCircle size={10} />,
+          label: 'Cancelled'
+        };
+      default:
+        return { 
+          color: 'bg-amber-500/10 text-amber-500 border-amber-500/20', 
+          icon: <AlertCircle size={10} />,
+          label: 'Pending'
+        };
+    }
+  };
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
 
-  const handleEditMeetingLink = (id, currentLink) => {
-    setEditingMeetingLinkId(id);
-    setMeetingLinkInput(currentLink || '');
-  };
-
-  const saveMeetingLink = async (id) => {
+  // Update status API call
+  const updateAppointmentStatus = async (id, status) => {
     try {
-      await http.put(`/appoinmentupdate/${id}`, { meetingLink: meetingLinkInput });
-      setEditingMeetingLinkId(null);
-      refetch();
-    } catch (err) {
-      alert('Failed to update meeting link');
+      setUpdatingStatus(true);
+      const response = await http.put(`/update-appointment-status/${id}`, { status }, { withCredentials: true });
+      
+      if (response.data.success) {
+        await refetch();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert(error.response?.data?.message || 'Failed to update status');
+      return false;
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
-  const saveStatus = async (id) => {
-    try {
-      await http.put(`/statusupdate/${id}`, { status: statusInput });
-      setEditingStatusId(null);
-      refetch();
-    } catch (err) {
-      alert('Failed to update status');
-    }
+  const handleStatusChange = async (id, newStatus) => {
+    if (!newStatus) return;
+    await updateAppointmentStatus(id, newStatus);
+    setEditingStatusId(null);
   };
 
-  if (loading)
+  if (loading) {
     return (
       <div className="flex flex-col justify-center items-center h-96 gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C5A059]"></div>
-        <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${subTextColor}`}>Synchronizing Schedule...</p>
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-amber-500 border-t-transparent"></div>
+        <p className={`text-[9px] font-bold uppercase tracking-wider ${textMuted}`}>Loading appointments...</p>
       </div>
     );
+  }
 
-  if (error)
+  if (error) {
     return (
-      <div className={`p-8 rounded-[2rem] border ${cardBg} ${borderColor}`}>
-        <EmptyStateModel title="Connection Error" message="Unable to fetch appointment data from the server." />
+      <div className={`p-8 rounded-xl border ${cardClass} ${borderClass}`}>
+        <EmptyStateModel title="Connection Error" message="Unable to fetch appointment data." />
       </div>
     );
+  }
+
+  // Calculate stats
+  const totalPending = Appointment.filter(a => a.status?.toLowerCase() === 'pending').length;
+  const totalConfirmed = Appointment.filter(a => a.status?.toLowerCase() === 'confirmed').length;
+  const totalCompleted = Appointment.filter(a => a.status?.toLowerCase() === 'complete').length;
+  const totalCancelled = Appointment.filter(a => a.status?.toLowerCase() === 'cancelled').length;
 
   return (
-    <div className={`min-h-screen transition-all duration-500 ${bgColor}`}>
-      
-      {/* Header & Luxury Search Bar */}
-      <div className="flex flex-col lg:flex-row justify-between items-end mb-10 gap-6">
-        <div>
-          <h1 className={`${textColor} text-3xl md:text-5xl font-bold tracking-tighter uppercase italic`}>
-            Property <span style={{ color: brandGold }}>Viewings</span>
-          </h1>
-          <div className="flex items-center gap-2 mt-2">
-            <div className="h-[2px] w-8" style={{ backgroundColor: brandGold }} />
-            <p className={`${subTextColor} text-[10px] font-bold uppercase tracking-[0.3em]`}>Schedule & Link Management</p>
+    <div className={`min-h-screen transition-colors duration-300 ${bgClass} p-6`}>
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <div>
+            <h1 className={`text-2xl font-bold tracking-tight ${textClass}`}>
+              Appointment <span className="text-amber-500">Management</span>
+            </h1>
+            <p className={`text-[10px] font-medium ${textMuted} mt-1`}>
+              Manage property viewing schedules
+            </p>
+          </div>
+          
+          <div className="relative w-full md:w-80">
+            <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${textMuted}`} />
+            <input
+              type="text"
+              placeholder="Search by name, email, or appointment ID..."
+              className={`w-full pl-9 pr-4 py-2 text-xs rounded-lg border focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all ${inputClass}`}
+              value={searchTerm}
+              onChange={handleSearch}
+            />
           </div>
         </div>
 
-        <div className="relative w-full lg:w-96 group">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#C5A059] transition-colors" />
-          <input
-            type="text"
-            placeholder="Search Registry..."
-            className={`w-full pl-12 pr-4 py-4 rounded-2xl outline-none border transition-all ${isDark ? 'bg-[#1A1F2B] border-white/10 text-white focus:border-[#C5A059]' : 'bg-white border-slate-200 text-slate-900 focus:shadow-xl'}`}
-            value={searchTerm}
-            onChange={handleSearch}
-          />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+          <div className={`p-3 rounded-lg border ${cardClass} ${borderClass}`}>
+            <p className={`text-[8px] font-bold uppercase tracking-wider ${textMuted}`}>Total</p>
+            <p className={`text-xl font-bold ${textClass}`}>{pagination?.totalCount || Appointment.length || 0}</p>
+          </div>
+          <div className={`p-3 rounded-lg border ${cardClass} ${borderClass}`}>
+            <p className={`text-[8px] font-bold uppercase tracking-wider text-amber-500`}>Pending</p>
+            <p className={`text-xl font-bold text-amber-500`}>{totalPending}</p>
+          </div>
+          <div className={`p-3 rounded-lg border ${cardClass} ${borderClass}`}>
+            <p className={`text-[8px] font-bold uppercase tracking-wider text-green-500`}>Confirmed</p>
+            <p className={`text-xl font-bold text-green-500`}>{totalConfirmed}</p>
+          </div>
+          <div className={`p-3 rounded-lg border ${cardClass} ${borderClass}`}>
+            <p className={`text-[8px] font-bold uppercase tracking-wider text-blue-500`}>Completed</p>
+            <p className={`text-xl font-bold text-blue-500`}>{totalCompleted}</p>
+          </div>
+          <div className={`p-3 rounded-lg border ${cardClass} ${borderClass}`}>
+            <p className={`text-[8px] font-bold uppercase tracking-wider text-red-500`}>Cancelled</p>
+            <p className={`text-xl font-bold text-red-500`}>{totalCancelled}</p>
+          </div>
         </div>
-      </div>
 
-      {/* Main Table Content */}
-      <div className={`rounded-[2.5rem] border overflow-hidden shadow-2xl ${cardBg} ${borderColor}`}>
-        <div className="w-full overflow-x-auto">
-          {Appointment.length === 0 ? (
-            <div className="p-20 text-center">
-              <EmptyStateModel type="Appointments" title="No Results Found" message="Refine your search parameters to find specific viewings." />
-            </div>
-          ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className={isDark ? "bg-white/5" : "bg-slate-900"}>
-                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/70">Ref ID</th>
-                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/70">Property Details</th>
-                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/70">Investor</th>
-                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/70">Schedule</th>
-                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/70">Virtual Access</th>
-                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/70 text-center">Status</th>
-                  <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-white/70 text-right">Ops</th>
-                </tr>
-              </thead>
-              <tbody className={`divide-y ${isDark ? 'divide-white/5' : 'divide-slate-100'}`}>
-                {Appointment.map((appointment) => (
-                  <tr key={appointment._id} className={`${isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-slate-50'} transition-colors`}>
-                    {/* ID */}
-                    <td className={`px-6 py-6 text-xs font-mono tracking-tighter ${subTextColor}`}>
-                      #{appointment.appointmentId}
-                    </td>
+        {/* Table */}
+        <div className={`rounded-xl border overflow-hidden ${cardClass} ${borderClass}`}>
+          <div className="overflow-x-auto">
+            {Appointment.length === 0 ? (
+              <div className="p-12 text-center">
+                <EmptyStateModel title="No Appointments" message="No appointment requests found." />
+              </div>
+            ) : (
+              <table className="w-full text-left">
+                <thead className={`bg-amber-500/5 ${borderClass}`}>
+                  <tr>
+                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-wider text-amber-500">Appt ID</th>
+                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-wider text-amber-500">Client</th>
+                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-wider text-amber-500">Contact</th>
+                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-wider text-amber-500">Property Type</th>
+                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-wider text-amber-500">Inquiry</th>
+                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-wider text-amber-500">Date</th>
+                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-wider text-amber-500">Time</th>
+                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-wider text-amber-500">Status</th>
+                    <th className="px-4 py-3 text-[9px] font-black uppercase tracking-wider text-amber-500 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className={`divide-y ${borderClass}`}>
+                  {Appointment.map((appointment) => {
+                    const statusConfig = getStatusConfig(appointment.status);
+                    return (
+                      <tr key={appointment._id} className={`transition-colors ${isDark ? 'hover:bg-white/5' : 'hover:bg-gray-50'}`}>
+                        {/* ID */}
+                        <td className="px-4 py-3">
+                          <span className={`text-[10px] font-mono ${textMuted}`}>
+                            {appointment.appointmentId?.slice(-8) || 'N/A'}
+                          </span>
+                        </td>
 
-                    {/* Property Card Style */}
-                    <td className="px-6 py-6 min-w-[240px]">
-                      <div className="flex items-center gap-4">
-                        <div className="relative h-14 w-14 rounded-2xl overflow-hidden border-2 border-[#C5A059]/20 shadow-lg">
-                          {appointment.property?.images?.[0] ? (
-                            <img src={appointment.property.images[0]} alt="Prop" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full bg-slate-800 flex items-center justify-center text-[#C5A059]"><MapPin size={18} /></div>
+                        {/* Client */}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-full bg-amber-500/20 flex items-center justify-center">
+                              <User size={12} className="text-amber-500" />
+                            </div>
+                            <div>
+                              <p className={`text-xs font-medium ${textClass}`}>
+                                {appointment.name || appointment.user?.firstname || 'N/A'}
+                              </p>
+                              <p className={`text-[9px] ${textMuted}`}>
+                                {appointment.inqueryType?.replace(/_/g, ' ') || 'Consultation'}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Contact */}
+                        <td className="px-4 py-3">
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-1">
+                              <Mail size={9} className={textMuted} />
+                              <span className={`text-[9px] ${textMuted}`}>{appointment.email || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Phone size={9} className={textMuted} />
+                              <span className={`text-[9px] ${textMuted}`}>{appointment.phone || 'N/A'}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Property Type */}
+                        <td className="px-4 py-3">
+                          <span className={`text-[10px] font-medium ${textClass}`}>
+                            {appointment.propertyType || 'Not specified'}
+                          </span>
+                          {appointment.location && (
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <MapPin size={8} className={textMuted} />
+                              <span className={`text-[8px] ${textMuted}`}>{appointment.location}</span>
+                            </div>
                           )}
-                        </div>
-                        <div>
-                          <p className={`text-sm font-black uppercase tracking-tight ${textColor}`}>{appointment.property.propertytype}</p>
-                          <p style={{ color: brandGold }} className="text-xs font-bold flex items-center">
-                            <IndianRupee size={12} className="mr-0.5" />
-                            {appointment.property?.price?.toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
+                        </td>
 
-                    {/* Client */}
-                    <td className="px-6 py-6">
-                      <p className={`text-sm font-bold ${textColor}`}>{appointment.user.firstname}</p>
-                      <p className={`text-[10px] uppercase font-bold opacity-40 ${textColor}`}>{appointment.user.email}</p>
-                    </td>
+                        {/* Inquiry Type */}
+                        <td className="px-4 py-3">
+                          <span className={`text-[9px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500`}>
+                            {appointment.inqueryType?.replace(/_/g, ' ') || 'Consultation'}
+                          </span>
+                        </td>
 
-                    {/* Schedule */}
-                    <td className="px-6 py-6">
-                      <div className="flex flex-col gap-1">
-                        <div className={`flex items-center gap-2 text-xs font-bold ${textColor}`}>
-                          <Calendar size={14} style={{ color: brandGold }} />
-                          {formatToLocalDateTime(appointment.date)}
-                        </div>
-                        <span className={`text-[10px] font-bold uppercase tracking-widest ${subTextColor}`}>
-                          via {appointment.meetingPlatform}
-                        </span>
-                      </div>
-                    </td>
+                        {/* Date */}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1">
+                            <Calendar size={9} className="text-amber-500" />
+                            <span className={`text-[9px] ${textClass}`}>
+                              {appointment.date || 'TBD'}
+                            </span>
+                          </div>
+                        </td>
 
-                    {/* Meeting Link - Luxury Edit Flow */}
-                    <td className="px-6 py-6">
-                      {editingMeetingLinkId === appointment._id ? (
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={meetingLinkInput}
-                            onChange={(e) => setMeetingLinkInput(e.target.value)}
-                            className={`px-3 py-2 rounded-xl text-xs outline-none border-2 border-[#C5A059] ${isDark ? 'bg-black text-white' : 'bg-white text-slate-900'}`}
-                          />
-                          <button onClick={() => saveMeetingLink(appointment._id)} className="p-2 text-emerald-500 hover:scale-110"><Check size={18} /></button>
-                          <button onClick={() => setEditingMeetingLinkId(null)} className="p-2 text-rose-500 hover:scale-110"><X size={18} /></button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-3">
-                          {appointment.meetingLink ? (
-                            <a href={appointment.meetingLink} target="_blank" rel="noopener noreferrer" 
-                               className="p-2.5 rounded-xl bg-[#C5A059]/10 text-[#C5A059] hover:bg-[#C5A059] hover:text-white transition-all shadow-sm">
-                              <LinkIcon size={16} />
-                            </a>
-                          ) : (
-                            <span className="text-[10px] font-bold uppercase text-slate-600">No Access Set</span>
-                          )}
-                          <PermissionProtectedAction action="view" module="Appoinment Management">
-                            <button onClick={() => handleEditMeetingLink(appointment._id, appointment.meetingLink)}
-                                    className={`p-2 rounded-lg ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-100'} ${subTextColor}`}>
-                              <Pencil size={14} />
+                        {/* Time */}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1">
+                            <Clock size={9} className="text-amber-500" />
+                            <span className={`text-[9px] ${textMuted}`}>
+                              {appointment.time || 'TBD'}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Status - Dropdown */}
+                        <td className="px-4 py-3">
+                          <select
+                            value={appointment.status || 'pending'}
+                            onChange={(e) => handleStatusChange(appointment._id, e.target.value)}
+                            disabled={updatingStatus}
+                            className={`px-2 py-1 rounded text-[9px] font-medium border cursor-pointer ${inputClass} ${statusConfig.color}`}
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="complete">Complete</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                         </td>
+
+                        {/* Actions */}
+                        <td className="px-4 py-3 text-right">
+                          <PermissionProtectedAction action="delete" module="Appoinment Management">
+                            <button 
+                              onClick={() => {
+                                if (window.confirm('Are you sure you want to delete this appointment?')) {
+                                  handleDeleteAppointment(appointment._id);
+                                }
+                              }} 
+                              className="p-1.5 rounded hover:bg-red-500/10 text-red-500 transition-all"
+                            >
+                              <Trash2 size={12} />
                             </button>
                           </PermissionProtectedAction>
-                        </div>
-                      )}
-                    </td>
-
-                    {/* Status Select */}
-                    <td className="px-6 py-6 text-center">
-                      {editingStatusId === appointment._id ? (
-                        <select
-                          value={statusInput}
-                          onChange={(e) => setStatusInput(e.target.value)}
-                          onBlur={() => setEditingStatusId(null)}
-                          autoFocus
-                          className="bg-black text-[#C5A059] border border-[#C5A059] rounded-lg px-2 py-1 text-[10px] font-bold uppercase"
-                        >
-                          {['pending', 'Confirmed', 'cancelled', 'complete'].map((opt) => (
-                            <option key={opt} value={opt}>{opt}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <div className="flex flex-col items-center gap-1 group">
-                          <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${
-                            appointment.status === 'Confirmed' ? 'border-emerald-500/30 text-emerald-500 bg-emerald-500/5' :
-                            appointment.status === 'pending' ? 'border-amber-500/30 text-amber-500 bg-amber-500/5' :
-                            'border-rose-500/30 text-rose-500 bg-rose-500/5'
-                          }`}>
-                            {appointment.status}
-                          </span>
-                          <PermissionProtectedAction action="update" module="Appoinment Management">
-                            <button onClick={() => { setEditingStatusId(appointment._id); setStatusInput(appointment.status); }}
-                                    className="opacity-0 group-hover:opacity-100 text-[10px] font-bold text-[#C5A059] transition-opacity">Change</button>
-                          </PermissionProtectedAction>
-                        </div>
-                      )}
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-6 py-6 text-right">
-                      <div className="flex justify-end gap-2">
-                         <PermissionProtectedAction action="delete" module="Appoinment Management">
-                          <button onClick={() => handleDeleteAppointment(appointment._id)}
-                                  className="p-3 rounded-2xl hover:bg-rose-500/10 text-rose-500 transition-all">
-                            <Trash2 size={20} />
-                          </button>
-                        </PermissionProtectedAction>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                         </td>
+                       </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Luxury Pagination */}
-      {pagination?.totalPages > 1 && (
-        <div className="flex flex-col md:flex-row items-center justify-between mt-10 px-4 md:px-10">
-          <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${subTextColor}`}>
-            Page <span style={{ color: brandGold }}>{currentPage}</span> of {pagination.totalPages} • Registry Count {pagination.totalCount}
-          </p>
-          
-          <div className="flex items-center gap-2 mt-4 md:mt-0">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className={`p-3 rounded-xl border transition-all ${isDark ? 'border-white/10 hover:bg-white/5' : 'border-slate-200 hover:bg-slate-100'} disabled:opacity-20`}
-            >
-              <ChevronLeft size={18} />
-            </button>
+        {/* Pagination */}
+        {pagination?.totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 pt-4 border-t border-gray-200 dark:border-gray-800">
+            <p className={`text-[9px] font-medium ${textMuted}`}>
+              Showing {(currentPage - 1) * limit + 1} - {Math.min(currentPage * limit, pagination.totalCount)} of {pagination.totalCount} appointments
+            </p>
             
-            <div className="flex gap-2">
-              {[...Array(Math.min(5, pagination.totalPages))].map((_, i) => {
-                const pageNum = i + 1;
+            <div className="flex gap-1.5">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`p-1.5 rounded-lg transition-all disabled:opacity-30 ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
+              >
+                <ChevronLeft size={14} />
+              </button>
+              
+              {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                let pageNum;
+                if (pagination.totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= pagination.totalPages - 2) {
+                  pageNum = pagination.totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
                 return (
                   <button
                     key={pageNum}
                     onClick={() => setCurrentPage(pageNum)}
-                    className={`w-12 h-12 rounded-xl text-xs font-black transition-all border ${
-                      currentPage === pageNum 
-                      ? 'bg-[#C5A059] border-[#C5A059] text-white shadow-lg shadow-[#C5A059]/20' 
-                      : isDark ? 'border-white/10 text-slate-400' : 'border-slate-200 text-slate-600'
+                    className={`w-7 h-7 rounded-lg text-[10px] font-bold transition-all ${
+                      currentPage === pageNum
+                        ? 'bg-amber-500 text-black shadow-sm'
+                        : isDark ? 'text-gray-400 hover:bg-white/10' : 'text-gray-600 hover:bg-gray-100'
                     }`}
                   >
                     {pageNum}
                   </button>
                 );
               })}
+              
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, pagination.totalPages))}
+                disabled={currentPage === pagination.totalPages}
+                className={`p-1.5 rounded-lg transition-all disabled:opacity-30 ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
+              >
+                <ChevronRight size={14} />
+              </button>
             </div>
-
-            <button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, pagination.totalPages))}
-              disabled={currentPage === pagination.totalPages}
-              className={`p-3 rounded-xl border transition-all ${isDark ? 'border-white/10 hover:bg-white/5' : 'border-slate-200 hover:bg-slate-100'} disabled:opacity-20`}
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
-        </div>
-      )}
+          </div>  
+        )}
+      </div>
     </div>
   );
 };
