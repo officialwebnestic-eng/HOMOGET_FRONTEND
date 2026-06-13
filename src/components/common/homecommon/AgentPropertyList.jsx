@@ -471,10 +471,8 @@ const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000/";
 <img 
   src={`${baseUrl}/agents/${agentImage}`}
   className="w-24 h-24 rounded-[2rem] object-cover relative z-10 border-2 border-amber-500/20"
-  alt={agent.name}
-  onError={(e) => {
-    e.target.src = getAvatarFallback(agent.name);
-  }}
+  alt="Agent"
+
 />                       ) : (
                             <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
                               <User size={14} />

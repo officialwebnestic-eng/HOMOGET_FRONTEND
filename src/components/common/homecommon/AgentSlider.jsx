@@ -181,10 +181,7 @@ const AgentSlider = () => {
   };
 
 
-  // Add this helper function before the AgentSupport component
-const getAvatarFallback = (name) => {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Agent')}&background=C5A059&color=fff&bold=true`;
-};
+
 
 // Fix the base URL construction - remove the incorrect template literal
 const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000/";
