@@ -586,7 +586,7 @@ useEffect(() => {
   return (
     <div className={`min-h-screen ${isDark ? "bg-gradient-to-br from-[#0F1219] via-[#0F1219] to-[#1a1f2e]" : "bg-gradient-to-br from-[#F8FAFC] via-[#F8FAFC] to-[#f1f5f9]"}`}>
       
-      <header className={`sticky top-0 border-b backdrop-blur-xl transition-all duration-300 z-50 ${isDark ? "bg-[#0F1219]/95 border-white/5" : "bg-white/95 border-slate-200"}`}>
+      <header className={`sticky top-0 border-b backdrop-blur-xl transition-all duration-300  ${isDark ? "bg-[#0F1219]/95 border-white/5" : "bg-white/95 border-slate-200"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-between py-3 md:py-0 md:h-20">
             <div className="flex items-center gap-3 group">
