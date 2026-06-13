@@ -468,14 +468,14 @@ const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000/";
                       <div className="flex items-center gap-3 py-3 mt-2 border-t border-gray-100 dark:border-white/5">
                         <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 flex-shrink-0">
                           {agentImage ? (
- <img 
-    src={`${baseUrl}/agents/${agent.profilePhoto}`}
-    className="w-24 h-24 rounded-[2rem] object-cover relative z-10 border-2 border-amber-500/20"
-    alt={agent.name}
-    onError={(e) => {
-      e.target.src = getAvatarFallback(agent.name);
-    }}
-  />                          ) : (
+<img 
+  src={`${baseUrl}/agents/${agentImage}`}
+  className="w-24 h-24 rounded-[2rem] object-cover relative z-10 border-2 border-amber-500/20"
+  alt={agent.name}
+  onError={(e) => {
+    e.target.src = getAvatarFallback(agent.name);
+  }}
+/>                       ) : (
                             <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
                               <User size={14} />
                             </div>
