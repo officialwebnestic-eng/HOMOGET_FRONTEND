@@ -176,6 +176,7 @@ const AgentPropertyList = () => {
     window.location.href = `mailto:info@homoget.ae?subject=${subject}&body=${body}`;
   };
 
+
   const handleShare = (e, property) => {
     e.stopPropagation();
     const propertyTitle = property.propertyTitleEn || property.propertyname;
@@ -187,6 +188,15 @@ const AgentPropertyList = () => {
       });
     }
   };
+
+// Add this helper function before the AgentSupport component
+const getAvatarFallback = (name) => {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Agent')}&background=C5A059&color=fff&bold=true`;
+};
+
+// Fix the base URL construction - remove the incorrect template literal
+const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000/";
+
 
   if (loading) {
     return (
@@ -302,7 +312,7 @@ const AgentPropertyList = () => {
                     })
                   }
                 >
-                  
+
                   {/* Image Section */}
                   <div className="relative h-72 overflow-hidden">
                     <img
@@ -458,8 +468,14 @@ const AgentPropertyList = () => {
                       <div className="flex items-center gap-3 py-3 mt-2 border-t border-gray-100 dark:border-white/5">
                         <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 flex-shrink-0">
                           {agentImage ? (
-                            <img src={agentImage} alt={agentName} className="w-full h-full object-cover" />
-                          ) : (
+ <img 
+    src={`${baseUrl}/agents/${agent.profilePhoto}`}
+    className="w-24 h-24 rounded-[2rem] object-cover relative z-10 border-2 border-amber-500/20"
+    alt={agent.name}
+    onError={(e) => {
+      e.target.src = getAvatarFallback(agent.name);
+    }}
+  />                          ) : (
                             <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
                               <User size={14} />
                             </div>

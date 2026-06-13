@@ -180,6 +180,14 @@ const AgentSlider = () => {
     accent: "text-amber-500",
   };
 
+
+  // Add this helper function before the AgentSupport component
+const getAvatarFallback = (name) => {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Agent')}&background=C5A059&color=fff&bold=true`;
+};
+
+// Fix the base URL construction - remove the incorrect template literal
+const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000/";
   return (
     <section className={`px-6 py-16 overflow-hidden transition-colors duration-700 ${isDark ? "bg-slate-950" : "bg-white"}`}>
       <div className="max-w-7xl mx-auto">
@@ -267,7 +275,10 @@ const AgentSlider = () => {
                     <div className="flex items-start justify-between mb-8">
                       <div className="relative">
                         <div className="absolute inset-0 bg-amber-500 rounded-2xl rotate-6 group-hover:rotate-12 transition-transform" />
-                        <img src={agent.profilePhoto || agent.profilePhoto || getAvatarFallback(agent.name)} className="relative w-24 h-24 object-cover rounded-2xl border-2 border-white dark:border-slate-900 shadow-xl" alt={agent.name} />
+                        <img // With this:
+src={agent.profilePhoto 
+  ? `${baseUrl}/agents/${agent.profilePhoto}` 
+  : getAvatarFallback(agent.name)} className="relative w-24 h-24 object-cover rounded-2xl border-2 border-white dark:border-slate-900 shadow-xl" alt={agent.name} />
                       </div>
                     </div>
 
