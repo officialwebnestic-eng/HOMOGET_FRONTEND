@@ -155,6 +155,7 @@ const handleImageClick = (index) => {
 
 
 
+
   const fetchRelatedProperties = useCallback(async () => {
     if (!property) return;
     
@@ -359,6 +360,7 @@ const [controlledSwiper, setControlledSwiper] = useState(null);
       {/* 1. ARCHITECTURAL HERO (with Swiper Gallery) */}
 
 {/* 1. HERO SECTION - Two Column Grid Layout */}
+{/* 1. HERO SECTION - Two Column Grid Layout (Fixed - No Duplicate Images) */}
 <section className="relative w-full">
   <div className="grid grid-cols-1 lg:grid-cols-5 min-h-[50vh] lg:h-[75vh] gap-2 p-2 bg-black/5 dark:bg-zinc-900/20">
     
@@ -414,14 +416,15 @@ const [controlledSwiper, setControlledSwiper] = useState(null);
       </div>
     </div>
 
-    {/* Right Column - Small Image Grid (2/5 width) */}
+    {/* Right Column - Small Image Grid (2/5 width) - FIXED: Start from index 1 to avoid duplicate */}
     <div className="lg:col-span-2 h-[35vh] lg:h-full">
       <div className="grid grid-cols-2 gap-2 h-full content-stretch">
         {[...Array(4)].map((_, idx) => {
-          const targetImageIndex = idx + 1; 
+          // ✅ FIX: Start from index 1 instead of 0 to avoid duplicate with main slider
+          const targetImageIndex = idx + 1;
           const hasImage = images[targetImageIndex];
           const isLastSlot = idx === 3;
-          const hasMoreImages = images.length > 4;
+          const hasMoreImages = images.length > 5; // Changed to 5 because we start from index 1
 
           // Case 1: Slot has a valid thumbnail image
           if (hasImage && !(isLastSlot && hasMoreImages)) {
@@ -451,17 +454,17 @@ const [controlledSwiper, setControlledSwiper] = useState(null);
             return (
               <div 
                 key={idx}
-                onClick={() => openGallery(4)}
+                onClick={() => openGallery(5)}
                 className="relative h-full overflow-hidden rounded-lg cursor-pointer group bg-zinc-800 min-h-[60px]"
               >
                 <img 
-                  src={hasImage || images[4]} 
+                  src={images[5] || images[4]} 
                   className="w-full h-full object-cover filter blur-[2px] brightness-75" 
                   alt="View more compilation preview" 
                 />
                 <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center transition-colors group-hover:bg-black/70">
                   <Camera size={24} className="text-white mb-1" />
-                  <span className="text-white text-sm font-bold">+{images.length - 4} more</span>
+                  <span className="text-white text-sm font-bold">+{images.length - 5} more</span>
                 </div>
               </div>
             );
