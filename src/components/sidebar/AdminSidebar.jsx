@@ -104,7 +104,7 @@ export default function Sidebar() {
           {/* Agents Dropdown */}
           <DropdownMenu
             icon={<Users size={20} />}
-            label="Agents"
+            label="Agents Management"
             menuKey="Users"
             openDropdown={openDropdown}
             toggleDropdown={toggleDropdown}
@@ -118,25 +118,10 @@ export default function Sidebar() {
 
 
 
-          {/* Developers Dropdown */}
-          <DropdownMenu
-            icon={<Building2 size={20} />}
-            label="Developers"
-            menuKey="Developers"
-            openDropdown={openDropdown}
-            toggleDropdown={toggleDropdown}
-            ct={ct}
-            isOpen={isOpen}
-            items={[
-              { to: "/createdeveloper", label: "Enroll Developer", icon: <Plus size={14} /> },
-              { to: "/viewdevelopers", label: "Developer Portfolio", icon: <Building2 size={14} /> }
-            ]}
-          />
-
           {/* Properties Dropdown */}
           <DropdownMenu
             icon={<Building size={20} />}
-            label="Properties"
+            label="Properties Management"
             menuKey="Prop"
             openDropdown={openDropdown}
             toggleDropdown={toggleDropdown}
@@ -147,8 +132,8 @@ export default function Sidebar() {
               { to: "/viewpropertylist", label: "All Properties", icon: <Eye size={14} /> }
             ]}
           />
-          
-          {/* Agents Dropdown */}
+                              <NavItem to="/leads-management" icon={<ClipboardList size={20} />} label="Leads Management" ct={ct} isOpen={isOpen} />
+  {/* Agents Dropdown */}
           <DropdownMenu
             icon={<Users size={20} />}
             label="Broker Property List"
@@ -161,6 +146,26 @@ export default function Sidebar() {
               { to: "/viewpropertyrequest", label: "Broker Property List", icon: <UserCheck size={14} /> },
             ]}
           />
+
+          {/* Developers Dropdown */}
+          <DropdownMenu
+            icon={<Building2 size={20} />}
+            label="Developer Management"
+            menuKey="Developers"
+            openDropdown={openDropdown}
+            toggleDropdown={toggleDropdown}
+            ct={ct}
+            isOpen={isOpen}
+            items={[
+              { to: "/createdeveloper", label: "Enroll Developer", icon: <Plus size={14} /> },
+              { to: "/viewdevelopers", label: "Developer Portfolio", icon: <Building2 size={14} /> }
+            ]}
+          />
+
+
+
+          
+        
 
           <DropdownMenu
             icon={<Calendar size={20} />}

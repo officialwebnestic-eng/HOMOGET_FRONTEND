@@ -81,6 +81,7 @@ import BlogDetails from "../components/common/homecommon/BlogDetails.jsx";
 import HelpCenter from "../components/common/homecommon/HelpCenter .jsx";
 import UserAgentDetails from "../components/common/homecommon/UserAgentDetails.jsx";
 import GetAppoinment from "../components/Appoinment/GetAppoinment.jsx";
+import LeadsManagementTable from "../components/admin/LeadsManagement/LeadsManagementTable.jsx";
 
 
 export const AdminRoutes = () => {
@@ -104,6 +105,7 @@ export const AdminRoutes = () => {
                 <Route path="/viewbloglist" element={<ViewBlogList />} />
                 <Route path="/updateblog/:id" element={<UpdateBlog />} />
                 <Route path="/updatepropertydetails/:id" element={<UpdateProperty />} />
+                <Route path="/leads-management" element={<LeadsManagementTable />} />
            
                 <Route path="/viewallbookings" element={<ViewAllBookings />} />
                 <Route path="/createdeveloper" element={<AddDeveloperForm />} />
