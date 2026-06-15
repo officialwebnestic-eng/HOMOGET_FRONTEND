@@ -329,125 +329,130 @@ const PropertyDetailsPage = () => {
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-[#050505] text-white" : "bg-white text-black"}`}>
       {/* 1. HERO SECTION - Two Column Grid Layout */}
-      <section className="relative w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-5 min-h-[50vh] lg:h-[60vh] gap-2 p-2 bg-black/5 dark:bg-zinc-900/20">
-          
-          {/* Left Column - Main Image Slider (3/5 width) */}
-          <div className="lg:col-span-3 relative h-[40vh] lg:h-full overflow-hidden rounded-xl bg-zinc-900 shadow-inner">
-            {images.length > 0 ? (
-              <Swiper
-                modules={[Autoplay, Pagination, SwiperNav]}
-                spaceBetween={0}
-                slidesPerView={1}
-                pagination={{ clickable: true }}
-                navigation
-                autoplay={{ delay: 4000, disableOnInteraction: false }}
-                className="h-full w-full"
-                onSwiper={(swiper) => {
-                  window.heroSwiper = swiper;
-                }}
+   {/* 1. HERO SECTION - Fixed Image Slider */}
+<section className="relative w-full">
+  <div className="grid grid-cols-1 lg:grid-cols-5 gap-2 p-2 bg-black/5 dark:bg-zinc-900/20">
+    
+    {/* Left Column - Main Image Slider (3/5 width) - FIXED HEIGHT */}
+    <div className="lg:col-span-3 relative aspect-[4/3] lg:aspect-auto lg:h-[500px] overflow-hidden rounded-xl bg-zinc-900 shadow-inner">
+      {images.length > 0 ? (
+        <Swiper
+          modules={[Autoplay, Pagination, SwiperNav]}
+          spaceBetween={0}
+          slidesPerView={1}
+          pagination={{ clickable: true }}
+          navigation
+          autoplay={{ delay: 4000, disableOnInteraction: false }}
+          className="h-full w-full"
+          onSwiper={(swiper) => {
+            window.heroSwiper = swiper;
+          }}
+        >
+          {images.map((img, idx) => (
+            <SwiperSlide key={idx}>
+              <div 
+                className="relative w-full h-full cursor-pointer"
+                onClick={() => openGallery(idx)}
               >
-                {images.map((img, idx) => (
-                  <SwiperSlide key={idx}>
-                    <div 
-                      className="relative w-full h-full cursor-pointer"
-                      onClick={() => openGallery(idx)}
-                    >
-                      <img 
-                        src={img} 
-                        className="w-full h-full object-cover" 
-                        alt={`${propertyTitle} - Image ${idx + 1}`} 
-                      />
-                    </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
-                <Building size={64} className="text-white/20" />
+                <img 
+                  src={img} 
+                  className="w-full h-full object-cover" 
+                  alt={`${propertyTitle} - Image ${idx + 1}`} 
+                />
               </div>
-            )}
-            
-            {/* Back Button */}
-            <button
-              onClick={() => navigate(-1)}
-              className="absolute top-4 left-4 z-20 flex items-center gap-2 text-[10px] font-medium text-white/80 hover:text-amber-500 transition-all bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full"
-            >
-              <ArrowLeft size={14} /> Back
-            </button>
-            
-            {/* Status Badge */}
-            <div className="absolute top-4 right-4 z-20">
-              <span className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${statusBadge.color} text-white shadow-lg`}>
-                {statusBadge.icon} {statusBadge.text}
-              </span>
-            </div>
-          </div>
-
-          {/* Right Column - Small Image Grid (2/5 width) */}
-          <div className="lg:col-span-2 h-[30vh] lg:h-full">
-            <div className="grid grid-cols-2 gap-2 h-full">
-              {[...Array(4)].map((_, idx) => {
-                const targetImageIndex = idx + 1; 
-                const hasImage = images[targetImageIndex];
-                const isLastSlot = idx === 3;
-                const hasMoreImages = images.length > 4;
-
-                if (hasImage && !(isLastSlot && hasMoreImages)) {
-                  return (
-                    <div 
-                      key={idx} 
-                      onClick={() => {
-                        if (window.heroSwiper) {
-                          window.heroSwiper.autoplay.stop();
-                          window.heroSwiper.slideTo(targetImageIndex);
-                        }
-                      }}
-                      className="relative h-full overflow-hidden rounded-lg cursor-pointer group bg-zinc-800"
-                    >
-                      <img 
-                        src={hasImage} 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                        alt={`Thumbnail preview ${targetImageIndex + 1}`} 
-                      />
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                    </div>
-                  );
-                }
-
-                if (isLastSlot && hasMoreImages) {
-                  return (
-                    <div 
-                      key={idx}
-                      onClick={() => openGallery(4)}
-                      className="relative h-full overflow-hidden rounded-lg cursor-pointer group bg-zinc-800"
-                    >
-                      <img 
-                        src={hasImage || images[4]} 
-                        className="w-full h-full object-cover filter blur-[2px] brightness-75" 
-                        alt="View more compilation preview" 
-                      />
-                      <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center transition-colors group-hover:bg-black/70">
-                        <Camera size={24} className="text-white mb-1" />
-                        <span className="text-white text-sm font-bold">+{images.length - 4} more</span>
-                      </div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div 
-                    key={`empty-${idx}`} 
-                    className="h-full rounded-lg bg-gray-200/40 dark:bg-zinc-800/40 flex items-center justify-center border border-dashed border-gray-300 dark:border-zinc-700"
-                  >
-                    <Building size={20} className="text-gray-400/50 dark:text-zinc-600" />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      ) : (
+        <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+          <Building size={64} className="text-white/20" />
         </div>
-      </section>
+      )}
+      
+      {/* Back Button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-4 left-4 z-20 flex items-center gap-2 text-[10px] font-medium text-white/80 hover:text-amber-500 transition-all bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full"
+      >
+        <ArrowLeft size={14} /> Back
+      </button>
+      
+      {/* Status Badge */}
+      <div className="absolute top-4 right-4 z-20">
+        <span className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${statusBadge.color} text-white shadow-lg`}>
+          {statusBadge.icon} {statusBadge.text}
+        </span>
+      </div>
+    </div>
+
+    {/* Right Column - Small Image Grid (2/5 width) - FIXED HEIGHT */}
+    <div className="lg:col-span-2">
+      <div className="grid grid-cols-2 gap-2 h-[250px] lg:h-[500px]">
+        {[...Array(4)].map((_, idx) => {
+          const targetImageIndex = idx + 1; 
+          const hasImage = images[targetImageIndex];
+          const isLastSlot = idx === 3;
+          const hasMoreImages = images.length > 4;
+
+          // Case 1: Slot has a valid thumbnail image
+          if (hasImage && !(isLastSlot && hasMoreImages)) {
+            return (
+              <div 
+                key={idx} 
+                onClick={() => {
+                  if (window.heroSwiper) {
+                    window.heroSwiper.autoplay.stop();
+                    window.heroSwiper.slideTo(targetImageIndex);
+                  }
+                }}
+                className="relative h-full overflow-hidden rounded-lg cursor-pointer group bg-zinc-800"
+              >
+                <img 
+                  src={hasImage} 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                  alt={`Thumbnail preview ${targetImageIndex + 1}`} 
+                />
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              </div>
+            );
+          }
+
+          // Case 2: Last slot with remaining extra overflow images (MORE BUTTON)
+          if (isLastSlot && hasMoreImages) {
+            return (
+              <div 
+                key={idx}
+                onClick={() => openGallery(4)}
+                className="relative h-full overflow-hidden rounded-lg cursor-pointer group bg-zinc-800"
+              >
+                <img 
+                  src={hasImage || images[4]} 
+                  className="w-full h-full object-cover filter blur-[2px] brightness-75" 
+                  alt="View more compilation preview" 
+                />
+                <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center transition-colors group-hover:bg-black/70">
+                  <Camera size={24} className="text-white mb-1" />
+                  <span className="text-white text-sm font-bold">+{images.length - 4} more</span>
+                </div>
+              </div>
+            );
+          }
+
+          // Case 3: Empty Placeholder layout fallback
+          return (
+            <div 
+              key={`empty-${idx}`} 
+              className="h-full rounded-lg bg-gray-200/40 dark:bg-zinc-800/40 flex items-center justify-center border border-dashed border-gray-300 dark:border-zinc-700"
+            >
+              <Building size={20} className="text-gray-400/50 dark:text-zinc-600" />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
+  </div>
+</section>
 
       {/* 2. PERSISTENT TRANSACTION BAR */}
       <div className="sticky top-0 z-30 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 shadow-sm">
