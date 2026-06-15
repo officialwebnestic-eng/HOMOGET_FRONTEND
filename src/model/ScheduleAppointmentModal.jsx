@@ -4,8 +4,9 @@ import { X, Calendar, Clock, Phone, Mail, User, Building2, MapPin, Send, Loader2
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from './SuccessToasNotification';
 import LocationSearch from '../components/admin/Property/LocationSearch';
- import { http } from '../axios/axios';
-
+import { http } from '../axios/axios';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
 const ScheduleAppointmentModal = ({ isOpen, onClose, isDark }) => {
   const { addToast } = useToast();
@@ -13,7 +14,6 @@ const ScheduleAppointmentModal = ({ isOpen, onClose, isDark }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phoneCode: '+971',
     phone: '',
     category: '',
     propertyType: '',
@@ -45,19 +45,6 @@ const ScheduleAppointmentModal = ({ isOpen, onClose, isDark }) => {
     return resTypes;
   };
 
-  const countryCodes = [
-    { code: '+971', flag: '🇦🇪', country: 'UAE' },
-    { code: '+966', flag: '🇸🇦', country: 'Saudi Arabia' },
-    { code: '+974', flag: '🇶🇦', country: 'Qatar' },
-    { code: '+965', flag: '🇰🇼', country: 'Kuwait' },
-    { code: '+968', flag: '🇴🇲', country: 'Oman' },
-    { code: '+973', flag: '🇧🇭', country: 'Bahrain' },
-    { code: '+91', flag: '🇮🇳', country: 'India' },
-    { code: '+44', flag: '🇬🇧', country: 'UK' },
-    { code: '+1', flag: '🇺🇸', country: 'USA' },
-    { code: '+61', flag: '🇦🇺', country: 'Australia' },
-  ];
-
   const inquiryTypes = [
     { value: 'consultation', label: 'Consultation' },
     { value: 'sell', label: 'I want to Sell' },
@@ -84,6 +71,13 @@ const ScheduleAppointmentModal = ({ isOpen, onClose, isDark }) => {
     }
   };
 
+  const handlePhoneChange = (value) => {
+    setFormData(prev => ({ ...prev, phone: value }));
+    if (errors.phone) {
+      setErrors(prev => ({ ...prev, phone: '' }));
+    }
+  };
+
   const handleLocationSelect = (location) => {
     if (location) {
       setSelectedLocationData(location);
@@ -99,8 +93,7 @@ const ScheduleAppointmentModal = ({ isOpen, onClose, isDark }) => {
     if (!formData.name.trim()) newErrors.name = 'Name is required';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
-    else if (!/^[0-9]{7,15}$/.test(formData.phone)) newErrors.phone = 'Phone number is invalid';
+    if (!formData.phone) newErrors.phone = 'Phone number is required';
     if (!formData.inqueryType) newErrors.inqueryType = 'Inquiry type is required';
     
     setErrors(newErrors);
@@ -133,7 +126,7 @@ const ScheduleAppointmentModal = ({ isOpen, onClose, isDark }) => {
       const payload = {
         name: formData.name,
         email: formData.email,
-        phone: `${formData.phoneCode} ${formData.phone}`,
+        phone: formData.phone,
         category: formData.category,
         propertyType: formData.propertyType,
         location: formData.location,
@@ -150,7 +143,7 @@ const ScheduleAppointmentModal = ({ isOpen, onClose, isDark }) => {
         addToast('Request submitted successfully! Our team will contact you shortly.', 'success');
         onClose();
         setFormData({
-          name: '', email: '', phoneCode: '+971', phone: '', category: '',
+          name: '', email: '', phone: '', category: '',
           propertyType: '', location: '', date: '', time: '', message: '',
           inqueryType: 'consultation', offeringType: ''
         });
@@ -245,35 +238,26 @@ const ScheduleAppointmentModal = ({ isOpen, onClose, isDark }) => {
                 </div>
               </div>
 
-              {/* Phone with Country Code */}
+              {/* Phone with Country Code using react-phone-input-2 */}
               <div>
                 <label className={labelClass}>Phone Number *</label>
-                <div className="flex gap-2">
-                  <div className="w-32 relative">
-                    <select
-                      name="phoneCode"
-                      value={formData.phoneCode}
-                      onChange={handleChange}
-                      className={`${inputClass} appearance-none cursor-pointer`}
-                    >
-                      {countryCodes.map((code) => (
-                        <option key={code.code} value={code.code}>
-                          {code.flag} {code.code}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex-1">
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className={inputClass}
-                      placeholder="50 123 4567"
-                    />
-                  </div>
-                </div>
+                <PhoneInput
+                  country={"ae"}
+                  value={formData.phone}
+                  onChange={handlePhoneChange}
+                  enableSearch={true}
+                  searchPlaceholder="Search country"
+                  inputClass={`!w-full !pl-12 !pr-3 !py-2.5 !text-sm !rounded-xl !border focus:!outline-none focus:!ring-2 focus:!ring-amber-500 ${
+                    isDark 
+                      ? "!bg-[#1A1F2B] !border-white/10 !text-white" 
+                      : "!bg-white !border-slate-200 !text-slate-900"
+                  }`}
+                  buttonClass={`!absolute !left-0 !top-0 !h-full !border-0 !bg-transparent ${
+                    isDark ? "!text-white" : ""
+                  }`}
+                  dropdownClass={isDark ? "!bg-[#1A1F2B] !text-white !border-white/10" : ""}
+                  searchClass={isDark ? "!bg-[#1A1F2B] !text-white" : ""}
+                />
                 {errors.phone && <p className="text-red-500 text-[9px] mt-1">{errors.phone}</p>}
               </div>
 
@@ -281,7 +265,7 @@ const ScheduleAppointmentModal = ({ isOpen, onClose, isDark }) => {
               <div>
                 <label className={labelClass}>Inquiry Type *</label>
                 <div className="relative">
-                  <Briefcase size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500" />
+                  <Briefcase size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 z-10" />
                   <select
                     name="inqueryType"
                     value={formData.inqueryType}
@@ -329,7 +313,7 @@ const ScheduleAppointmentModal = ({ isOpen, onClose, isDark }) => {
                 <div>
                   <label className={labelClass}>Property Type</label>
                   <div className="relative">
-                    <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500" />
+                    <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 z-10" />
                     <select
                       name="propertyType"
                       value={formData.propertyType}
@@ -387,7 +371,7 @@ const ScheduleAppointmentModal = ({ isOpen, onClose, isDark }) => {
                 <div>
                   <label className={labelClass}>Preferred Date</label>
                   <div className="relative">
-                    <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500" />
+                    <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 z-10" />
                     <input
                       type="date"
                       name="date"
@@ -401,7 +385,7 @@ const ScheduleAppointmentModal = ({ isOpen, onClose, isDark }) => {
                 <div>
                   <label className={labelClass}>Preferred Time</label>
                   <div className="relative">
-                    <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500" />
+                    <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 z-10" />
                     <input
                       type="time"
                       name="time"
