@@ -53,6 +53,8 @@ const UpdateProperty = () => {
   const filteredAmenities = AMENITIES.filter((item) =>
     item.toLowerCase().includes(searchAmenity.toLowerCase())
   );
+  const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000/";
+
 
   const CURRENCIES = ["AED", "USD", "EUR", "GBP", "INR", "SAR", "QAR", "OMR", "KWD", "BHD"];
 
@@ -442,132 +444,146 @@ useEffect(() => {
     );
   };
 
-  const onSubmit = async (data) => {
-    if (existingImages.length === 0 && files.length === 0) {
-      addToast("Media Portfolio Required", "error");
-      return;
-    }
+const onSubmit = async (data) => {
+  // ✅ 1. Validation
+  if (existingImages.length === 0 && files.length === 0) {
+    addToast("Media Portfolio Required", "error");
+    return;
+  }
+  
+  if (!data.locationName && !data.displayAddress) {
+    addToast("Please select a valid location from the search", "error");
+    return;
+  }
+  
+  setIsSubmitting(true);
+  
+  try {
+    const formData = new FormData();
     
-    if (!data.locationName && !data.displayAddress) {
-      addToast("Please select a valid location from the search", "error");
-      return;
-    }
+    // ✅ 2. Clean Payload Creation (Explicitly exclude raw file arrays from data object to prevent loop pollution)
+    const payload = {
+      propertyTitleEn: data.propertyTitleEn || "",
+      propertyTitleAr: data.propertyTitleAr || "",
+      price: data.price ? Number(data.price) : 0,
+      currency: data.currency || "AED",
+      category: data.category || "Residential",
+      propertytype: data.propertytype || "",
+      offeringType: data.offeringType || "Sale",
+      rentedPeriod: data.rentedPeriod || "",
+      cheques: data.cheques ? Number(data.cheques) : undefined,
+      developerId: data.developerId || null,
+      agentId: isAdmin ? (data.agentId || "") : (selectedAgent?._id || data.agentId || ""),
+      permitType: data.permitType || "RERA",
+      trakheesiNumber: data.trakheesiNumber || "",
+      reraORN: data.reraORN || "",
+      brnNumber: data.brnNumber || "",
+      ownerName: data.ownerName || "",
+      bedroom: data.bedroom ? Number(data.bedroom) : 0,
+      bathroom: data.bathroom ? Number(data.bathroom) : 0,
+      totalFloor: data.totalFloor ? Number(data.totalFloor) : undefined,
+      squarefoot: data.squarefoot ? Number(data.squarefoot) : 0,
+      unitNo: data.unitNo || "",
+      parkingSlots: data.parkingSlots ? Number(data.parkingSlots) : 0,
+      furnishingType: data.furnishingType || "Unfurnished",
+      propertyAge: data.propertyAge || "Brand New",
+      availability: data.availability || "Immediately",
+      descriptionEn: data.descriptionEn || "",
+      descriptionAr: data.descriptionAr || "",
+      locationName: data.locationName || "",
+      locationAddress: data.locationAddress || "",
+      locationPlaceId: data.locationPlaceId || "",
+      locationLat: data.locationLat ? Number(data.locationLat) : null,
+      locationLng: data.locationLng ? Number(data.locationLng) : null,
+      locationType: data.locationType || "POI",
+      displayAddress: data.displayAddress || "",
+      address: data.address || "",
+      amenities: Array.isArray(data.amenities) ? data.amenities : [],
+      nearByLocations: Array.isArray(data.nearByLocations) ? data.nearByLocations : [],
+      nearByProjects: Array.isArray(data.nearByProjects) ? data.nearByProjects : [],
+      videos: data.videos || "",
+      virtualTour360: data.virtualTour360 || "",
+      videoTourLink: data.videoTourLink || "",
+      status: data.status || "Active",
+      publishingStatus: data.publishingStatus || "Published",
+      refrenceNo: data.refrenceNo || generateReferenceNumber(),
+      offPlanType: isOffPlan ? data.offPlanType : undefined,
+      deliveryDate: data.deliveryDate || "",
+      completionPercentage: data.completionPercentage ? Number(data.completionPercentage) : null,
+      paymentPlan: data.paymentPlan || "",
+      offPlanNocNumber: data.offPlanNocNumber || "",
+      offPlanPermitNumber: data.offPlanPermitNumber || "",
+      offPlanSecondaryNocNumber: data.offPlanSecondaryNocNumber || "",
+      offPlanSecondaryPermitNumber: data.offPlanSecondaryPermitNumber || "",
+      originalOffPlanPermitNumber: data.originalOffPlanPermitNumber || "",
+      assignmentContractNumber: data.assignmentContractNumber || "",
+      ownerIdNumber: data.ownerIdNumber || "",
+      ownerEmiratesId: data.ownerEmiratesId || "",
+      ownerPassportNumber: data.ownerPassportNumber || "",
+      ownerVisaCopy: data.ownerVisaCopy || "",
+      dldExpiryDate: data.dldExpiryDate || "",
+      listingStartDate: data.listingStartDate || new Date().toISOString().split('T')[0],
+      listingEndDate: data.listingEndDate || null,
+      zoneName: data.zoneName || "",
+    };
     
-    setIsSubmitting(true);
-    
-    try {
-      const formData = new FormData();
-      
-      const payload = {
-        propertyTitleEn: data.propertyTitleEn || "",
-        propertyTitleAr: data.propertyTitleAr || "",
-        price: data.price ? Number(data.price) : 0,
-        currency: data.currency || "AED",
-        category: data.category || "Residential",
-        propertytype: data.propertytype || "",
-        offeringType: data.offeringType || "Sale",
-        rentedPeriod: data.rentedPeriod || "",
-        cheques: data.cheques ? Number(data.cheques) : undefined,
-        developerId: data.developerId || null,
-        agentId: isAdmin ? (data.agentId || "") : (selectedAgent?._id || data.agentId || ""),
-        permitType: data.permitType || "RERA",
-        trakheesiNumber: data.trakheesiNumber || "",
-        reraORN: data.reraORN || "",
-        brnNumber: data.brnNumber || "",
-        ownerName: data.ownerName || "",
-        bedroom: data.bedroom ? Number(data.bedroom) : 0,
-        bathroom: data.bathroom ? Number(data.bathroom) : 0,
-        totalFloor: data.totalFloor ? Number(data.totalFloor) : undefined,
-        squarefoot: data.squarefoot ? Number(data.squarefoot) : 0,
-        unitNo: data.unitNo || "",
-        parkingSlots: data.parkingSlots ? Number(data.parkingSlots) : 0,
-        furnishingType: data.furnishingType || "Unfurnished",
-        propertyAge: data.propertyAge || "Brand New",
-        availability: data.availability || "Immediately",
-        descriptionEn: data.descriptionEn || "",
-        descriptionAr: data.descriptionAr || "",
-        locationName: data.locationName || "",
-        locationAddress: data.locationAddress || "",
-        locationPlaceId: data.locationPlaceId || "",
-        locationLat: data.locationLat ? Number(data.locationLat) : null,
-        locationLng: data.locationLng ? Number(data.locationLng) : null,
-        locationType: data.locationType || "POI",
-        displayAddress: data.displayAddress || "",
-        address: data.address || "",
-        amenities: Array.isArray(data.amenities) ? data.amenities : [],
-        nearByLocations: Array.isArray(data.nearByLocations) ? data.nearByLocations : [],
-        nearByProjects: Array.isArray(data.nearByProjects) ? data.nearByProjects : [],
-        videos: data.videos || "",
-        virtualTour360: data.virtualTour360 || "",
-        videoTourLink: data.videoTourLink || "",
-        status: data.status || "Active",
-        publishingStatus: data.publishingStatus || "Published",
-        refrenceNo: data.refrenceNo || generateReferenceNumber(),
-        offPlanType: isOffPlan ? data.offPlanType : undefined,
-        deliveryDate: data.deliveryDate || "",
-        completionPercentage: data.completionPercentage ? Number(data.completionPercentage) : null,
-        paymentPlan: data.paymentPlan || "",
-        offPlanNocNumber: data.offPlanNocNumber || "",
-        offPlanPermitNumber: data.offPlanPermitNumber || "",
-        offPlanSecondaryNocNumber: data.offPlanSecondaryNocNumber || "",
-        offPlanSecondaryPermitNumber: data.offPlanSecondaryPermitNumber || "",
-        originalOffPlanPermitNumber: data.originalOffPlanPermitNumber || "",
-        assignmentContractNumber: data.assignmentContractNumber || "",
-        ownerIdNumber: data.ownerIdNumber || "",
-        ownerEmiratesId: data.ownerEmiratesId || "",
-        ownerPassportNumber: data.ownerPassportNumber || "",
-        ownerVisaCopy: data.ownerVisaCopy || "",
-        dldExpiryDate: data.dldExpiryDate || "",
-        listingStartDate: data.listingStartDate || new Date().toISOString().split('T')[0],
-        listingEndDate: data.listingEndDate || null,
-        zoneName: data.zoneName || "",
-      };
-      
-      for (const key in payload) {
-        const value = payload[key];
-        if (value !== undefined && value !== null && value !== "") {
-          if (typeof value === "object" && !Array.isArray(value)) {
-            formData.append(key, JSON.stringify(value));
-          } else if (Array.isArray(value)) {
-            formData.append(key, JSON.stringify(value));
-          } else {
-            formData.append(key, value);
-          }
+    // ✅ 3. Append Textual Fields FIRST (Crucial for Multer middleware processing order)
+    for (const key in payload) {
+      const value = payload[key];
+      if (value !== undefined && value !== null && value !== "") {
+        if (typeof value === "object") {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, value);
         }
       }
-      
-      formData.append("existingImages", JSON.stringify(existingImages));
-      files.forEach((file) => formData.append("image", file));
-      
-      formData.append("existingOffPlanDocuments", JSON.stringify(existingOffPlanDocuments));
-      offPlanDocuments.forEach((doc) => formData.append("offPlanDocuments", doc));
-      
-      formData.append("existingOwnerDocuments", JSON.stringify(existingOwnerDocuments));
-      ownerDocuments.forEach((doc) => formData.append("ownerDocuments", doc));
-      
-      if (dldQRFile) {
-        formData.append("dldQRCode", dldQRFile);
-      }
-      if (!existingDldQRCode && !dldQRFile) {
-        formData.append("removeDldQRCode", "true");
-      }
-      
-      const res = await http.put(`/updateproperty/${id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        withCredentials: true
-      });
-      
-      if (res.data.success) {
-        addToast("Property Updated Successfully", "success");
-        navigate("/propertydetailsagent");
-      }
-    } catch (e) {
-      console.error("Submission error:", e);
-      addToast(e.response?.data?.message || "Failed to update property", "error");
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+    
+    // ✅ 4. Append Document Arrays as explicitly Stringified collections
+    formData.append("existingImages", JSON.stringify(existingImages));
+    formData.append("existingOffPlanDocuments", JSON.stringify(existingOffPlanDocuments));
+    formData.append("existingOwnerDocuments", JSON.stringify(existingOwnerDocuments));
+    
+    // ✅ 5. Append Raw Binary Streams LAST (Ensures Multer intercepts files after fields are mounted)
+    if (files && files.length > 0) {
+      files.forEach((file) => {
+        formData.append("image", file); // Must match backend field configuration: upload.array('image')
+      });
+    }
+    
+    if (offPlanDocuments && offPlanDocuments.length > 0) {
+      offPlanDocuments.forEach((doc) => formData.append("offPlanDocuments", doc));
+    }
+    
+    if (ownerDocuments && ownerDocuments.length > 0) {
+      ownerDocuments.forEach((doc) => formData.append("ownerDocuments", doc));
+    }
+    
+    // Handle DLD QR File Stream configurations
+    if (dldQRFile) {
+      formData.append("dldQRCode", dldQRFile);
+    }
+    if (!existingDldQRCode && !dldQRFile) {
+      formData.append("removeDldQRCode", "true");
+    }
+    
+    // ✅ 6. Network Pipeline Dispatch
+    const res = await http.put(`/updateproperty/${id}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      withCredentials: true
+    });
+    
+    if (res.data.success) {
+      addToast("Property Updated Successfully", "success");
+      navigate("/viewpropertylist");
+    }
+  } catch (e) {
+    console.error("Submission operational error:", e);
+    addToast(e.response?.data?.message || "Failed to finalize property configuration", "error");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const inputClass = `w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all text-sm font-medium ${
     isDark ? "bg-[#1A1F2B] border-white/10 text-white" : "bg-white border-slate-200 text-slate-900 shadow-sm"
@@ -1112,7 +1128,7 @@ useEffect(() => {
                   <div className="mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
                     <p className="text-[10px] text-green-600 mb-2">Current QR Code:</p>
                     <div className="flex items-center justify-between">
-                      <img src={existingDldQRCode} alt="Existing DLD QR" className="w-16 h-16 object-contain" />
+                      <img src={`${baseUrl}/properties/${existingDldQRCode}`} alt="Existing DLD QR" className="w-16 h-16 object-contain" />
                       <button type="button" onClick={removeExistingDldQR} className="text-xs text-red-500 hover:text-red-600 transition-colors">Remove</button>
                     </div>  
                   </div>
@@ -1252,21 +1268,33 @@ useEffect(() => {
             <div id="media" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
               <SectionHeader icon={<Camera />} title="Media" currentStep={currentStep} stepIndex={isOffPlan ? 8 : 6} />
               
-              {existingImages.length > 0 && (
-                <div className="mb-4">
-                  <label className={labelClass}>Current Images</label>
-                  <div className="grid grid-cols-3 md:grid-cols-4 gap-3 mt-2">
-                    {existingImages.map((img, i) => (
-                      <div key={i} className="relative aspect-square rounded-lg overflow-hidden group border">
-                        <img src={`http://localhost:3000/properties/${img}`} className="w-full h-full object-cover" alt="" />
-                        <button type="button" onClick={() => setExistingImages(prev => prev.filter((_, idx) => idx !== i))} className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
-                          <Trash2 size={16} className="text-white" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+          {/* When displaying existing images for deletion preview */}
+{existingImages.length > 0 && (
+  <div className="mb-4">
+    <label className={labelClass}>Current Images</label>
+    <div className="grid grid-cols-3 md:grid-cols-4 gap-3 mt-2">
+      {existingImages.map((img, i) => (
+        <div key={i} className="relative aspect-square rounded-lg overflow-hidden group border">
+          <img 
+            src={`${baseUrl}/properties/${img}`}
+            className="w-full h-full object-cover" 
+            alt=""
+            onError={(e) => {
+              e.target.src = 'https://via.placeholder.com/150?text=Image+Not+Found';
+            }}
+          />
+          <button 
+            type="button" 
+            onClick={() => setExistingImages(prev => prev.filter((_, idx) => idx !== i))} 
+            className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all"
+          >
+            <Trash2 size={16} className="text-white" />
+          </button>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
               
               <div className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer hover:bg-amber-500/5 transition-all" onClick={() => document.getElementById("file-up")?.click()}>
                 <Upload className="mx-auto mb-2 text-amber-500" size={28} />
