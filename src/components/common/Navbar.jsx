@@ -386,12 +386,37 @@ export default function Navbar() {
             {/* Right Section with Schedule Appointment Button */}
             <div className="flex items-center gap-2 lg:gap-2 flex-shrink-0">
               {/* Schedule Appointment Button */}
-              <button
-                onClick={() => setShowAppointmentModal(true)}
-                className="px-3 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md hover:shadow-lg transition-all flex items-center gap-1.5"
-              >
-                <Calendar size={12} /> Schedule
-              </button>
+            <button
+  onClick={() => setShowAppointmentModal(true)}
+  className="group relative px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-2 overflow-visible"
+>
+  {/* NEW badge - positioned top-right */}
+  <div className="absolute -top-2 -right-2 z-10">
+    <div className="relative">
+      <div className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75"></div>
+      <div className="relative bg-gradient-to-r from-red-500 to-orange-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-md">
+        NEW
+      </div>
+    </div>
+  </div>
+
+  {/* Icon - handshake/agreement symbol for real estate */}
+  <div className="relative">
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      viewBox="0 0 24 24" 
+      fill="currentColor" 
+      className="w-3.5 h-3.5 group-hover:scale-110 transition-transform"
+    >
+      <path d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 0V3h3m4.5 0v15H6V3.75a.75.75 0 0 1 .75-.75H6m12 15v.75a.75.75 0 0 1-.75.75H6.75a.75.75 0 0 1-.75-.75V18h12Z" />
+    </svg>
+  </div>
+
+  <span className="relative tracking-wide">REQUEST APPOINTMENT</span>
+
+  {/* Small red accent dot for urgency */}
+  <div className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></div>
+</button>
 
               <button onClick={toggleTheme} className={`p-1.5 rounded-full transition-all ${isDark ? "text-amber-400 bg-white/5" : "text-slate-600 bg-slate-100"}`}>
                 {isDark ? <SunIcon size={14} /> : <MoonIcon size={14} />}

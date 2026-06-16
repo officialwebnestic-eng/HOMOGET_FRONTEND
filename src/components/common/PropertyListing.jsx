@@ -541,7 +541,7 @@ const PropertyListing = () => {
                 >
                   <Grid3x3 size={16} />
                 </button>
-                
+
                 <button
                   onClick={() => setViewMode('list')}
                   className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-amber-500 text-white' : 'text-slate-500'}`}
@@ -578,13 +578,14 @@ const PropertyListing = () => {
         const isCommercialProperty = isCommercial(property);
         const propertyTitle = property.propertyTitleEn || property.propertyname;
         const propertyType = property.propertytype || (isCommercialProperty ? "Commercial" : "Residential");
-        const location = property.community || property.city || "Dubai";
+        const location = property.locationName || property.address || "Dubai";
         const agentName = property.agentId?.name || "Property Consultant";
         const agentImage = property.agentId?.profilePhoto || property.agentId?.profileImage;
         const agentPhone = property.agentId?.phone || property.agentPhone || "+971500000000";
         const agentEmail = property.agentId?.email || "info@homoget.ae";
         const agentRating = property.agentId?.rating || 4.8;
         const agentReraLicense = property.agentId?.reraLicenseNumber || property.brnNumber || "N/A";
+              const locationQuery = property?.displayAddress;
 
         // WhatsApp message
         const whatsappMsg = encodeURIComponent(
@@ -678,8 +679,31 @@ const PropertyListing = () => {
               <h3 className="font-bold text-base mb-2 line-clamp-1 group-hover:text-amber-500 transition-colors">
                 {propertyTitle}
               </h3>
-              <div className="flex items-center gap-1">
+              <div className="  flex justify-between items-center gap-1">
                   <span className="text-sm  ">{property.category}</span>
+                   {/* Price */}
+              <div className="mb-3">
+        <CurrencyDisplay 
+          price={property.price} 
+          period={isRent(property) ? property.rentedPeriod : null}
+          currency={property?.currency || "AED"}
+          isDark={isDark}
+          priceClassName="text-lg font-bold"
+          periodClassName="text-xs text-slate-400 font-normal"
+        />
+      </div>
+                </div>
+
+                         <div className="inline-flex items-center py-4 gap-1.5">
+                  {/* Animated location pin */}
+                  <MapPin size={12} className="text-amber-500 dark:text-amber-400 drop-shadow-sm" />
+                  
+                  <span className="text-[10px] font-black uppercase tracking-wider text-black dark:text-white">
+                    {locationQuery}
+                  </span>
+                  
+                  {/* Small decorative slash */}
+                  <span className="text-amber-500 dark:text-amber-400 font-black text-[10px]">/</span>
                 </div>
               
               {/* Property Specs */}
@@ -699,18 +723,9 @@ const PropertyListing = () => {
                 </div>
               </div>
               
-              {/* Price */}
-              <div className="mb-3">
-        <p className="text-[8px] text-slate-400">Starting From</p>
-        <CurrencyDisplay 
-          price={property.price} 
-          period={isRent(property) ? property.rentedPeriod : null}
-          currency={property?.currency || "AED"}
-          isDark={isDark}
-          priceClassName="text-lg font-bold"
-          periodClassName="text-xs text-slate-400 font-normal"
-        />
-      </div>
+             
+      
+      
               
               {/* Action Buttons - WhatsApp, Call, Email */}
               <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-white/10">
@@ -766,7 +781,7 @@ const PropertyListing = () => {
               
               <div className="flex items-center gap-2 mb-2">
                 <MapPin size={12} className="text-amber-500" />
-                <span className="text-xs text-slate-500">{location}, UAE</span>
+                <span className="text-xs text-slate-500">{location}</span>
               </div>
               
               <div className="flex items-center gap-4 mb-2">
@@ -774,6 +789,7 @@ const PropertyListing = () => {
                 <div className="flex items-center gap-1"><Bath size={12} /> <span className="text-xs">{property.bathroom || 0}</span></div>
                 <div className="flex items-center gap-1"><Ruler size={12} /> <span className="text-xs">{property.squarefoot?.toLocaleString()} sqft</span></div>
               </div>
+
               
               <div className="flex flex-wrap items-center justify-between gap-2 mt-2">
                 <p className="text-lg font-bold text-amber-500">
@@ -785,6 +801,18 @@ const PropertyListing = () => {
                   )}
                 </p>
                 
+
+                         <div className="inline-flex items-center gap-1.5">
+                  {/* Animated location pin */}
+                  <MapPin size={12} className="text-amber-500 dark:text-amber-400 drop-shadow-sm" />
+                  
+                  <span className="text-[10px] font-black uppercase tracking-wider text-black dark:text-white">
+                    {locationQuery}
+                  </span>
+                  
+                  {/* Small decorative slash */}
+                  <span className="text-amber-500 dark:text-amber-400 font-black text-[10px]">/</span>
+                </div>
                 {/* Action Buttons for List View */}
                 <div className="flex items-center gap-2">
                   <button

@@ -158,7 +158,7 @@ const LeadsManagementTable = ({ isDark = false }) => {
       inquiryType: "commercial"
     },
     {
-      id: 5,
+    id: 5, 
       leadName: "Omar Al Hadid",
       leadPhone: "+971 54 567 8901",
       leadEmail: "omar@example.com",

@@ -1,11 +1,12 @@
 import React, { useState, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { http } from "../../../axios/axios";
 import { toast } from "react-toastify";
 import { useToast } from "../../../model/SuccessToasNotification";
 import {
   UploadCloud, X, Check, FileText, Calendar, Tag, User, Hash, List,
-  Newspaper, Sparkles, Image, Clock, Eye, Save, Globe
+  Newspaper, Sparkles, Image, Clock, Eye, Save, Globe, Link2, Youtube,
+  Facebook, Twitter, Linkedin, Instagram, Share2, Plus, Trash2
 } from "lucide-react";
 import { useTheme } from "../../../context/ThemeContext";
 
@@ -23,14 +24,30 @@ const CreateBlog = () => {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting },
     setValue,
     watch
   } = useForm({
     defaultValues: {
       blogstatus: "published",
-      blogpublishdate: new Date().toISOString().split('T')[0]
+      blogpublishdate: new Date().toISOString().split('T')[0],
+      videos: [{ type: "youtube", url: "", title: "" }],
+      socialLinks: {
+        facebook: "",
+        twitter: "",
+        linkedin: "",
+        instagram: "",
+        pinterest: "",
+        whatsapp: "",
+        telegram: ""
+      }
     }
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "videos"
   });
 
   const handleDrop = (e) => {
@@ -68,9 +85,19 @@ const CreateBlog = () => {
 
     try {
       const formData = new FormData();
+      
+      // Append all form data
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          formData.append(key, value);
+          if (key === "videos") {
+            // Handle videos as JSON string
+            formData.append(key, JSON.stringify(value));
+          } else if (key === "socialLinks") {
+            // Handle social links as JSON string
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, value);
+          }
         }
       });
       
@@ -106,6 +133,22 @@ const CreateBlog = () => {
     { value: "draft", label: "Draft", icon: <FileText size={12} /> },
     { value: "published", label: "Published", icon: <Globe size={12} /> },
     { value: "archived", label: "Archived", icon: <Archive size={12} /> }
+  ];
+
+  const videoTypes = [
+    { value: "youtube", label: "YouTube", icon: <Youtube size={14} /> },
+    { value: "vimeo", label: "Vimeo", icon: <Youtube size={14} /> },
+    { value: "other", label: "Other", icon: <Link2 size={14} /> }
+  ];
+
+  const socialPlatforms = [
+    { key: "facebook", label: "Facebook", icon: <Facebook size={14} />, placeholder: "https://facebook.com/your-post" },
+    { key: "twitter", label: "Twitter/X", icon: <Twitter size={14} />, placeholder: "https://twitter.com/your-post" },
+    { key: "linkedin", label: "LinkedIn", icon: <Linkedin size={14} />, placeholder: "https://linkedin.com/your-post" },
+    { key: "instagram", label: "Instagram", icon: <Instagram size={14} />, placeholder: "https://instagram.com/your-post" },
+    { key: "pinterest", label: "Pinterest", icon: <Share2 size={14} />, placeholder: "https://pinterest.com/your-post" },
+    { key: "whatsapp", label: "WhatsApp", icon: <Share2 size={14} />, placeholder: "https://wa.me/your-post" },
+    { key: "telegram", label: "Telegram", icon: <Share2 size={14} />, placeholder: "https://t.me/your-post" }
   ];
 
   return (
@@ -183,6 +226,115 @@ const CreateBlog = () => {
                 {!content && <p className="text-xs text-red-500 mt-1">Blog content is required</p>}
               </div>
 
+              {/* Videos Section - NEW */}
+              <div className={`rounded-xl p-5 ${isDark ? 'bg-gray-800/50 border border-gray-700' : 'bg-white shadow-sm'}`}>
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center">
+                      <Youtube size={14} className="text-white" />
+                    </div>
+                    <div>
+                      <h3 className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-800'}`}>Video Links</h3>
+                      <p className="text-[10px] text-gray-500">Add YouTube or Vimeo videos</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => append({ type: "youtube", url: "", title: "" })}
+                    className="px-2 py-1 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-all text-[10px] font-bold flex items-center gap-1"
+                  >
+                    <Plus size={12} /> Add Video
+                  </button>
+                </div>
+                
+                <div className="space-y-3">
+                  {fields.map((field, index) => (
+                    <div key={field.id} className={`p-3 rounded-lg ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'} border ${isDark ? 'border-gray-600' : 'border-gray-200'}`}>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className={`text-[9px] font-medium block mb-0.5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Type</label>
+                          <select
+                            {...register(`videos.${index}.type`)}
+                            className={`w-full px-2 py-1 rounded border text-xs ${
+                              isDark ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-200'
+                            }`}
+                          >
+                            {videoTypes.map((type) => (
+                              <option key={type.value} value={type.value}>{type.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="col-span-2">
+                          <label className={`text-[9px] font-medium block mb-0.5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Video URL</label>
+                          <div className="flex items-center gap-1">
+                            <input
+                              {...register(`videos.${index}.url`)}
+                              placeholder="https://youtube.com/watch?v=..."
+                              className={`flex-1 px-2 py-1 rounded border text-xs ${
+                                isDark ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-200'
+                              }`}
+                            />
+                            {fields.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => remove(index)}
+                                className="p-1 rounded bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-2">
+                        <input
+                          {...register(`videos.${index}.title`)}
+                          placeholder="Video title (optional)"
+                          className={`w-full px-2 py-1 rounded border text-xs ${
+                            isDark ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-200'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  {fields.length === 0 && (
+                    <p className={`text-xs text-center py-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                      No videos added. Click "Add Video" to include videos.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Social Media Links - NEW */}
+              <div className={`rounded-xl p-5 ${isDark ? 'bg-gray-800/50 border border-gray-700' : 'bg-white shadow-sm'}`}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center">
+                    <Share2 size={14} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-800'}`}>Social Media Links</h3>
+                    <p className="text-[10px] text-gray-500">Add social share links for this blog</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {socialPlatforms.map((platform) => (
+                    <div key={platform.key} className="flex items-center gap-2">
+                      <div className={`p-1.5 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'} text-amber-500`}>
+                        {platform.icon}
+                      </div>
+                      <input
+                        {...register(`socialLinks.${platform.key}`)}
+                        placeholder={platform.placeholder}
+                        className={`flex-1 px-2 py-1.5 rounded border text-xs ${
+                          isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-200'
+                        }`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* SEO Section */}
               <div className={`rounded-xl p-5 ${isDark ? 'bg-gray-800/50 border border-gray-700' : 'bg-white shadow-sm'}`}>
                 <div className="flex items-center gap-2 mb-3">
@@ -215,7 +367,7 @@ const CreateBlog = () => {
                       Meta Description
                     </label>
                     <textarea
-                      {...register("seometadiscription")}
+                      {...register("seometadescription")}
                       rows="2"
                       placeholder="Brief description for search engines (150-160 characters)"
                       className={`w-full px-3 py-1.5 rounded-lg border focus:ring-2 focus:ring-amber-500 text-xs ${
@@ -223,7 +375,7 @@ const CreateBlog = () => {
                       }`}
                       maxLength="160"
                     />
-                    <p className="text-[9px] text-gray-500 mt-1">{watch("seometadiscription")?.length || 0}/160 characters</p>
+                    <p className="text-[9px] text-gray-500 mt-1">{watch("seometadescription")?.length || 0}/160 characters</p>
                   </div>
                 </div>
               </div>

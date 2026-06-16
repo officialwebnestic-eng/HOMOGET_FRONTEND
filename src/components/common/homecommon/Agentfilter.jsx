@@ -419,7 +419,7 @@ const Agentfilter = () => {
               const isCommercialProperty = isCommercial(property);
               const propertyTitle = property.propertyTitleEn || property.propertyname;
               const propertyType = property.propertytype || (isCommercialProperty ? "Commercial Space" : "Residential");
-              const location = property.community || property.city || "Dubai";
+              const location = property.locationName || property.address || "Dubai";
               const agentName = property.agentId?.name || "Property Consultant";
               const agentImage = property.agentId?.profilePhoto || property.name;
               const agentRating = property.agentId?.rating || 4.8;
@@ -509,7 +509,7 @@ const Agentfilter = () => {
                     <div className="absolute bottom-4 left-4 flex items-center gap-1.5 text-white bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full">
                       <MapPin size={12} className="text-amber-400" />
                       <span className="text-[10px] font-bold truncate max-w-[150px]">
-                        {location}, UAE
+                        {location}
                       </span>
                     </div>
                   </div>
@@ -570,11 +570,17 @@ const Agentfilter = () => {
                       </div>
                     )}
 
-                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/5 dark:bg-white/10">
-  <MapPin size={10} className="text-amber-500" />
-  <span className="text-[9px] font-bold uppercase tracking-wide text-black dark:text-white">
+         
+         <div className="inline-flex py-4 items-center gap-1.5">
+  {/* Animated location pin */}
+  <MapPin size={12} className="text-amber-500 dark:text-amber-400 drop-shadow-sm" />
+  
+  <span className="text-[10px] font-black uppercase tracking-wider text-black dark:text-white">
     {locationQuery}
   </span>
+  
+  {/* Small decorative slash */}
+  <span className="text-amber-500 dark:text-amber-400 font-black text-[10px]">/</span>
 </div>
                     {/* Agent Info Bar */}
                     <div className="flex items-center gap-3 py-3 mt-2 border-t border-gray-100 dark:border-white/5">

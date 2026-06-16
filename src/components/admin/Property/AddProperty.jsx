@@ -23,6 +23,7 @@ const AddProperty = () => {
 
   // --- States ---
   const [files, setFiles] = useState([]);
+  const [floorPlanFiles, setFloorPlanFiles] = useState([]);
   const [offPlanDocuments, setOffPlanDocuments] = useState([]);
   const [ownerDocuments, setOwnerDocuments] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,7 +101,7 @@ const AddProperty = () => {
       dldExpiryDate: "",
       listingStartDate: "",
       listingEndDate: "",
-       zoneName:"",
+      zoneName: "",
     },
   });
 
@@ -117,6 +118,16 @@ const AddProperty = () => {
   const isOffPlan = watchCategory === "Off-Plan";
   const watchOffPlanType = watch("offPlanType");
 
+  // Handle Floor Plan upload
+  const handleFloorPlanUpload = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    setFloorPlanFiles(prev => [...prev, ...selectedFiles]);
+  };
+
+  const removeFloorPlanFile = (index) => {
+    setFloorPlanFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   // Form steps configuration
   const formSteps = [
     { id: "basic", label: "Basic Info", icon: <Home size={16} />, fields: ["propertyTitleEn", "propertyTitleAr", "category", "propertytype", "offeringType", "status"] },
@@ -124,10 +135,10 @@ const AddProperty = () => {
     { id: "specs", label: "Specifications", icon: <Layers size={16} />, fields: ["bedroom", "bathroom", "squarefoot", "parkingSlots", "furnishingType"] },
     { id: "location", label: "Location", icon: <MapPin size={16} />, fields: ["locationName", "displayAddress"] },
     { id: "offplan", label: "Off-Plan", icon: <Building size={16} />, condition: isOffPlan },
+    { id: "floorplan", label: "Floor Plan", icon: <FileText size={16} /> },
     { id: "documents", label: "Documents", icon: <FileText size={16} /> },
-        { id: "dld ", label: "DLD Verification", icon: <FileText size={16} /> },
-  { id: "listing", label: "Listing Period", icon: <Calendar size={16} /> },
-
+    { id: "dld", label: "DLD Verification", icon: <QrCode size={16} /> },
+    { id: "listing", label: "Listing Period", icon: <Calendar size={16} /> },
     { id: "media", label: "Media", icon: <Camera size={16} />, fields: ["images"] },
     { id: "amenities", label: "Amenities", icon: <Sparkles size={16} /> },
     { id: "pricing", label: "Pricing", icon: <DollarSign size={16} />, fields: ["price", "currency"] },
@@ -320,7 +331,7 @@ const AddProperty = () => {
         reraORN: data.reraORN || "",
         brnNumber: data.brnNumber || "",
         ownerName: data.ownerName || "",
-        bedroom: data.bedroom ? Number(data.bedroom) : 0,
+        bedroom: data.bedroom || "0",
         bathroom: data.bathroom ? Number(data.bathroom) : 0,
         totalFloor: data.totalFloor ? Number(data.totalFloor) : undefined,
         squarefoot: data.squarefoot ? Number(data.squarefoot) : 0,
@@ -365,8 +376,8 @@ const AddProperty = () => {
         dldPermitNumber: data.dldPermitNumber || "",
         dldExpiryDate: data.dldExpiryDate || "",
         zoneName: data.zoneName || "",
-
-         
+        listingStartDate: data.listingStartDate || "",
+        listingEndDate: data.listingEndDate || "",
       };
       
       for (const key in payload) {
@@ -383,6 +394,10 @@ const AddProperty = () => {
       }
       
       files.forEach((file) => formData.append("image", file));
+      
+      if (floorPlanFiles.length > 0) {
+        floorPlanFiles.forEach((file) => formData.append("floorPlan", file));
+      }
       
       if (offPlanDocuments.length > 0) {
         offPlanDocuments.forEach((doc) => formData.append("offPlanDocuments", doc));
@@ -404,6 +419,7 @@ const AddProperty = () => {
         addToast("Property Added Successfully", "success");
         reset();
         setFiles([]);
+        setFloorPlanFiles([]);
         setOffPlanDocuments([]);
         setOwnerDocuments([]);
         setDldQRFile(null);
@@ -430,8 +446,8 @@ const AddProperty = () => {
   return (
     <div className={`min-h-screen ${isDark ? "bg-gradient-to-br from-[#0F1219] via-[#0F1219] to-[#1a1f2e]" : "bg-gradient-to-br from-[#F8FAFC] via-[#F8FAFC] to-[#f1f5f9]"}`}>
       
-      {/* Header with higher z-index */}
-      <header className={`sticky top-0  border-b backdrop-blur-xl transition-all duration-300 ${isDark ? "bg-[#0F1219]/95 border-white/5" : "bg-white/95 border-slate-200"}`}>
+      {/* Header */}
+      <header className={`sticky top-0 border-b backdrop-blur-xl transition-all duration-300 ${isDark ? "bg-[#0F1219]/95 border-white/5" : "bg-white/95 border-slate-200"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-between py-3 md:py-0 md:h-20">
             <div className="flex items-center gap-3 group">
@@ -521,8 +537,9 @@ const AddProperty = () => {
             ))}
           </div>
         </div>
+
         <div className="flex gap-6">
-          {/* Sidebar Navigation - Fixed z-index issue */}
+          {/* Sidebar Navigation */}
           <aside className={`hidden lg:block w-64 flex-shrink-0 transition-all duration-300 ${isSidebarOpen ? 'block' : 'hidden'}`}>
             <div className={`sticky top-24 rounded-xl p-3 ${isDark ? 'bg-[#161B26]/80 backdrop-blur-sm' : 'bg-white/80 backdrop-blur-sm'} shadow-lg border ${isDark ? 'border-white/5' : 'border-slate-200'}`}>
               <div className="space-y-1">
@@ -563,6 +580,7 @@ const AddProperty = () => {
 
           {/* Main Form Content */}
           <div className="flex-1 space-y-6">
+            
             {/* SECTION 1: BASIC INFO */}
             <div id="basic" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
               <SectionHeader icon={<Home />} title="Basic Information" currentStep={currentStep} stepIndex={0} />
@@ -640,72 +658,6 @@ const AddProperty = () => {
               </div>
             </div>
 
-{/* LISTING DATES SECTION */}
-<div className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-  <SectionHeader icon={<Calendar />} title="Listing Period" currentStep={currentStep} stepIndex={4} />
-  
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-    {/* Listing Start Date */}
-    <div>
-      <label className={labelClass}>
-        <Calendar size={12} className="inline mr-1 text-amber-500" />
-        Listing Start Date
-      </label>
-      <input 
-        type="date" 
-        {...register("listingStartDate")} 
-        className={inputClass} 
-      />
-      <p className="text-[8px] text-slate-400 mt-1">
-        Date when the property becomes available for listing
-      </p>
-    </div>
-    
-
-    {/* Listing End Date */}
-    <div>
-      <label className={labelClass}>
-        <Calendar size={12} className="inline mr-1 text-amber-500" />
-        Listing End Date
-      </label>
-      <input 
-        type="date" 
-        {...register("listingEndDate")} 
-        className={inputClass} 
-      />
-      <p className="text-[8px] text-slate-400 mt-1">
-        Leave empty for no expiry date
-      </p>
-    </div>
-  </div>
-
-  {/* Listing Status Preview */}
-  <div className="mt-4 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
-    <div className="flex items-center justify-between">
-      <span className="text-[9px] font-medium text-slate-500">Listing Status:</span>
-      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-        watch("listingEndDate") && new Date(watch("listingEndDate")) < new Date()
-          ? "bg-red-500/20 text-red-500"
-          : "bg-green-500/20 text-green-500"
-      }`}>
-        {watch("listingEndDate") && new Date(watch("listingEndDate")) < new Date()
-          ? "Expired"
-          : "Active"}
-      </span>
-    </div>
-    <div className="flex items-center justify-between mt-2">
-      <span className="text-[8px] text-slate-400">Listing Period:</span>
-      <span className="text-[8px] font-mono">
-        {watch("listingStartDate") 
-          ? new Date(watch("listingStartDate")).toLocaleDateString() 
-          : "Start date not set"} 
-        {watch("listingEndDate") 
-          ? ` → ${new Date(watch("listingEndDate")).toLocaleDateString()}` 
-          : " → No expiry"}
-      </span>
-    </div>
-  </div>
-</div>
             {/* SECTION 2: COMPLIANCE */}
             <div id="compliance" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
               <SectionHeader icon={<ShieldCheck />} title="License & Compliance" currentStep={currentStep} stepIndex={1} />
@@ -722,7 +674,7 @@ const AddProperty = () => {
                 </div>
                 {watchPermit === "RERA" && (
                   <div>
-                    <label className={labelClass}>DLD PERMIT NO {requiredStar} </label>
+                    <label className={labelClass}>DLD PERMIT NO {requiredStar}</label>
                     <input {...register("trakheesiNumber")} className={inputClass} />
                   </div>
                 )}
@@ -759,131 +711,126 @@ const AddProperty = () => {
             </div>
 
             {/* SECTION 3: SPECIFICATIONS */}
-           {/* SECTION 3: SPECIFICATIONS */}
-<div id="specs" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-  <SectionHeader icon={<Layers />} title="Physical Specifications" currentStep={currentStep} stepIndex={2} />
-  <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
-    
-    {/* Bedrooms - Updated with +Maid and +Study options */}
-    <div>
-      <label className={labelClass}>Bedrooms</label>
-      <select {...register("bedroom")} className={inputClass}>
-        <option value="0">Studio</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
-        <option value="10">10+</option>
-        {/* Maid Room Options */}
-        <option value="1+Maid">1 + Maid</option>
-        <option value="2+Maid">2 + Maid</option>
-        <option value="3+Maid">3 + Maid</option>
-        <option value="4+Maid">4 + Maid</option>
-        <option value="5+Maid">5 + Maid</option>
-        <option value="6+Maid">6 + Maid</option>
-        <option value="7+Maid">7 + Maid</option>
-        <option value="8+Maid">8 + Maid</option>
-        <option value="9+Maid">9 + Maid</option>
-        <option value="10+Maid">10 + Maid</option>
-      
-        {/* Study Room Options */}
-        <option value="1+Study">1 + Study</option>
-        <option value="2+Study">2 + Study</option>
-        <option value="3+Study">3 + Study</option>
-        <option value="4+Study">4 + Study</option>
-        <option value="5+Study">5 + Study</option>
-        <option value="6+Study">6 + Study</option>
-        <option value="7+Maid">7 + Maid</option>
-        <option value="8+Maid">8 + Maid</option>
-        <option value="9+Maid">9 + Maid</option>
-          <option value="10+Maid">10 + Maid</option>
-        {/* Combined Options */}
-         <option value="1+Maid+Study">1 + Maid + Study</option>
-          <option value="2+Maid+Study">2 + Maid + Study</option>
-    
-        <option value="3+Maid+Study">3 + Maid + Study</option>
-        <option value="4+Maid+Study">4 + Maid + Study</option>
-        <option value="5+Maid+Study">5 + Maid + Study</option>
-        <option value="6+Maid+Study">6 + Maid + Study</option>
-          <option value="7+Maid+Study">7 + Maid + Study</option>
-            <option value="8+Maid+Study">8 + Maid + Study</option>
-              <option value="9+Maid+Study">9 + Maid + Study</option>
-                <option value="10+Maid+Study">10 + Maid + Study</option>
-      </select>
-    </div>
-    
-    {/* Bathrooms - Keep as is */}
-    <div>
-      <label className={labelClass}>Bathrooms</label>
-      <select {...register("bathroom")} className={inputClass}>
-        {[...Array(11).keys()].map((i) => (<option key={i} value={i}>{i}</option>))}
-      </select>
-    </div>
-    
-    {/* Total Floors */}
-    <div>
-      <label className={labelClass}>Total Floors</label>
-      <input type="number" {...register("totalFloor")} className={inputClass} />
-    </div>
-    
-    {/* Area */}
-    <div>
-      <label className={labelClass}>Area (sqft) {requiredStar}</label>
-      <input type="number" {...register("squarefoot", { required: true })} className={inputClass} />
-      {errors.squarefoot && <p className="text-red-500 text-[9px] mt-1">Required</p>}
-    </div>
-    
-    {/* Unit/Suite No */}
-    <div>
-      <label className={labelClass}>Unit/Suite No</label>
-      <input {...register("unitNo")} className={inputClass} />
-    </div>
-    
-    {/* Parking Slots */}
-    <div>
-      <label className={labelClass}>Parking Slots</label>
-      <input type="number" {...register("parkingSlots")} className={inputClass} defaultValue={0} />
-    </div>
-    
-    {/* Furnishing Type */}
-    <div>
-      <label className={labelClass}>Furnishing Type</label>
-      <select {...register("furnishingType")} className={inputClass}>
-        <option value="Unfurnished">Unfurnished</option>
-        <option value="Semi-Furnished">Semi-Furnished</option>
-        <option value="Furnished">Furnished</option>
-      </select>
-    </div>
-    
-    {/* Property Age */}
-    <div>
-      <label className={labelClass}>Property Age</label>
-      <select {...register("propertyAge")} className={inputClass}>
-        <option value="Brand New">Brand New</option>
-        <option value="1-2 Years">1-2 Years</option>
-        <option value="3-5 Years">3-5 Years</option>
-        <option value="5-10 Years">5-10 Years</option>
-        <option value="10+ Years">10+ Years</option>
-      </select>
-    </div>
-    
-    {/* Availability */}
-    <div>
-      <label className={labelClass}>Availability</label>
-      <select {...register("availability")} className={inputClass}>
-        <option value="Immediately">Immediately</option>
-        <option value="Ready to Move">Ready to Move</option>
-        <option value="Under Construction">Under Construction</option>
-        <option value="Coming Soon">Coming Soon</option>
-      </select>
-    </div>
-  </div>
-</div>
+            <div id="specs" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
+              <SectionHeader icon={<Layers />} title="Physical Specifications" currentStep={currentStep} stepIndex={2} />
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+                
+                {/* Bedrooms */}
+                <div>
+                  <label className={labelClass}>Bedrooms</label>
+                  <select {...register("bedroom")} className={inputClass}>
+                    <option value="Studio">Studio</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="10+">10+</option>
+                    <option value="1+Maid">1 + Maid</option>
+                    <option value="2+Maid">2 + Maid</option>
+                    <option value="3+Maid">3 + Maid</option>
+                    <option value="4+Maid">4 + Maid</option>
+                    <option value="5+Maid">5 + Maid</option>
+                    <option value="6+Maid">6 + Maid</option>
+                    <option value="7+Maid">7 + Maid</option>
+                    <option value="8+Maid">8 + Maid</option>
+                    <option value="9+Maid">9 + Maid</option>
+                    <option value="10+Maid">10 + Maid</option>
+                    <option value="1+Study">1 + Study</option>
+                    <option value="2+Study">2 + Study</option>
+                    <option value="3+Study">3 + Study</option>
+                    <option value="4+Study">4 + Study</option>
+                    <option value="5+Study">5 + Study</option>
+                    <option value="6+Study">6 + Study</option>
+                    <option value="7+Study">7 + Study</option>
+                    <option value="8+Study">8 + Study</option>
+                    <option value="9+Study">9 + Study</option>
+                    <option value="10+Study">10 + Study</option>
+                    <option value="1+Maid+Study">1 + Maid + Study</option>
+                    <option value="2+Maid+Study">2 + Maid + Study</option>
+                    <option value="3+Maid+Study">3 + Maid + Study</option>
+                    <option value="4+Maid+Study">4 + Maid + Study</option>
+                    <option value="5+Maid+Study">5 + Maid + Study</option>
+                    <option value="6+Maid+Study">6 + Maid + Study</option>
+                    <option value="7+Maid+Study">7 + Maid + Study</option>
+                    <option value="8+Maid+Study">8 + Maid + Study</option>
+                    <option value="9+Maid+Study">9 + Maid + Study</option>
+                    <option value="10+Maid+Study">10 + Maid + Study</option>
+                  </select>
+                </div>
+                
+                {/* Bathrooms */}
+                <div>
+                  <label className={labelClass}>Bathrooms</label>
+                  <select {...register("bathroom")} className={inputClass}>
+                    {[...Array(11).keys()].map((i) => (<option key={i} value={i}>{i}</option>))}
+                  </select>
+                </div>
+                
+                {/* Total Floors */}
+                <div>
+                  <label className={labelClass}>Total Floors</label>
+                  <input type="number" {...register("totalFloor")} className={inputClass} />
+                </div>
+                
+                {/* Area */}
+                <div>
+                  <label className={labelClass}>Area (sqft) {requiredStar}</label>
+                  <input type="number" {...register("squarefoot", { required: true })} className={inputClass} />
+                  {errors.squarefoot && <p className="text-red-500 text-[9px] mt-1">Required</p>}
+                </div>
+                
+                {/* Unit/Suite No */}
+                <div>
+                  <label className={labelClass}>Unit/Suite No</label>
+                  <input {...register("unitNo")} className={inputClass} />
+                </div>
+                
+                {/* Parking Slots */}
+                <div>
+                  <label className={labelClass}>Parking Slots</label>
+                  <input type="number" {...register("parkingSlots")} className={inputClass} defaultValue={0} />
+                </div>
+                
+                {/* Furnishing Type */}
+                <div>
+                  <label className={labelClass}>Furnishing Type</label>
+                  <select {...register("furnishingType")} className={inputClass}>
+                    <option value="Unfurnished">Unfurnished</option>
+                    <option value="Semi-Furnished">Semi-Furnished</option>
+                    <option value="Furnished">Furnished</option>
+                  </select>
+                </div>
+                
+                {/* Property Age */}
+                <div>
+                  <label className={labelClass}>Property Age</label>
+                  <select {...register("propertyAge")} className={inputClass}>
+                    <option value="Brand New">Brand New</option>
+                    <option value="1-2 Years">1-2 Years</option>
+                    <option value="3-5 Years">3-5 Years</option>
+                    <option value="5-10 Years">5-10 Years</option>
+                    <option value="10+ Years">10+ Years</option>
+                  </select>
+                </div>
+                
+                {/* Availability */}
+                <div>
+                  <label className={labelClass}>Availability</label>
+                  <select {...register("availability")} className={inputClass}>
+                    <option value="Immediately">Immediately</option>
+                    <option value="Ready to Move">Ready to Move</option>
+                    <option value="Under Construction">Under Construction</option>
+                    <option value="Coming Soon">Coming Soon</option>
+                  </select>
+                </div>
+              </div>
+            </div>
 
             {/* SECTION 4: LOCATION */}
             <div id="location" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
@@ -1033,69 +980,97 @@ const AddProperty = () => {
                     </select>
                   </div>
                 </div>
-
-                
               </div>
             )}
 
-
-           
-            <div id="dld" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-  <SectionHeader icon={<QrCode />} title="DLD QR Code" currentStep={currentStep} stepIndex={4} />
-
-  {/* DLD QR Code Section */}
-  <div className="mt-2 p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
-    <div className="flex items-center gap-3 mb-4">
-      <div className="p-2 rounded-lg bg-green-500/20">
-        <QrCode size={18} className="text-green-500" />
-      </div>
-      <div>
-        <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>DLD Verified QR Code</h3>
-        <p className="text-[9px] text-slate-500">Upload official Dubai Land Department QR code</p>
-      </div>
-    </div>
-    
-    {/* Only Expiry Date Field */}
-    <div>
-      <label className={labelClass}>DLD QR Expiry Date</label>
-      <input type="date" {...register("dldExpiryDate")} className={inputClass} />
-    </div>
-    <div>
-                    <label className={labelClass}>Zone Name</label>
-                    <input type="text" {...register("zoneName")} className={inputClass} />
+            {/* SECTION 6: FLOOR PLAN */}
+            <div id="floorplan" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
+              <SectionHeader icon={<FileText />} title="Floor Plan" currentStep={currentStep} stepIndex={5} />
+              
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClass}>Upload Floor Plan</label>
+                  <div
+                    className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+                      floorPlanFiles.length > 0 
+                        ? "border-amber-400 bg-amber-50 dark:bg-amber-950/30" 
+                        : "border-gray-300 dark:border-gray-600 hover:border-amber-400"
+                    }`}
+                    onClick={() => document.getElementById("floorPlanInput")?.click()}
+                  >
+                    <input 
+                      id="floorPlanInput" 
+                      type="file" 
+                      multiple
+                      accept="image/*,.pdf" 
+                      className="hidden" 
+                      onChange={handleFloorPlanUpload} 
+                    />
+                    {floorPlanFiles.length > 0 ? (
+                      <div className="flex flex-col items-center">
+                        <FileCheck size={32} className="text-amber-500 mb-2" />
+                        <p className="text-sm font-medium text-amber-500">{floorPlanFiles.length} file(s) uploaded</p>
+                        <div className="flex flex-wrap gap-2 mt-2 justify-center">
+                          {floorPlanFiles.map((file, idx) => (
+                            <span key={idx} className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded">
+                              {file.name}
+                            </span>
+                          ))}
+                        </div>
+                        <button 
+                          type="button" 
+                          onClick={(e) => { e.stopPropagation(); setFloorPlanFiles([]); }}
+                          className="text-xs text-red-500 mt-2"
+                        >
+                          Remove All
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload size={32} className="mx-auto mb-2 text-gray-400" />
+                        <p className="text-xs font-medium">Click to upload floor plan</p>
+                        <p className="text-[9px] text-gray-500 mt-1">PNG, JPG, JPEG, PDF (Max 5MB each)</p>
+                      </>
+                    )}
                   </div>
-    
-    {/* QR Code Upload */}
-    <div className="mt-4">
-      <div
-        className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
-          dldQRPreview ? "border-green-400 bg-green-50 dark:bg-green-950" : "border-gray-300 dark:border-gray-600 hover:border-green-400"
-        }`}
-        onClick={() => document.getElementById("dldQRInput")?.click()}
-      >
-        <input id="dldQRInput" type="file" accept="image/*" className="hidden" onChange={handleDldQRUpload} />
-        {dldQRPreview ? (
-          <div className="flex flex-col items-center gap-2">
-            <img src={dldQRPreview} alt="DLD QR" className="w-20 h-20 object-contain" />
-            <p className="text-xs font-medium text-green-600">✓ QR Code uploaded</p>
-            <button type="button" onClick={(e) => { e.stopPropagation(); removeDldQR(); }} className="text-xs text-red-500">Remove</button>
-          </div>
-        ) : (
-          <>
-            <Upload size={28} className="mx-auto mb-2 text-gray-400" />
-            <p className="text-xs font-medium">Click to upload DLD QR Code</p>
-            <p className="text-[9px] text-gray-500 mt-1">PNG, JPG, JPEG (Max 2MB)</p>
-          </>
-        )}
-      </div>
-    </div>
-  </div>
-</div>
-            
+                </div>
 
-            {/* SECTION 6: DOCUMENTS */}
+                {/* Floor Plan Preview */}
+                {floorPlanFiles.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+                    {floorPlanFiles.map((file, idx) => (
+                      <div key={idx} className="relative group">
+                        <div className="aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                          {file.type?.startsWith('image/') ? (
+                            <img 
+                              src={URL.createObjectURL(file)} 
+                              alt={`Floor Plan ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center">
+                              <FileText size={24} className="text-gray-400" />
+                              <span className="text-[8px] text-gray-500 mt-1 truncate px-1">{file.name}</span>
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFloorPlanFile(idx)}
+                          className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition opacity-0 group-hover:opacity-100"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* SECTION 7: DOCUMENTS */}
             <div id="documents" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<FileText />} title="Documents" currentStep={currentStep} stepIndex={isOffPlan ? 5 : 4} />
+              <SectionHeader icon={<FileText />} title="Documents" currentStep={currentStep} stepIndex={6} />
               
               {isOffPlan && watchOffPlanType === "Direct" && (
                 <div className={`mb-6 p-5 rounded-xl ${isDark ? 'bg-purple-500/5 border border-purple-500/20' : 'bg-purple-50 border border-purple-200'}`}>
@@ -1159,10 +1134,112 @@ const AddProperty = () => {
               </div>
             </div>
 
-            {/* SECTION 7: DESCRIPTION */}
+            {/* SECTION 8: DLD VERIFICATION */}
+            <div id="dld" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
+              <SectionHeader icon={<QrCode />} title="DLD Verification" currentStep={currentStep} stepIndex={7} />
+
+              <div className="mt-2 p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-lg bg-green-500/20">
+                    <QrCode size={18} className="text-green-500" />
+                  </div>
+                  <div>
+                    <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>DLD Verified QR Code</h3>
+                    <p className="text-[9px] text-slate-500">Upload official Dubai Land Department QR code</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className={labelClass}>DLD QR Expiry Date</label>
+                  <input type="date" {...register("dldExpiryDate")} className={inputClass} />
+                </div>
+                
+                <div className="mt-3">
+                  <label className={labelClass}>Zone Name</label>
+                  <input type="text" {...register("zoneName")} className={inputClass} placeholder="e.g., Dubai Marina, Downtown Dubai" />
+                </div>
+                
+                <div className="mt-4">
+                  <div
+                    className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
+                      dldQRPreview ? "border-green-400 bg-green-50 dark:bg-green-950" : "border-gray-300 dark:border-gray-600 hover:border-green-400"
+                    }`}
+                    onClick={() => document.getElementById("dldQRInput")?.click()}
+                  >
+                    <input id="dldQRInput" type="file" accept="image/*" className="hidden" onChange={handleDldQRUpload} />
+                    {dldQRPreview ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <img src={dldQRPreview} alt="DLD QR" className="w-20 h-20 object-contain" />
+                        <p className="text-xs font-medium text-green-600">✓ QR Code uploaded</p>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); removeDldQR(); }} className="text-xs text-red-500">Remove</button>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload size={28} className="mx-auto mb-2 text-gray-400" />
+                        <p className="text-xs font-medium">Click to upload DLD QR Code</p>
+                        <p className="text-[9px] text-gray-500 mt-1">PNG, JPG, JPEG (Max 2MB)</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 9: LISTING PERIOD */}
+            <div id="listing" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
+              <SectionHeader icon={<Calendar />} title="Listing Period" currentStep={currentStep} stepIndex={8} />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className={labelClass}>
+                    <Calendar size={12} className="inline mr-1 text-amber-500" />
+                    Listing Start Date
+                  </label>
+                  <input type="date" {...register("listingStartDate")} className={inputClass} />
+                  <p className="text-[8px] text-slate-400 mt-1">Date when the property becomes available for listing</p>
+                </div>
+                
+                <div>
+                  <label className={labelClass}>
+                    <Calendar size={12} className="inline mr-1 text-amber-500" />
+                    Listing End Date
+                  </label>
+                  <input type="date" {...register("listingEndDate")} className={inputClass} />
+                  <p className="text-[8px] text-slate-400 mt-1">Leave empty for no expiry date</p>
+                </div>
+              </div>
+
+              <div className="mt-4 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-medium text-slate-500">Listing Status:</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    watch("listingEndDate") && new Date(watch("listingEndDate")) < new Date()
+                      ? "bg-red-500/20 text-red-500"
+                      : "bg-green-500/20 text-green-500"
+                  }`}>
+                    {watch("listingEndDate") && new Date(watch("listingEndDate")) < new Date()
+                      ? "Expired"
+                      : "Active"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-[8px] text-slate-400">Listing Period:</span>
+                  <span className="text-[8px] font-mono">
+                    {watch("listingStartDate") 
+                      ? new Date(watch("listingStartDate")).toLocaleDateString() 
+                      : "Start date not set"} 
+                    {watch("listingEndDate") 
+                      ? ` → ${new Date(watch("listingEndDate")).toLocaleDateString()}` 
+                      : " → No expiry"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 10: DESCRIPTION */}
             <div className={`p-6 md:p-8 rounded-2xl border ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
               <div className="flex justify-between items-center mb-5">
-                <SectionHeader icon={<FileText />} title="Description" currentStep={currentStep} stepIndex={isOffPlan ? 6 : 5} />
+                <SectionHeader icon={<FileText />} title="Description" currentStep={currentStep} stepIndex={isOffPlan ? 10 : 9} />
                 <div className="flex gap-1 p-1 rounded-lg bg-black/10 dark:bg-white/10">
                   {["en", "ar"].map((l) => (
                     <button key={l} type="button" onClick={() => setLangTab(l)} className={`px-3 py-1 rounded-md text-[9px] font-bold transition-all ${langTab === l ? "bg-amber-500 text-black" : "text-slate-500"}`}>
@@ -1178,9 +1255,9 @@ const AddProperty = () => {
               </AnimatePresence>
             </div>
 
-            {/* SECTION 8: MEDIA */}
+            {/* SECTION 11: MEDIA */}
             <div id="media" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<Camera />} title="Media" currentStep={currentStep} stepIndex={isOffPlan ? 7 : 6} />
+              <SectionHeader icon={<Camera />} title="Media" currentStep={currentStep} stepIndex={isOffPlan ? 11 : 10} />
               <div className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer hover:bg-amber-500/5 transition-all" onClick={() => document.getElementById("file-up")?.click()}>
                 <Upload className="mx-auto mb-2 text-amber-500" size={28} />
                 <p className="text-[10px] font-bold uppercase">Drop Images Here {requiredStar}</p>
@@ -1201,13 +1278,12 @@ const AddProperty = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
                 <div><label className={labelClass}>Video URL</label><input {...register("videos")} className={inputClass} placeholder="https://youtube.com/..." /></div>
                 <div><label className={labelClass}>Virtual Tour 360</label><input {...register("virtualTour360")} className={inputClass} placeholder="Matterport URL" /></div>
-                <div><label className={labelClass}>Video Tour Link</label><input {...register("videoTourLink")} className={inputClass} /></div>
               </div>
             </div>
 
-            {/* SECTION 9: AMENITIES */}
+            {/* SECTION 12: AMENITIES */}
             <div id="amenities" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<Sparkles />} title="Amenities" currentStep={currentStep} stepIndex={isOffPlan ? 8 : 7} />
+              <SectionHeader icon={<Sparkles />} title="Amenities" currentStep={currentStep} stepIndex={isOffPlan ? 12 : 11} />
               <input type="text" placeholder="Search amenities..." value={searchAmenity} onChange={(e) => setSearchAmenity(e.target.value)} className={inputClass} />
               <div className="max-h-80 overflow-y-auto mt-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
@@ -1226,9 +1302,9 @@ const AddProperty = () => {
               </div>
             </div>
 
-            {/* SECTION 10: PRICING */}
+            {/* SECTION 13: PRICING */}
             <div id="pricing" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<Wallet />} title="Pricing" currentStep={currentStep} stepIndex={isOffPlan ? 9 : 8} />
+              <SectionHeader icon={<Wallet />} title="Pricing" currentStep={currentStep} stepIndex={isOffPlan ? 13 : 12} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className={labelClass}>Price {requiredStar}</label>

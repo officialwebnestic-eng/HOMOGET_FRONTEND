@@ -104,6 +104,8 @@ const PropertyDetailsPage = () => {
   const [showImageGallery, setShowImageGallery] = useState(false);
   const [galleryStartIndex, setGalleryStartIndex] = useState(0);
   const [galleryViewMode, setGalleryViewMode] = useState('grid');
+  const [showAllFloorPlans, setShowAllFloorPlans] = useState(false);
+
 
   const openGallery = (startIndex) => {
     setGalleryStartIndex(startIndex);
@@ -300,6 +302,7 @@ const PropertyDetailsPage = () => {
   const agentName = property.agentId?.name || "Property Consultant";
   const agentImage = property.agentId?.profileImage || property.agentId?.profilePhoto;
   const images = property.image || [];
+   const floorPlan= property.floorPlan || [];
   const videos = property.videos || property.videoTourLink;
   const virtualTour = property.virtualTour360;
   const isOffPlanProperty = isOffPlan(property);
@@ -454,6 +457,8 @@ const PropertyDetailsPage = () => {
   </div>
 </section>
 
+
+
       {/* 2. PERSISTENT TRANSACTION BAR */}
       <div className="sticky top-0 z-30 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 shadow-sm">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-3 sm:py-4 md:py-5">
@@ -517,6 +522,10 @@ const PropertyDetailsPage = () => {
               </button>
             </div>
           </div>
+
+
+
+
           
           {/* Property Specs Bar */}
           <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100 dark:border-zinc-800">
@@ -565,12 +574,15 @@ const PropertyDetailsPage = () => {
           </div>
         </div>
       </div>
+      
+
+
+
 
       {/* 3. CORE CONTENT GRID */}
       <main className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-8 md:py-12 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
         {/* LEFT COLUMN */}
         <div className="lg:col-span-8 space-y-8 md:space-y-12">
-          
           {/* Description Section */}
           <section>
             <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-600 mb-4 md:mb-6 flex items-center gap-2">
@@ -583,7 +595,7 @@ const PropertyDetailsPage = () => {
                 : property.descriptionEn
               }
             </p>
-            
+
             {property.descriptionEn?.length > 300 && (
               <button
                 onClick={() => setShowFullDesc(true)}
@@ -631,10 +643,100 @@ const PropertyDetailsPage = () => {
               <AmenitiesSection amenities={property.amenities} />
             </section>
           )}
+
+
           
           {/* Map */}
           <GeospatialMap property={property} isDark={isDark} />
-          
+
+
+
+       {/* FLOOR PLAN SECTION - Shows only if floor plan exists */}
+{property.floorPlan && (() => {
+  const getFloorPlanImages = () => {
+    if (!property.floorPlan) return [];
+    if (Array.isArray(property.floorPlan)) {
+      return property.floorPlan.filter(img => img);
+    }
+    if (typeof property.floorPlan === 'string' && property.floorPlan) {
+      return [property.floorPlan];
+    }
+    return [];
+  };
+
+  const floorPlanImages = getFloorPlanImages();
+  if (floorPlanImages.length === 0) return null;
+  
+  const isSingle = floorPlanImages.length === 1;
+
+  return (
+    <section className="w-full">
+      <h3 className="text-[10px]  uppercase tracking-[0.5em] text-amber-600 mb-4 md:mb-6 flex items-center gap-2">
+        <FileText size={12} /> Floor Plan
+        {!isSingle && (
+          <span className="text-[8px] text-slate-400 ml-2">({floorPlanImages.length} images)</span>
+        )}
+      </h3>
+      
+      {isSingle ? (
+        <div className="relative group cursor-pointer w-full ">
+          <div className="w-full min-h-[400px] h-[60vh] md:h-[70vh] lg:h-[80vh] xl:h-[85vh] flex items-center justify-center  ">
+            <img
+              src={floorPlanImages[0]}
+              alt="Floor Plan"
+              className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+              onClick={() => window.open(floorPlanImages[0], '_blank')}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjIyIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMTgiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZmlsbD0iI2FhYSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkZsb29yIFBsYW48L3RleHQ+PC9zdmc+';
+              }}
+            />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <div className="bg-amber-500/20 p-5 transform scale-90 group-hover:scale-100 transition-transform duration-300">
+              <FileText size={36} className="text-amber-500" />
+            </div>
+          </div>
+          <div className="absolute bottom-4 left-4 bg-black/70 px-4 py-2 text-white text-xs flex items-center gap-2">
+            <FileText size={14} className="text-amber-500" />
+            <span className="font-medium">Floor Plan</span>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3 w-full">
+          {floorPlanImages.map((plan, idx) => (
+            <div
+              key={idx}
+              className="relative group cursor-pointer w-full bg-zinc-900"
+              onClick={() => window.open(plan, '_blank')}
+            >
+              <div className="w-full min-h-[250px] h-[40vh] sm:h-[50vh] md:h-[60vh] lg:h-[70vh] flex items-center justify-center bg-zinc-900">
+                <img
+                  src={plan}
+                  alt={`Floor Plan ${idx + 1}`}
+                  className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjIyIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZmlsbD0iI2FhYSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkZsb29yIFBsYW48L3RleHQ+PC9zdmc+';
+                  }}
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                <div className="bg-amber-500/20 p-3 transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                  <FileText size={28} className="text-amber-500" />
+                </div>
+              </div>
+              <div className="absolute bottom-2 left-2 bg-black/70 px-2 py-1 text-white text-[8px] font-medium flex items-center gap-1">
+                <FileText size={10} className="text-amber-500" />
+                {idx + 1}/{floorPlanImages.length}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+})()}
           {/* Nearby Locations */}
           <NearbyLocations property={property} isDark={isDark} />
           
@@ -684,6 +786,7 @@ const PropertyDetailsPage = () => {
               </div>
             )}
           </section>
+          
 
           {/* Off-Plan Progress Bar */}
           {isOffPlanProperty && property.completionPercentage && (

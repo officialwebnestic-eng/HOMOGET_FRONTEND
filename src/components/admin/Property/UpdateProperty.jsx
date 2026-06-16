@@ -36,6 +36,8 @@ const UpdateProperty = () => {
   const [existingOffPlanDocuments, setExistingOffPlanDocuments] = useState([]);
   const [ownerDocuments, setOwnerDocuments] = useState([]);
   const [existingOwnerDocuments, setExistingOwnerDocuments] = useState([]);
+  const [floorPlanFiles, setFloorPlanFiles] = useState([]);
+  const [existingFloorPlan, setExistingFloorPlan] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [langTab, setLangTab] = useState("en");
@@ -54,7 +56,6 @@ const UpdateProperty = () => {
     item.toLowerCase().includes(searchAmenity.toLowerCase())
   );
   const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000/";
-
 
   const CURRENCIES = ["AED", "USD", "EUR", "GBP", "INR", "SAR", "QAR", "OMR", "KWD", "BHD"];
 
@@ -134,6 +135,7 @@ const UpdateProperty = () => {
       listingStartDate: new Date().toISOString().split('T')[0],
       listingEndDate: "",
       zoneName: "",
+      floorPlan: "",
     },
   });
 
@@ -157,7 +159,8 @@ const UpdateProperty = () => {
     { id: "location", label: "Location", icon: <MapPin size={16} /> },
     { id: "listing", label: "Listing Period", icon: <Calendar size={16} /> },
     { id: "offplan", label: "Off-Plan", icon: <Building size={16} />, condition: isOffPlan },
-    { id: "dld", label: "DLD Verification", icon: <QrCode size={16} />, condition: isOffPlan },
+    { id: "floorplan", label: "Floor Plan", icon: <FileText size={16} /> },
+    { id: "dld", label: "DLD Verification", icon: <QrCode size={16} /> },
     { id: "documents", label: "Documents", icon: <FileText size={16} /> },
     { id: "media", label: "Media", icon: <Camera size={16} /> },
     { id: "amenities", label: "Amenities", icon: <Sparkles size={16} /> },
@@ -203,121 +206,141 @@ const UpdateProperty = () => {
     fetchDevelopers();
   }, []);
 
- // In your UpdateProperty component, update the fetchProperty function
-useEffect(() => {
-  if (hasFetched.current) return;
-  hasFetched.current = true;
-  
-  const fetchProperty = async () => {
-    try {
-      const response = await http.get(`/getproperty/${id}`, { withCredentials: true });
-      if (response.data.success) {
-        const data = response.data.data;
-        
-        // ✅ Safe number formatting - handle undefined/null values
-        const safeNumber = (value, defaultValue = 0) => {
-          if (value === undefined || value === null || value === "") return defaultValue;
-          const num = Number(value);
-          return isNaN(num) ? defaultValue : num;
-        };
-        
-        const formData = {
-          propertyTitleEn: data.propertyTitleEn || data.propertyname || "",
-          propertyTitleAr: data.propertyTitleAr || "",
-          category: data.category || "Residential",
-          propertytype: data.propertytype || "",
-          offeringType: data.offeringType || "Sale",
-          rentedPeriod: data.rentedPeriod || "Per Year",
-          permitType: data.permitType || "RERA",
-          trakheesiNumber: data.trakheesiNumber || "",
-          reraORN: data.reraORN || "",
-          brnNumber: data.brnNumber || "",
-          bedroom: safeNumber(data.bedroom),
-          bathroom: safeNumber(data.bathroom),
-          listingStartDate: data.listingStartDate ? new Date(data.listingStartDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-          listingEndDate: data.listingEndDate ? new Date(data.listingEndDate).toISOString().split('T')[0] : "",
-          totalFloor: safeNumber(data.totalFloor),
-          squarefoot: safeNumber(data.squarefoot),
-          unitNo: data.unitNo || "",
-          parkingSlots: safeNumber(data.parkingSlots),
-          furnishingType: data.furnishingType || "Unfurnished",
-          propertyAge: data.propertyAge || "Brand New",
-          ownerName: data.ownerName || "",
-          availability: data.availability || "Immediately",
-          status: data.status || "Active",
-          publishingStatus: data.publishingStatus || "Published",
-          address: data.address || "",
-          displayAddress: data.displayAddress || "",
-          locationName: data.locationName || "",
-          locationAddress: data.locationAddress || "",
-          locationPlaceId: data.locationPlaceId || "",
-          locationLat: data.locationLat || "",
-          locationLng: data.locationLng || "",
-          locationType: data.locationType || "",
-          price: safeNumber(data.price),
-          currency: data.currency || "AED",
-          cheques: data.cheques ? safeNumber(data.cheques) : "",
-          descriptionEn: data.descriptionEn || data.description || "",
-          descriptionAr: data.descriptionAr || "",
-          videos: data.videos || "",
-          virtualTour360: data.virtualTour360 || "",
-          videoTourLink: data.videoTourLink || "",
-          developerId: data.developerId?._id || data.developerId || "",
-          agentId: data.agentId?._id || data.agentId || "",
-          deliveryDate: data.deliveryDate || "",
-          completionPercentage: data.completionPercentage ? safeNumber(data.completionPercentage) : "",
-          paymentPlan: data.paymentPlan || "",
-          offPlanType: data.offPlanType || "Direct",
-          offPlanNocNumber: data.offPlanNocNumber || "",
-          offPlanPermitNumber: data.offPlanPermitNumber || "",
-          offPlanSecondaryNocNumber: data.offPlanSecondaryNocNumber || "",
-          offPlanSecondaryPermitNumber: data.offPlanSecondaryPermitNumber || "",
-          originalOffPlanPermitNumber: data.originalOffPlanPermitNumber || "",
-          assignmentContractNumber: data.assignmentContractNumber || "",
-          ownerIdNumber: data.ownerIdNumber || "",
-          ownerEmiratesId: data.ownerEmiratesId || "",
-          ownerPassportNumber: data.ownerPassportNumber || "",
-          ownerVisaCopy: data.ownerVisaCopy || "",
-          dldExpiryDate: data.dldExpiryDate ? data.dldExpiryDate.split('T')[0] : "",
-          refrenceNo: data.refrenceNo || generateReferenceNumber(),
-          nearByLocations: data.nearByLocations?.length ? data.nearByLocations : [{ locationName: "", distance: "", transportType: "Drive" }],
-          zoneName: data.zoneName || "",
-        };
-        
-        reset(formData);
-        
-        if (data.amenities && Array.isArray(data.amenities)) {
-          setValue("amenities", data.amenities);
-        }
-        
-        setExistingImages(data.image || []);
-        setExistingOffPlanDocuments(data.offPlanDocuments || []);
-        setExistingOwnerDocuments(data.ownerDocuments || []);
-        
-        if (data.dldQRCode) {
-          setExistingDldQRCode(data.dldQRCode);
-        }
-        
-        if (data.locationName && data.locationAddress) {
-          setSelectedLocationData({
-            name: data.locationName,
-            title: data.locationAddress,
-            type: data.locationType
-          });
-        }
-      } else {
-        addToast("Failed to load property data", "error");
-      }
-    } catch (error) {
-      console.error(error);
-      addToast("Error loading property", "error");
-    } finally {
-      setLoadingData(false);
-    }
+  // Handle Floor Plan upload
+  const handleFloorPlanUpload = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    setFloorPlanFiles(prev => [...prev, ...selectedFiles]);
+    setExistingFloorPlan(null);
   };
-  
-  fetchProperty();
-}, [id, reset, setValue, addToast, generateReferenceNumber]);
+
+  const removeFloorPlanFile = (index) => {
+    setFloorPlanFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingFloorPlan = () => {
+    setExistingFloorPlan(null);
+  };
+
+  // Fetch property data
+  useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+    
+    const fetchProperty = async () => {
+      try {
+        const response = await http.get(`/getproperty/${id}`, { withCredentials: true });
+        if (response.data.success) {
+          const data = response.data.data;
+          
+          const safeNumber = (value, defaultValue = 0) => {
+            if (value === undefined || value === null || value === "") return defaultValue;
+            const num = Number(value);
+            return isNaN(num) ? defaultValue : num;
+          };
+          
+          const formData = {
+            propertyTitleEn: data.propertyTitleEn || data.propertyname || "",
+            propertyTitleAr: data.propertyTitleAr || "",
+            category: data.category || "Residential",
+            propertytype: data.propertytype || "",
+            offeringType: data.offeringType || "Sale",
+            rentedPeriod: data.rentedPeriod || "Per Year",
+            permitType: data.permitType || "RERA",
+            trakheesiNumber: data.trakheesiNumber || "",
+            reraORN: data.reraORN || "",
+            brnNumber: data.brnNumber || "",
+            bedroom: safeNumber(data.bedroom),
+            bathroom: safeNumber(data.bathroom),
+            listingStartDate: data.listingStartDate ? new Date(data.listingStartDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            listingEndDate: data.listingEndDate ? new Date(data.listingEndDate).toISOString().split('T')[0] : "",
+            totalFloor: safeNumber(data.totalFloor),
+            squarefoot: safeNumber(data.squarefoot),
+            unitNo: data.unitNo || "",
+            parkingSlots: safeNumber(data.parkingSlots),
+            furnishingType: data.furnishingType || "Unfurnished",
+            propertyAge: data.propertyAge || "Brand New",
+            ownerName: data.ownerName || "",
+            availability: data.availability || "Immediately",
+            status: data.status || "Active",
+            publishingStatus: data.publishingStatus || "Published",
+            address: data.address || "",
+            displayAddress: data.displayAddress || "",
+            locationName: data.locationName || "",
+            locationAddress: data.locationAddress || "",
+            locationPlaceId: data.locationPlaceId || "",
+            locationLat: data.locationLat || "",
+            locationLng: data.locationLng || "",
+            locationType: data.locationType || "",
+            price: safeNumber(data.price),
+            currency: data.currency || "AED",
+            cheques: data.cheques ? safeNumber(data.cheques) : "",
+            descriptionEn: data.descriptionEn || data.description || "",
+            descriptionAr: data.descriptionAr || "",
+            videos: data.videos || "",
+            virtualTour360: data.virtualTour360 || "",
+            videoTourLink: data.videoTourLink || "",
+            developerId: data.developerId?._id || data.developerId || "",
+            agentId: data.agentId?._id || data.agentId || "",
+            deliveryDate: data.deliveryDate || "",
+            completionPercentage: data.completionPercentage ? safeNumber(data.completionPercentage) : "",
+            paymentPlan: data.paymentPlan || "",
+            offPlanType: data.offPlanType || "Direct",
+            offPlanNocNumber: data.offPlanNocNumber || "",
+            offPlanPermitNumber: data.offPlanPermitNumber || "",
+            offPlanSecondaryNocNumber: data.offPlanSecondaryNocNumber || "",
+            offPlanSecondaryPermitNumber: data.offPlanSecondaryPermitNumber || "",
+            originalOffPlanPermitNumber: data.originalOffPlanPermitNumber || "",
+            assignmentContractNumber: data.assignmentContractNumber || "",
+            ownerIdNumber: data.ownerIdNumber || "",
+            ownerEmiratesId: data.ownerEmiratesId || "",
+            ownerPassportNumber: data.ownerPassportNumber || "",
+            ownerVisaCopy: data.ownerVisaCopy || "",
+            dldExpiryDate: data.dldExpiryDate ? data.dldExpiryDate.split('T')[0] : "",
+            refrenceNo: data.refrenceNo || generateReferenceNumber(),
+            nearByLocations: data.nearByLocations?.length ? data.nearByLocations : [{ locationName: "", distance: "", transportType: "Drive" }],
+            zoneName: data.zoneName || "",
+            floorPlan: data.floorPlan || "",
+          };
+          
+          reset(formData);
+          
+          if (data.amenities && Array.isArray(data.amenities)) {
+            setValue("amenities", data.amenities);
+          }
+          
+          setExistingImages(data.image || []);
+          setExistingOffPlanDocuments(data.offPlanDocuments || []);
+          setExistingOwnerDocuments(data.ownerDocuments || []);
+          
+          // Set existing floor plan
+          if (data.floorPlan) {
+            setExistingFloorPlan(data.floorPlan);
+          }
+          
+          if (data.dldQRCode) {
+            setExistingDldQRCode(data.dldQRCode);
+          }
+          
+          if (data.locationName && data.locationAddress) {
+            setSelectedLocationData({
+              name: data.locationName,
+              title: data.locationAddress,
+              type: data.locationType
+            });
+          }
+        } else {
+          addToast("Failed to load property data", "error");
+        }
+      } catch (error) {
+        console.error(error);
+        addToast("Error loading property", "error");
+      } finally {
+        setLoadingData(false);
+      }
+    };
+    
+    fetchProperty();
+  }, [id, reset, setValue, addToast, generateReferenceNumber]);
 
   // Auto-populate agent ORN and BRN
   useEffect(() => {
@@ -444,146 +467,151 @@ useEffect(() => {
     );
   };
 
-const onSubmit = async (data) => {
-  // ✅ 1. Validation
-  if (existingImages.length === 0 && files.length === 0) {
-    addToast("Media Portfolio Required", "error");
-    return;
-  }
-  
-  if (!data.locationName && !data.displayAddress) {
-    addToast("Please select a valid location from the search", "error");
-    return;
-  }
-  
-  setIsSubmitting(true);
-  
-  try {
-    const formData = new FormData();
+  const onSubmit = async (data) => {
+    if (existingImages.length === 0 && files.length === 0) {
+      addToast("Media Portfolio Required", "error");
+      return;
+    }
     
-    // ✅ 2. Clean Payload Creation (Explicitly exclude raw file arrays from data object to prevent loop pollution)
-    const payload = {
-      propertyTitleEn: data.propertyTitleEn || "",
-      propertyTitleAr: data.propertyTitleAr || "",
-      price: data.price ? Number(data.price) : 0,
-      currency: data.currency || "AED",
-      category: data.category || "Residential",
-      propertytype: data.propertytype || "",
-      offeringType: data.offeringType || "Sale",
-      rentedPeriod: data.rentedPeriod || "",
-      cheques: data.cheques ? Number(data.cheques) : undefined,
-      developerId: data.developerId || null,
-      agentId: isAdmin ? (data.agentId || "") : (selectedAgent?._id || data.agentId || ""),
-      permitType: data.permitType || "RERA",
-      trakheesiNumber: data.trakheesiNumber || "",
-      reraORN: data.reraORN || "",
-      brnNumber: data.brnNumber || "",
-      ownerName: data.ownerName || "",
-      bedroom: data.bedroom ? Number(data.bedroom) : 0,
-      bathroom: data.bathroom ? Number(data.bathroom) : 0,
-      totalFloor: data.totalFloor ? Number(data.totalFloor) : undefined,
-      squarefoot: data.squarefoot ? Number(data.squarefoot) : 0,
-      unitNo: data.unitNo || "",
-      parkingSlots: data.parkingSlots ? Number(data.parkingSlots) : 0,
-      furnishingType: data.furnishingType || "Unfurnished",
-      propertyAge: data.propertyAge || "Brand New",
-      availability: data.availability || "Immediately",
-      descriptionEn: data.descriptionEn || "",
-      descriptionAr: data.descriptionAr || "",
-      locationName: data.locationName || "",
-      locationAddress: data.locationAddress || "",
-      locationPlaceId: data.locationPlaceId || "",
-      locationLat: data.locationLat ? Number(data.locationLat) : null,
-      locationLng: data.locationLng ? Number(data.locationLng) : null,
-      locationType: data.locationType || "POI",
-      displayAddress: data.displayAddress || "",
-      address: data.address || "",
-      amenities: Array.isArray(data.amenities) ? data.amenities : [],
-      nearByLocations: Array.isArray(data.nearByLocations) ? data.nearByLocations : [],
-      nearByProjects: Array.isArray(data.nearByProjects) ? data.nearByProjects : [],
-      videos: data.videos || "",
-      virtualTour360: data.virtualTour360 || "",
-      videoTourLink: data.videoTourLink || "",
-      status: data.status || "Active",
-      publishingStatus: data.publishingStatus || "Published",
-      refrenceNo: data.refrenceNo || generateReferenceNumber(),
-      offPlanType: isOffPlan ? data.offPlanType : undefined,
-      deliveryDate: data.deliveryDate || "",
-      completionPercentage: data.completionPercentage ? Number(data.completionPercentage) : null,
-      paymentPlan: data.paymentPlan || "",
-      offPlanNocNumber: data.offPlanNocNumber || "",
-      offPlanPermitNumber: data.offPlanPermitNumber || "",
-      offPlanSecondaryNocNumber: data.offPlanSecondaryNocNumber || "",
-      offPlanSecondaryPermitNumber: data.offPlanSecondaryPermitNumber || "",
-      originalOffPlanPermitNumber: data.originalOffPlanPermitNumber || "",
-      assignmentContractNumber: data.assignmentContractNumber || "",
-      ownerIdNumber: data.ownerIdNumber || "",
-      ownerEmiratesId: data.ownerEmiratesId || "",
-      ownerPassportNumber: data.ownerPassportNumber || "",
-      ownerVisaCopy: data.ownerVisaCopy || "",
-      dldExpiryDate: data.dldExpiryDate || "",
-      listingStartDate: data.listingStartDate || new Date().toISOString().split('T')[0],
-      listingEndDate: data.listingEndDate || null,
-      zoneName: data.zoneName || "",
-    };
+    if (!data.locationName && !data.displayAddress) {
+      addToast("Please select a valid location from the search", "error");
+      return;
+    }
     
-    // ✅ 3. Append Textual Fields FIRST (Crucial for Multer middleware processing order)
-    for (const key in payload) {
-      const value = payload[key];
-      if (value !== undefined && value !== null && value !== "") {
-        if (typeof value === "object") {
-          formData.append(key, JSON.stringify(value));
-        } else {
-          formData.append(key, value);
+    setIsSubmitting(true);
+    
+    try {
+      const formData = new FormData();
+      
+      // Build payload
+      const payload = {
+        propertyTitleEn: data.propertyTitleEn || "",
+        propertyTitleAr: data.propertyTitleAr || "",
+        price: data.price ? Number(data.price) : 0,
+        currency: data.currency || "AED",
+        category: data.category || "Residential",
+        propertytype: data.propertytype || "",
+        offeringType: data.offeringType || "Sale",
+        rentedPeriod: data.rentedPeriod || "",
+        cheques: data.cheques ? Number(data.cheques) : undefined,
+        developerId: data.developerId || null,
+        agentId: isAdmin ? (data.agentId || "") : (selectedAgent?._id || data.agentId || ""),
+        permitType: data.permitType || "RERA",
+        trakheesiNumber: data.trakheesiNumber || "",
+        reraORN: data.reraORN || "",
+        brnNumber: data.brnNumber || "",
+        ownerName: data.ownerName || "",
+        bedroom: data.bedroom || "0",
+        bathroom: data.bathroom ? Number(data.bathroom) : 0,
+        totalFloor: data.totalFloor ? Number(data.totalFloor) : undefined,
+        squarefoot: data.squarefoot ? Number(data.squarefoot) : 0,
+        unitNo: data.unitNo || "",
+        parkingSlots: data.parkingSlots ? Number(data.parkingSlots) : 0,
+        furnishingType: data.furnishingType || "Unfurnished",
+        propertyAge: data.propertyAge || "Brand New",
+        availability: data.availability || "Immediately",
+        descriptionEn: data.descriptionEn || "",
+        descriptionAr: data.descriptionAr || "",
+        locationName: data.locationName || "",
+        locationAddress: data.locationAddress || "",
+        locationPlaceId: data.locationPlaceId || "",
+        locationLat: data.locationLat ? Number(data.locationLat) : null,
+        locationLng: data.locationLng ? Number(data.locationLng) : null,
+        locationType: data.locationType || "POI",
+        displayAddress: data.displayAddress || "",
+        address: data.address || "",
+        amenities: Array.isArray(data.amenities) ? data.amenities : [],
+        nearByLocations: Array.isArray(data.nearByLocations) ? data.nearByLocations : [],
+        nearByProjects: Array.isArray(data.nearByProjects) ? data.nearByProjects : [],
+        videos: data.videos || "",
+        virtualTour360: data.virtualTour360 || "",
+        videoTourLink: data.videoTourLink || "",
+        status: data.status || "Active",
+        publishingStatus: data.publishingStatus || "Published",
+        refrenceNo: data.refrenceNo || generateReferenceNumber(),
+        offPlanType: isOffPlan ? data.offPlanType : undefined,
+        deliveryDate: data.deliveryDate || "",
+        completionPercentage: data.completionPercentage ? Number(data.completionPercentage) : null,
+        paymentPlan: data.paymentPlan || "",
+        offPlanNocNumber: data.offPlanNocNumber || "",
+        offPlanPermitNumber: data.offPlanPermitNumber || "",
+        offPlanSecondaryNocNumber: data.offPlanSecondaryNocNumber || "",
+        offPlanSecondaryPermitNumber: data.offPlanSecondaryPermitNumber || "",
+        originalOffPlanPermitNumber: data.originalOffPlanPermitNumber || "",
+        assignmentContractNumber: data.assignmentContractNumber || "",
+        ownerIdNumber: data.ownerIdNumber || "",
+        ownerEmiratesId: data.ownerEmiratesId || "",
+        ownerPassportNumber: data.ownerPassportNumber || "",
+        ownerVisaCopy: data.ownerVisaCopy || "",
+        dldExpiryDate: data.dldExpiryDate || "",
+        listingStartDate: data.listingStartDate || new Date().toISOString().split('T')[0],
+        listingEndDate: data.listingEndDate || null,
+        zoneName: data.zoneName || "",
+      };
+      
+      // Append text fields
+      for (const key in payload) {
+        const value = payload[key];
+        if (value !== undefined && value !== null && value !== "") {
+          if (typeof value === "object") {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, value);
+          }
         }
       }
-    }
-    
-    // ✅ 4. Append Document Arrays as explicitly Stringified collections
-    formData.append("existingImages", JSON.stringify(existingImages));
-    formData.append("existingOffPlanDocuments", JSON.stringify(existingOffPlanDocuments));
-    formData.append("existingOwnerDocuments", JSON.stringify(existingOwnerDocuments));
-    
-    // ✅ 5. Append Raw Binary Streams LAST (Ensures Multer intercepts files after fields are mounted)
-    if (files && files.length > 0) {
-      files.forEach((file) => {
-        formData.append("image", file); // Must match backend field configuration: upload.array('image')
+      
+      // Append document arrays
+      formData.append("existingImages", JSON.stringify(existingImages));
+      formData.append("existingOffPlanDocuments", JSON.stringify(existingOffPlanDocuments));
+      formData.append("existingOwnerDocuments", JSON.stringify(existingOwnerDocuments));
+      
+      // Handle floor plan
+      if (floorPlanFiles.length > 0) {
+        floorPlanFiles.forEach((file) => formData.append("floorPlan", file));
+      } else if (existingFloorPlan) {
+        // Send existing floor plan as JSON
+        formData.append("floorPlan", JSON.stringify(existingFloorPlan));
+      } else if (!existingFloorPlan && floorPlanFiles.length === 0) {
+        formData.append("removeFloorPlan", "true");
+      }
+      
+      // Append files
+      if (files && files.length > 0) {
+        files.forEach((file) => formData.append("image", file));
+      }
+      
+      if (offPlanDocuments && offPlanDocuments.length > 0) {
+        offPlanDocuments.forEach((doc) => formData.append("offPlanDocuments", doc));
+      }
+      
+      if (ownerDocuments && ownerDocuments.length > 0) {
+        ownerDocuments.forEach((doc) => formData.append("ownerDocuments", doc));
+      }
+      
+      if (dldQRFile) {
+        formData.append("dldQRCode", dldQRFile);
+      }
+      if (!existingDldQRCode && !dldQRFile) {
+        formData.append("removeDldQRCode", "true");
+      }
+      
+      const res = await http.put(`/updateproperty/${id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true
       });
+      
+      if (res.data.success) {
+        addToast("Property Updated Successfully", "success");
+        navigate("/viewpropertylist");
+      }
+    } catch (e) {
+      console.error("Submission error:", e);
+      addToast(e.response?.data?.message || "Failed to update property", "error");
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    if (offPlanDocuments && offPlanDocuments.length > 0) {
-      offPlanDocuments.forEach((doc) => formData.append("offPlanDocuments", doc));
-    }
-    
-    if (ownerDocuments && ownerDocuments.length > 0) {
-      ownerDocuments.forEach((doc) => formData.append("ownerDocuments", doc));
-    }
-    
-    // Handle DLD QR File Stream configurations
-    if (dldQRFile) {
-      formData.append("dldQRCode", dldQRFile);
-    }
-    if (!existingDldQRCode && !dldQRFile) {
-      formData.append("removeDldQRCode", "true");
-    }
-    
-    // ✅ 6. Network Pipeline Dispatch
-    const res = await http.put(`/updateproperty/${id}`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-      withCredentials: true
-    });
-    
-    if (res.data.success) {
-      addToast("Property Updated Successfully", "success");
-      navigate("/viewpropertylist");
-    }
-  } catch (e) {
-    console.error("Submission operational error:", e);
-    addToast(e.response?.data?.message || "Failed to finalize property configuration", "error");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   const inputClass = `w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all text-sm font-medium ${
     isDark ? "bg-[#1A1F2B] border-white/10 text-white" : "bg-white border-slate-200 text-slate-900 shadow-sm"
@@ -602,7 +630,7 @@ const onSubmit = async (data) => {
   return (
     <div className={`min-h-screen ${isDark ? "bg-gradient-to-br from-[#0F1219] via-[#0F1219] to-[#1a1f2e]" : "bg-gradient-to-br from-[#F8FAFC] via-[#F8FAFC] to-[#f1f5f9]"}`}>
       
-      <header className={`sticky top-0 border-b backdrop-blur-xl transition-all duration-300  ${isDark ? "bg-[#0F1219]/95 border-white/5" : "bg-white/95 border-slate-200"}`}>
+      <header className={`sticky top-0 border-b backdrop-blur-xl transition-all duration-300 z-50 ${isDark ? "bg-[#0F1219]/95 border-white/5" : "bg-white/95 border-slate-200"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-between py-3 md:py-0 md:h-20">
             <div className="flex items-center gap-3 group">
@@ -727,10 +755,9 @@ const onSubmit = async (data) => {
                 <div className="lg:col-span-3">
                   <label className={`${labelClass} flex items-center gap-1.5 mb-2`}>
                     <Hash size={14} className="text-amber-500" />
-                    Reference Number {requiredStar}
+                    Reference Number
                   </label>
-                  <input {...register("refrenceNo", { required: true })} className={`${inputClass} w-full font-mono tracking-wider`} readOnly />
-                  {errors.refrenceNo && <p className="text-red-500 text-[9px] mt-1">Required</p>}
+                  <input {...register("refrenceNo")} className={`${inputClass} w-full font-mono tracking-wider`} />
                 </div>
                 <div className="lg:col-span-1">
                   <label className={`${labelClass} mb-2 block`}>Publishing Status</label>
@@ -801,8 +828,8 @@ const onSubmit = async (data) => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className={labelClass}>Listing Start Date {requiredStar}</label>
-                  <input type="date" {...register("listingStartDate", { required: true })} className={inputClass} />
+                  <label className={labelClass}>Listing Start Date</label>
+                  <input type="date" {...register("listingStartDate")} className={inputClass} />
                   <p className="text-[8px] text-slate-400 mt-1">Date when the property becomes available</p>
                 </div>
                 <div>
@@ -810,37 +837,6 @@ const onSubmit = async (data) => {
                   <input type="date" {...register("listingEndDate")} className={inputClass} />
                   <p className="text-[8px] text-slate-400 mt-1">Leave empty for no expiry date</p>
                 </div>
-              </div>
-
-              <div className="mt-4 p-4 rounded-lg bg-gradient-to-r from-amber-500/5 to-orange-500/5 border border-amber-500/20">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[9px] font-medium text-slate-500">Listing Status:</span>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                    watch("listingEndDate") && new Date(watch("listingEndDate")) < new Date()
-                      ? "bg-red-500/20 text-red-500"
-                      : "bg-green-500/20 text-green-500"
-                  }`}>
-                    <div className={`w-1.5 h-1.5 rounded-full ${watch("listingEndDate") && new Date(watch("listingEndDate")) < new Date() ? "bg-red-500" : "bg-green-500 animate-pulse"}`} />
-                    {watch("listingEndDate") && new Date(watch("listingEndDate")) < new Date() ? "Expired" : "Active"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-amber-500/10">
-                  <span className="text-[8px] text-slate-400 uppercase tracking-wider">Listing Period:</span>
-                  <span className="text-[8px] font-mono flex items-center gap-1">
-                    {watch("listingStartDate") ? new Date(watch("listingStartDate")).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "Not set"} 
-                    <ArrowRight size={10} className="text-amber-500" />
-                    {watch("listingEndDate") ? new Date(watch("listingEndDate")).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "No expiry"}
-                  </span>
-                </div>
-                {watch("listingEndDate") && new Date(watch("listingEndDate")) >= new Date() && (
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-[8px] text-slate-400 uppercase tracking-wider">Days Remaining:</span>
-                    <span className="text-[9px] font-bold text-amber-500 flex items-center gap-1">
-                      <Clock size={10} />
-                      {Math.ceil((new Date(watch("listingEndDate")) - new Date()) / (1000 * 60 * 60 * 24))} days
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -907,7 +903,48 @@ const onSubmit = async (data) => {
                 <div>
                   <label className={labelClass}>Bedrooms</label>
                   <select {...register("bedroom")} className={inputClass}>
-                    {[...Array(21).keys()].map((i) => (<option key={i} value={i}>{i === 0 ? "Studio" : i}</option>))}
+                    <option value="Studio">Studio</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="10+">10+</option>
+                    <option value="1+Maid">1 + Maid</option>
+                    <option value="2+Maid">2 + Maid</option>
+                    <option value="3+Maid">3 + Maid</option>
+                    <option value="4+Maid">4 + Maid</option>
+                    <option value="5+Maid">5 + Maid</option>
+                    <option value="6+Maid">6 + Maid</option>
+                    <option value="7+Maid">7 + Maid</option>
+                    <option value="8+Maid">8 + Maid</option>
+                    <option value="9+Maid">9 + Maid</option>
+                    <option value="10+Maid">10 + Maid</option>
+                    <option value="1+Study">1 + Study</option>
+                    <option value="2+Study">2 + Study</option>
+                    <option value="3+Study">3 + Study</option>
+                    <option value="4+Study">4 + Study</option>
+                    <option value="5+Study">5 + Study</option>
+                    <option value="6+Study">6 + Study</option>
+                    <option value="7+Study">7 + Study</option>
+                    <option value="8+Study">8 + Study</option>
+                    <option value="9+Study">9 + Study</option>
+                    <option value="10+Study">10 + Study</option>
+                    <option value="1+Maid+Study">1 + Maid + Study</option>
+                    <option value="2+Maid+Study">2 + Maid + Study</option>
+                    <option value="3+Maid+Study">3 + Maid + Study</option>
+                    <option value="4+Maid+Study">4 + Maid + Study</option>
+                    <option value="5+Maid+Study">5 + Maid + Study</option>
+                    <option value="6+Maid+Study">6 + Maid + Study</option>
+                    <option value="7+Maid+Study">7 + Maid + Study</option>
+                    <option value="8+Maid+Study">8 + Maid + Study</option>
+                    <option value="9+Maid+Study">9 + Maid + Study</option>
+                    <option value="10+Maid+Study">10 + Maid + Study</option>
                   </select>
                 </div>
                 <div>
@@ -1017,11 +1054,11 @@ const onSubmit = async (data) => {
             {/* OFF-PLAN DETAILS SECTION */}
             {isOffPlan && (
               <div id="offplan" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-                <SectionHeader icon={<Building />} title="Off-Plan Details" currentStep={currentStep} stepIndex={4} />
+                <SectionHeader icon={<Building />} title="Off-Plan Details" currentStep={currentStep} stepIndex={5} />
                 
                 <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20">
-                  <label className={`${labelClass} text-purple-500`}>Off-Plan Type {requiredStar}</label>
-                  <select {...register("offPlanType", { required: true })} className={inputClass}>
+                  <label className={`${labelClass} text-purple-500`}>Off-Plan Type</label>
+                  <select {...register("offPlanType")} className={inputClass}>
                     <option value="Direct">Direct</option>
                     <option value="Secondary">Secondary</option>
                     <option value="Resale">Resale</option>
@@ -1097,9 +1134,115 @@ const onSubmit = async (data) => {
               </div>
             )}
 
+            {/* FLOOR PLAN SECTION */}
+            <div id="floorplan" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
+              <SectionHeader icon={<FileText />} title="Floor Plan" currentStep={currentStep} stepIndex={6} />
+              
+              <div className="space-y-4">
+                {/* Existing Floor Plan */}
+                {existingFloorPlan && (
+                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <p className="text-[10px] text-amber-600 mb-2">Current Floor Plan:</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <FileText size={16} className="text-amber-500" />
+                        <span className="text-xs truncate max-w-[200px]">
+                          {Array.isArray(existingFloorPlan) 
+                            ? `${existingFloorPlan.length} floor plan(s)` 
+                            : existingFloorPlan.split('/').pop() || existingFloorPlan}
+                        </span>
+                      </div>
+                      <button type="button" onClick={removeExistingFloorPlan} className="text-xs text-red-500 hover:text-red-600 transition-colors">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Upload New Floor Plan */}
+                <div>
+                  <label className={labelClass}>Upload Floor Plan</label>
+                  <div
+                    className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+                      floorPlanFiles.length > 0 
+                        ? "border-amber-400 bg-amber-50 dark:bg-amber-950/30" 
+                        : "border-gray-300 dark:border-gray-600 hover:border-amber-400"
+                    }`}
+                    onClick={() => document.getElementById("floorPlanInput")?.click()}
+                  >
+                    <input 
+                      id="floorPlanInput" 
+                      type="file" 
+                      multiple
+                      accept="image/*,.pdf" 
+                      className="hidden" 
+                      onChange={handleFloorPlanUpload} 
+                    />
+                    {floorPlanFiles.length > 0 ? (
+                      <div className="flex flex-col items-center">
+                        <FileCheck size={32} className="text-amber-500 mb-2" />
+                        <p className="text-sm font-medium text-amber-500">{floorPlanFiles.length} file(s) uploaded</p>
+                        <div className="flex flex-wrap gap-2 mt-2 justify-center">
+                          {floorPlanFiles.map((file, idx) => (
+                            <span key={idx} className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded">
+                              {file.name}
+                            </span>
+                          ))}
+                        </div>
+                        <button 
+                          type="button" 
+                          onClick={(e) => { e.stopPropagation(); setFloorPlanFiles([]); }}
+                          className="text-xs text-red-500 mt-2"
+                        >
+                          Remove All
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload size={32} className="mx-auto mb-2 text-gray-400" />
+                        <p className="text-xs font-medium">Click to upload floor plan</p>
+                        <p className="text-[9px] text-gray-500 mt-1">PNG, JPG, JPEG, PDF (Max 5MB each)</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Floor Plan Preview */}
+                {floorPlanFiles.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+                    {floorPlanFiles.map((file, idx) => (
+                      <div key={idx} className="relative group">
+                        <div className="aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                          {file.type?.startsWith('image/') ? (
+                            <img 
+                              src={URL.createObjectURL(file)} 
+                              alt={`Floor Plan ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center">
+                              <FileText size={24} className="text-gray-400" />
+                              <span className="text-[8px] text-gray-500 mt-1 truncate px-1">{file.name}</span>
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFloorPlanFile(idx)}
+                          className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition opacity-0 group-hover:opacity-100"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* DLD VERIFICATION SECTION */}
             <div id="dld" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<QrCode />} title="DLD Verification" currentStep={currentStep} stepIndex={5} />
+              <SectionHeader icon={<QrCode />} title="DLD Verification" currentStep={currentStep} stepIndex={7} />
 
               <div className="mt-2 p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
                 <div className="flex items-center gap-3 mb-4">
@@ -1119,8 +1262,7 @@ const onSubmit = async (data) => {
                   </div>
                   <div>
                     <label className={labelClass}>Zone Name</label>
-                    <input type="text" {...register("zoneName")} className={inputClass} placeholder="e.g., Dubai Marina, Downtown Dubai" autoComplete="off" />
-                    <p className="text-[8px] text-slate-400 mt-1">Enter the community, district, or zone name</p>
+                    <input type="text" {...register("zoneName")} className={inputClass} placeholder="e.g., Dubai Marina, Downtown Dubai" />
                   </div>
                 </div>
                 
@@ -1157,7 +1299,7 @@ const onSubmit = async (data) => {
 
             {/* DOCUMENTS SECTION */}
             <div id="documents" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<FileText />} title="Documents" currentStep={currentStep} stepIndex={isOffPlan ? 6 : 4} />
+              <SectionHeader icon={<FileText />} title="Documents" currentStep={currentStep} stepIndex={8} />
               
               {isOffPlan && watchOffPlanType === "Direct" && (
                 <div className={`mb-6 p-5 rounded-xl ${isDark ? 'bg-purple-500/5 border border-purple-500/20' : 'bg-purple-50 border border-purple-200'}`}>
@@ -1248,7 +1390,7 @@ const onSubmit = async (data) => {
             {/* DESCRIPTION SECTION */}
             <div className={`p-6 md:p-8 rounded-2xl border ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
               <div className="flex justify-between items-center mb-5">
-                <SectionHeader icon={<FileText />} title="Description" currentStep={currentStep} stepIndex={isOffPlan ? 7 : 5} />
+                <SectionHeader icon={<FileText />} title="Description" currentStep={currentStep} stepIndex={9} />
                 <div className="flex gap-1 p-1 rounded-lg bg-black/10 dark:bg-white/10">
                   {["en", "ar"].map((l) => (
                     <button key={l} type="button" onClick={() => setLangTab(l)} className={`px-3 py-1 rounded-md text-[9px] font-bold transition-all ${langTab === l ? "bg-amber-500 text-black" : "text-slate-500"}`}>
@@ -1266,39 +1408,38 @@ const onSubmit = async (data) => {
 
             {/* MEDIA SECTION */}
             <div id="media" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<Camera />} title="Media" currentStep={currentStep} stepIndex={isOffPlan ? 8 : 6} />
+              <SectionHeader icon={<Camera />} title="Media" currentStep={currentStep} stepIndex={10} />
               
-          {/* When displaying existing images for deletion preview */}
-{existingImages.length > 0 && (
-  <div className="mb-4">
-    <label className={labelClass}>Current Images</label>
-    <div className="grid grid-cols-3 md:grid-cols-4 gap-3 mt-2">
-      {existingImages.map((img, i) => (
-        <div key={i} className="relative aspect-square rounded-lg overflow-hidden group border">
-          <img 
-            src={`${baseUrl}/properties/${img}`}
-            className="w-full h-full object-cover" 
-            alt=""
-            onError={(e) => {
-              e.target.src = 'https://via.placeholder.com/150?text=Image+Not+Found';
-            }}
-          />
-          <button 
-            type="button" 
-            onClick={() => setExistingImages(prev => prev.filter((_, idx) => idx !== i))} 
-            className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all"
-          >
-            <Trash2 size={16} className="text-white" />
-          </button>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
+              {existingImages.length > 0 && (
+                <div className="mb-4">
+                  <label className={labelClass}>Current Images</label>
+                  <div className="grid grid-cols-3 md:grid-cols-4 gap-3 mt-2">
+                    {existingImages.map((img, i) => (
+                      <div key={i} className="relative aspect-square rounded-lg overflow-hidden group border">
+                        <img 
+                          src={`${baseUrl}/properties/${img}`}
+                          className="w-full h-full object-cover" 
+                          alt=""
+                          onError={(e) => {
+                            e.target.src = 'https://via.placeholder.com/150?text=Image+Not+Found';
+                          }}
+                        />
+                        <button 
+                          type="button" 
+                          onClick={() => setExistingImages(prev => prev.filter((_, idx) => idx !== i))} 
+                          className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all"
+                        >
+                          <Trash2 size={16} className="text-white" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               <div className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer hover:bg-amber-500/5 transition-all" onClick={() => document.getElementById("file-up")?.click()}>
                 <Upload className="mx-auto mb-2 text-amber-500" size={28} />
-                <p className="text-[10px] font-bold uppercase">Add New Images {requiredStar}</p>
+                <p className="text-[10px] font-bold uppercase">Add New Images</p>
                 <input id="file-up" type="file" multiple hidden accept="image/*" onChange={(e) => setFiles([...files, ...Array.from(e.target.files || [])])} />
               </div>
               {files.length > 0 && (
@@ -1323,7 +1464,7 @@ const onSubmit = async (data) => {
 
             {/* AMENITIES SECTION */}
             <div id="amenities" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<Sparkles />} title="Amenities" currentStep={currentStep} stepIndex={isOffPlan ? 9 : 7} />
+              <SectionHeader icon={<Sparkles />} title="Amenities" currentStep={currentStep} stepIndex={11} />
               <input type="text" placeholder="Search amenities..." value={searchAmenity} onChange={(e) => setSearchAmenity(e.target.value)} className={inputClass} />
               <div className="max-h-80 overflow-y-auto mt-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
@@ -1342,7 +1483,7 @@ const onSubmit = async (data) => {
 
             {/* PRICING SECTION */}
             <div id="pricing" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<Wallet />} title="Pricing" currentStep={currentStep} stepIndex={isOffPlan ? 10 : 8} />
+              <SectionHeader icon={<Wallet />} title="Pricing" currentStep={currentStep} stepIndex={12} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className={labelClass}>Price {requiredStar}</label>

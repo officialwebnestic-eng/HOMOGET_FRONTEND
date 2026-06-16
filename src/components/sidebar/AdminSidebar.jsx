@@ -150,7 +150,7 @@ export default function Sidebar() {
           {/* Developers Dropdown */}
           <DropdownMenu
             icon={<Building2 size={20} />}
-            label="Developer Management"
+            label="Developer Management"  
             menuKey="Developers"
             openDropdown={openDropdown}
             toggleDropdown={toggleDropdown}

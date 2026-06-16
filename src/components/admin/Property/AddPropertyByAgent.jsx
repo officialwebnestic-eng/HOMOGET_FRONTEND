@@ -45,6 +45,7 @@ const AddPropertyByAgent = () => {
 
   // --- States ---
   const [files, setFiles] = useState([]);
+  const [floorPlanFiles, setFloorPlanFiles] = useState([]);
   const [offPlanDocuments, setOffPlanDocuments] = useState([]);
   const [ownerDocuments, setOwnerDocuments] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -162,6 +163,7 @@ const AddPropertyByAgent = () => {
     { id: "specs", label: "Specifications", icon: <Layers size={16} /> },
     { id: "location", label: "Location", icon: <MapPin size={16} /> },
     { id: "offplan", label: "Off-Plan", icon: <Building size={16} />, condition: isOffPlan },
+    { id: "floorplan", label: "Floor Plan", icon: <FileText size={16} /> },
     { id: "documents", label: "Documents", icon: <FileText size={16} /> },
     { id: "dld", label: "DLD QR", icon: <QrCode size={16} /> },
     { id: "media", label: "Media", icon: <Camera size={16} /> },
@@ -190,6 +192,16 @@ const AddPropertyByAgent = () => {
         element.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     }
+  };
+
+  // Handle Floor Plan upload
+  const handleFloorPlanUpload = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    setFloorPlanFiles(prev => [...prev, ...selectedFiles]);
+  };
+
+  const removeFloorPlanFile = (index) => {
+    setFloorPlanFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   useEffect(() => {
@@ -392,6 +404,12 @@ const AddPropertyByAgent = () => {
       });
       
       files.forEach((file) => formData.append("image", file));
+      
+      // ✅ Append Floor Plan files
+      if (floorPlanFiles.length > 0) {
+        floorPlanFiles.forEach((file) => formData.append("floorPlan", file));
+      }
+      
       offPlanDocuments.forEach((doc) => formData.append("offPlanDocuments", doc));
       ownerDocuments.forEach((doc) => formData.append("ownerDocuments", doc));
       
@@ -409,6 +427,7 @@ const AddPropertyByAgent = () => {
         
         reset();
         setFiles([]);
+        setFloorPlanFiles([]);
         setOffPlanDocuments([]);
         setOwnerDocuments([]);
         setDldQRFile(null);
@@ -718,7 +737,7 @@ const AddPropertyByAgent = () => {
                 <div>
                   <label className={labelClass}>Bedrooms</label>
                 <select {...register("bedroom")} className={inputClass}>
-                       <option value="0">Studio</option>
+                       <option value="Studio">Studio</option>
                        <option value="1">1</option>
                        <option value="2">2</option>
                        <option value="3">3</option>
@@ -728,7 +747,8 @@ const AddPropertyByAgent = () => {
                        <option value="7">7</option>
                        <option value="8">8</option>
                        <option value="9">9</option>
-                       <option value="10">10+</option>
+                       <option value="10">10</option>
+                       <option value="10+">10+</option>
                        {/* Maid Room Options */}
                        <option value="1+Maid">1 + Maid</option>
                        <option value="2+Maid">2 + Maid</option>
@@ -748,10 +768,10 @@ const AddPropertyByAgent = () => {
                        <option value="4+Study">4 + Study</option>
                        <option value="5+Study">5 + Study</option>
                        <option value="6+Study">6 + Study</option>
-                       <option value="7+Maid">7 + Maid</option>
-                       <option value="8+Maid">8 + Maid</option>
-                       <option value="9+Maid">9 + Maid</option>
-                         <option value="10+Maid">10 + Maid</option>
+                       <option value="7+Study">7 + Study</option>
+                       <option value="8+Study">8 + Study</option>
+                       <option value="9+Study">9 + Study</option>
+                       <option value="10+Study">10 + Study</option>
                        {/* Combined Options */}
                         <option value="1+Maid+Study">1 + Maid + Study</option>
                          <option value="2+Maid+Study">2 + Maid + Study</option>
@@ -953,9 +973,94 @@ const AddPropertyByAgent = () => {
               </div>
             )}
 
+            {/* FLOOR PLAN SECTION - NEW */}
+            <div id="floorplan" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
+              <SectionHeader icon={<FileText />} title="Floor Plan" currentStep={currentStep} stepIndex={6} />
+              
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClass}>Upload Floor Plan</label>
+                  <div
+                    className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+                      floorPlanFiles.length > 0 
+                        ? "border-amber-400 bg-amber-50 dark:bg-amber-950/30" 
+                        : "border-gray-300 dark:border-gray-600 hover:border-amber-400"
+                    }`}
+                    onClick={() => document.getElementById("floorPlanInput")?.click()}
+                  >
+                    <input 
+                      id="floorPlanInput" 
+                      type="file" 
+                      multiple
+                      accept="image/*,.pdf" 
+                      className="hidden" 
+                      onChange={handleFloorPlanUpload} 
+                    />
+                    {floorPlanFiles.length > 0 ? (
+                      <div className="flex flex-col items-center">
+                        <FileCheck size={32} className="text-amber-500 mb-2" />
+                        <p className="text-sm font-medium text-amber-500">{floorPlanFiles.length} file(s) uploaded</p>
+                        <div className="flex flex-wrap gap-2 mt-2 justify-center">
+                          {floorPlanFiles.map((file, idx) => (
+                            <span key={idx} className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded">
+                              {file.name}
+                            </span>
+                          ))}
+                        </div>
+                        <button 
+                          type="button" 
+                          onClick={(e) => { e.stopPropagation(); setFloorPlanFiles([]); }}
+                          className="text-xs text-red-500 mt-2"
+                        >
+                          Remove All
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload size={32} className="mx-auto mb-2 text-gray-400" />
+                        <p className="text-xs font-medium">Click to upload floor plan</p>
+                        <p className="text-[9px] text-gray-500 mt-1">PNG, JPG, JPEG, PDF (Max 5MB each)</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Floor Plan Preview */}
+                {floorPlanFiles.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+                    {floorPlanFiles.map((file, idx) => (
+                      <div key={idx} className="relative group">
+                        <div className="aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                          {file.type?.startsWith('image/') ? (
+                            <img 
+                              src={URL.createObjectURL(file)} 
+                              alt={`Floor Plan ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center">
+                              <FileText size={24} className="text-gray-400" />
+                              <span className="text-[8px] text-gray-500 mt-1 truncate px-1">{file.name}</span>
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFloorPlanFile(idx)}
+                          className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition opacity-0 group-hover:opacity-100"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* DOCUMENTS SECTION */}
             <div id="documents" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<FileText />} title="Documents" currentStep={currentStep} stepIndex={isOffPlan ? 6 : 5} />
+              <SectionHeader icon={<FileText />} title="Documents" currentStep={currentStep} stepIndex={7} />
               
               {isOffPlan && watchOffPlanType === "Direct" && (
                 <div className={`mb-6 p-5 rounded-xl ${isDark ? 'bg-purple-500/5 border border-purple-500/20' : 'bg-purple-50 border border-purple-200'}`}>
@@ -1020,7 +1125,7 @@ const AddPropertyByAgent = () => {
 
             {/* DLD QR CODE SECTION */}
             <div id="dld" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<QrCode />} title="DLD QR Code" currentStep={currentStep} stepIndex={7} />
+              <SectionHeader icon={<QrCode />} title="DLD QR Code" currentStep={currentStep} stepIndex={8} />
             
               <div className="mt-2 p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
                 <div className="flex items-center gap-3 mb-4">
@@ -1068,7 +1173,7 @@ const AddPropertyByAgent = () => {
             {/* DESCRIPTION SECTION */}
             <div className={`p-6 md:p-8 rounded-2xl border ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
               <div className="flex justify-between items-center mb-5">
-                <SectionHeader icon={<FileText />} title="Description" currentStep={currentStep} stepIndex={isOffPlan ? 8 : 6} />
+                <SectionHeader icon={<FileText />} title="Description" currentStep={currentStep} stepIndex={9} />
                 <div className="flex gap-1 p-1 rounded-lg bg-black/10 dark:bg-white/10">
                   {["en", "ar"].map((l) => (
                     <button key={l} type="button" onClick={() => setLangTab(l)} className={`px-3 py-1 rounded-md text-[9px] font-bold transition-all ${langTab === l ? "bg-amber-500 text-black" : "text-slate-500"}`}>
@@ -1086,7 +1191,7 @@ const AddPropertyByAgent = () => {
 
             {/* MEDIA SECTION */}
             <div id="media" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<Camera />} title="Media" currentStep={currentStep} stepIndex={isOffPlan ? 9 : 7} />
+              <SectionHeader icon={<Camera />} title="Media" currentStep={currentStep} stepIndex={10} />
               <div className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer hover:bg-amber-500/5 transition-all" onClick={() => document.getElementById("file-up")?.click()}>
                 <Upload className="mx-auto mb-2 text-amber-500" size={28} />
                 <p className="text-[10px] font-bold uppercase">Drop Images Here {requiredStar}</p>
@@ -1113,7 +1218,7 @@ const AddPropertyByAgent = () => {
 
             {/* AMENITIES SECTION */}
             <div id="amenities" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<Sparkles />} title="Amenities" currentStep={currentStep} stepIndex={isOffPlan ? 10 : 8} />
+              <SectionHeader icon={<Sparkles />} title="Amenities" currentStep={currentStep} stepIndex={11} />
               <input type="text" placeholder="Search amenities..." value={searchAmenity} onChange={(e) => setSearchAmenity(e.target.value)} className={inputClass} />
               <div className="max-h-80 overflow-y-auto mt-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
@@ -1134,7 +1239,7 @@ const AddPropertyByAgent = () => {
 
             {/* PRICING SECTION */}
             <div id="pricing" className={`p-6 md:p-8 rounded-2xl border scroll-mt-24 ${isDark ? "bg-[#161B26] border-white/5" : "bg-white border-slate-100 shadow-xl"}`}>
-              <SectionHeader icon={<Wallet />} title="Pricing" currentStep={currentStep} stepIndex={isOffPlan ? 11 : 9} />
+              <SectionHeader icon={<Wallet />} title="Pricing" currentStep={currentStep} stepIndex={12} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className={labelClass}>Price {requiredStar}</label>

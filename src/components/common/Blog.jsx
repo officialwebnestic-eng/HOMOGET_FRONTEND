@@ -10,7 +10,9 @@ import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
 import { 
   ArrowRight, Calendar, Clock, Search, X, ShieldCheck, Quote,
-  User, Tag, Eye, Heart, ChevronDown, Filter
+  User, Tag, Eye, Heart, ChevronDown, Filter, 
+  Facebook, Twitter, Linkedin, Instagram, Share2, Youtube, Link2,
+  Globe, MessageCircle, Send
 } from 'lucide-react';
 import { notfound } from '../../ExportImages';
 import { toast } from 'react-toastify';
@@ -26,6 +28,7 @@ const Blog = () => {
   const [sortBy, setSortBy] = useState('newest');
   const [showFilters, setShowFilters] = useState(false);
   const [filteredBlogs, setFilteredBlogs] = useState([]);
+  const [showShareMenu, setShowShareMenu] = useState(null);
 
   // Categories
   const categories = [
@@ -61,7 +64,6 @@ const Blog = () => {
   useEffect(() => {
     let filtered = [...blogData];
     
-    // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(blog =>
         blog.blogtitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -70,12 +72,10 @@ const Blog = () => {
       );
     }
     
-    // Apply category filter
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(blog => blog.blogcategory === selectedCategory);
     }
     
-    // Apply sorting
     filtered.sort((a, b) => {
       if (sortBy === 'newest') {
         return new Date(b.blogpublishdate) - new Date(a.blogpublishdate);
@@ -110,6 +110,44 @@ const Blog = () => {
     const words = content.split(/\s+/g).length;
     const minutes = Math.ceil(words / 200);
     return `${minutes} min read`;
+  };
+
+  // Handle social share click
+  const handleShare = (blog, platform) => {
+    const url = window.location.origin + `/blog/${blog._id}`;
+    let shareUrl = '';
+    
+    switch(platform) {
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        break;
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(blog.blogtitle)}&url=${encodeURIComponent(url)}`;
+        break;
+      case 'linkedin':
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+        break;
+      case 'whatsapp':
+        shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(blog.blogtitle + ' ' + url)}`;
+        break;
+      case 'telegram':
+        shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(blog.blogtitle)}`;
+        break;
+      case 'pinterest':
+        shareUrl = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&media=${encodeURIComponent(blog.image?.[0] || '')}&description=${encodeURIComponent(blog.blogtitle)}`;
+        break;
+      default:
+        return;
+    }
+    
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+    setShowShareMenu(null);
+  };
+
+  // Get social link from blog data
+  const getSocialLink = (blog, platform) => {
+    if (!blog.socialLinks) return null;
+    return blog.socialLinks[platform] || null;
   };
 
   const colors = {
@@ -299,11 +337,10 @@ const Blog = () => {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                onClick={() => handleBlogClick(blog._id)}
-                className={`group rounded-2xl overflow-hidden border ${colors.card} shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer`}
+                className={`group rounded-2xl overflow-hidden border ${colors.card} shadow-sm hover:shadow-xl transition-all duration-300`}
               >
                 {/* Image Container */}
-                <div className="relative h-56 overflow-hidden">
+                <div className="relative h-56 overflow-hidden cursor-pointer" onClick={() => handleBlogClick(blog._id)}>
                   <img 
                     src={blog.image?.[0] || "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=500"} 
                     alt={blog.blogtitle}
@@ -314,12 +351,20 @@ const Blog = () => {
                       {blog.blogcategory || 'General'}
                     </span>
                   </div>
+                  {/* Video Badge */}
+                  {blog.videos && blog.videos.length > 0 && (
+                    <div className="absolute top-3 right-3">
+                      <span className="px-2 py-1 bg-red-500 text-white text-[8px] font-bold rounded-md flex items-center gap-1">
+                        <Youtube size={10} /> Video
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Content */}
                 <div className="p-5">
                   {/* Meta Info */}
-                  <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
+                  <div className="flex items-center gap-3 text-xs text-gray-500 mb-3 flex-wrap">
                     <span className="flex items-center gap-1">
                       <User size={12} /> {blog.blogauthor || 'Admin'}
                     </span>
@@ -332,16 +377,115 @@ const Blog = () => {
                   </div>
 
                   {/* Title */}
-                  <h3 className={`text-xl font-bold mb-2 line-clamp-2 group-hover:text-orange-500 transition ${colors.textHeading}`}>
+                  <h3 
+                    className={`text-xl font-bold mb-2 line-clamp-2 group-hover:text-orange-500 transition cursor-pointer ${colors.textHeading}`}
+                    onClick={() => handleBlogClick(blog._id)}
+                  >
                     {blog.blogtitle}
                   </h3>
 
                   {/* Summary */}
-                  <p className={`text-sm line-clamp-2 mb-4 ${colors.textSub}`}>
+                  <p 
+                    className={`text-sm line-clamp-2 mb-4 cursor-pointer ${colors.textSub}`}
+                    onClick={() => handleBlogClick(blog._id)}
+                  >
                     {blog.blogsummary || blog.blogcontent?.substring(0, 120) + '...'}
                   </p>
 
-                  {/* Footer */}
+                  {/* Social Links Section - NEW */}
+                  {blog.socialLinks && Object.values(blog.socialLinks).some(link => link) && (
+                    <div className="flex items-center gap-2 mb-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+                      <span className="text-[9px] font-medium text-gray-400 uppercase tracking-wider">Share:</span>
+                      <div className="flex items-center gap-1.5">
+                        {blog.socialLinks.facebook && (
+                          <a 
+                            href={blog.socialLinks.facebook} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-1 rounded-full hover:bg-blue-500/10 text-blue-500 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Facebook"
+                          >
+                            <Facebook size={14} />
+                          </a>
+                        )}
+                        {blog.socialLinks.twitter && (
+                          <a 
+                            href={blog.socialLinks.twitter} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-1 rounded-full hover:bg-sky-500/10 text-sky-500 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Twitter"
+                          >
+                            <Twitter size={14} />
+                          </a>
+                        )}
+                        {blog.socialLinks.linkedin && (
+                          <a 
+                            href={blog.socialLinks.linkedin} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-1 rounded-full hover:bg-blue-600/10 text-blue-600 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                            title="LinkedIn"
+                          >
+                            <Linkedin size={14} />
+                          </a>
+                        )}
+                        {blog.socialLinks.instagram && (
+                          <a 
+                            href={blog.socialLinks.instagram} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-1 rounded-full hover:bg-pink-500/10 text-pink-500 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Instagram"
+                          >
+                            <Instagram size={14} />
+                          </a>
+                        )}
+                        {blog.socialLinks.whatsapp && (
+                          <a 
+                            href={blog.socialLinks.whatsapp} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-1 rounded-full hover:bg-green-500/10 text-green-500 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                            title="WhatsApp"
+                          >
+                            <MessageCircle size={14} />
+                          </a>
+                        )}
+                        {blog.socialLinks.telegram && (
+                          <a 
+                            href={blog.socialLinks.telegram} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-1 rounded-full hover:bg-blue-400/10 text-blue-400 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Telegram"
+                          >
+                            <Send size={14} />
+                          </a>
+                        )}
+                        {blog.socialLinks.pinterest && (
+                          <a 
+                            href={blog.socialLinks.pinterest} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-1 rounded-full hover:bg-red-500/10 text-red-500 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Pinterest"
+                          >
+                            <Share2 size={14} />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Quick Share Buttons */}
                   <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800">
                     <div className="flex items-center gap-3">
                       <span className="flex items-center gap-1 text-xs text-gray-500">
@@ -350,10 +494,104 @@ const Blog = () => {
                       <span className="flex items-center gap-1 text-xs text-gray-500">
                         <Heart size={12} /> {blog.likes || 0}
                       </span>
+                      {blog.videos && blog.videos.length > 0 && (
+                        <span className="flex items-center gap-1 text-xs text-red-500">
+                          <Youtube size={12} /> {blog.videos.length}
+                        </span>
+                      )}
                     </div>
-                    <button className="text-orange-500 group-hover:translate-x-1 transition-transform">
-                      <ArrowRight size={16} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {/* Share Dropdown Button */}
+                      <div className="relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowShareMenu(showShareMenu === blog._id ? null : blog._id);
+                          }}
+                          className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-orange-500 transition-colors"
+                          title="Share this article"
+                        >
+                          <Share2 size={15} />
+                        </button>
+                        
+                        {/* Share Dropdown Menu */}
+                        <AnimatePresence>
+                          {showShareMenu === blog._id && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                              className="absolute right-0 bottom-full mb-2 p-2 rounded-xl shadow-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 z-50 min-w-[180px]"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="space-y-1">
+                                <button
+                                  onClick={() => handleShare(blog, 'facebook')}
+                                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm transition-colors"
+                                >
+                                  <Facebook size={14} className="text-blue-600" />
+                                  Facebook
+                                </button>
+                                <button
+                                  onClick={() => handleShare(blog, 'twitter')}
+                                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm transition-colors"
+                                >
+                                  <Twitter size={14} className="text-sky-500" />
+                                  Twitter/X
+                                </button>
+                                <button
+                                  onClick={() => handleShare(blog, 'linkedin')}
+                                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm transition-colors"
+                                >
+                                  <Linkedin size={14} className="text-blue-700" />
+                                  LinkedIn
+                                </button>
+                                <button
+                                  onClick={() => handleShare(blog, 'whatsapp')}
+                                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm transition-colors"
+                                >
+                                  <MessageCircle size={14} className="text-green-500" />
+                                  WhatsApp
+                                </button>
+                                <button
+                                  onClick={() => handleShare(blog, 'telegram')}
+                                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm transition-colors"
+                                >
+                                  <Send size={14} className="text-blue-400" />
+                                  Telegram
+                                </button>
+                                <button
+                                  onClick={() => handleShare(blog, 'pinterest')}
+                                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm transition-colors"
+                                >
+                                  <Share2 size={14} className="text-red-500" />
+                                  Pinterest
+                                </button>
+                                <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard?.writeText(window.location.origin + `/blog/${blog._id}`);
+                                    toast.success('Link copied to clipboard!');
+                                    setShowShareMenu(null);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm transition-colors"
+                                >
+                                  <Link2 size={14} className="text-gray-500" />
+                                  Copy Link
+                                </button>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                      
+                      <button 
+                        onClick={() => handleBlogClick(blog._id)}
+                        className="text-orange-500 group-hover:translate-x-1 transition-transform"
+                      >
+                        <ArrowRight size={16} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </motion.article>
@@ -401,5 +639,5 @@ const Blog = () => {
     </div>
   );
 };
-
+ 
 export default Blog;

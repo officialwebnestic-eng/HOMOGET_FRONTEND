@@ -72,10 +72,12 @@ const PropertyCard = ({ property }) => {
   const statusBadge = getStatusBadge();
   const propertyTitle = property.propertyTitleEn || property.propertyname;
   const propertyType = property.propertytype || (isCommercial() ? "Commercial Space" : "Residential");
-  const location = property.community || property.city || "Dubai";
+  const location = property.locationName || property.address || "Dubai";
   const agentName = property.agentId?.name || "Property Consultant";
   const agentImage = property.agentId?.profilePhoto || property.agentId?.profilePhotoUrl;
   const agentRating = property.agentId?.rating || 4.8;
+                const locationQuery = property?.displayAddress;
+
 
   const handleCardClick = () => {
     navigate(`/property/${property._id}`, {
@@ -132,6 +134,8 @@ const PropertyCard = ({ property }) => {
       });
     }
   };
+    const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000/";
+
 
   return (
     <motion.div
@@ -246,12 +250,22 @@ const PropertyCard = ({ property }) => {
             </div>
           </div>
         )}
-
+<div className="inline-flex items-center gap-1.5">
+  {/* Animated location pin */}
+  <MapPin size={12} className="text-amber-500 dark:text-amber-400 drop-shadow-sm" />
+  
+  <span className="text-[10px] font-black uppercase tracking-wider text-black dark:text-white">
+    {locationQuery}
+  </span>
+  
+  {/* Small decorative slash */}
+  <span className="text-amber-500 dark:text-amber-400 font-black text-[10px]">/</span>
+</div>
         {/* Agent Info Bar */}
         <div className="flex items-center gap-3 py-3 mt-2 border-t border-gray-100 dark:border-white/5">
           <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 flex-shrink-0">
             {agentImage ? (
-              <img src={agentImage} alt={agentName} className="w-full h-full object-cover" />
+              <img src={`${baseUrl}/agents/${agentImage}`} alt={agentName} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
                 {agentName.charAt(0)}

@@ -12,6 +12,8 @@ const RelatedAssets = ({ currentProperty, isDark, limit = 3 }) => {
   const navigate = useNavigate();
   const [relatedProperties, setRelatedProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000/";
+
 
   useEffect(() => {
     const fetchRelatedProperties = async () => {
