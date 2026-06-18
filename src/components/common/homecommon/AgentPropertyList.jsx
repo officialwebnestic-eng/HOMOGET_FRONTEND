@@ -231,54 +231,60 @@ const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000/";
     >
       <div className="max-w-7xl mx-auto">
         {/* --- HEADER --- */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-5 md:mb-10 gap-4">
-          <div className="flex items-center gap-4">
-            <div className="h-1 w-12 bg-amber-500 rounded-full" />
-              <h1 className={`text-3xl md:text-4xl lg:text-5xl font-serif font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-800'}`}>
-              Latest <span className="text-amber-500">Properties</span> 
-            </h1>
-          </div>
-          <button
-            onClick={() => navigate("/propertylisting")}
-            className="px-8 py-3 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center gap-3 hover:bg-black transition-all shadow-lg"
-          >
-            View All Properties <ArrowRight size={16} />
-          </button>
-        </div>
-
+       <div className="flex justify-between items-center mb-5 md:mb-10 gap-4">
+  <div className="flex items-center gap-4 flex-shrink-0">
+    <div className="h-1 w-8 sm:w-10 md:w-12 bg-amber-500 rounded-full flex-shrink-0" />
+    <h1 className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-serif font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-800'} whitespace-nowrap`}>
+      Latest <span className="text-amber-500">Properties</span>
+    </h1>
+  </div>
+  
+  <button
+    onClick={() => navigate("/propertylisting")}
+    className="px-3 sm:px-6 md:px-8 py-1.5 sm:py-2.5 md:py-3 bg-amber-500 text-white rounded-full text-[10px] sm:text-sm md:text-base font-bold flex items-center gap-1.5 sm:gap-3 hover:bg-black transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 flex-shrink-0"
+  >
+    <span className="hidden xs:inline">View All Properties</span>
+    <span className="xs:hidden">View All</span>
+    <ArrowRight size={14} className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 flex-shrink-0" />
+  </button>
+</div>
         {/* --- FILTER & SEARCH BAR --- */}
-        <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-10">
-          <div className="flex flex-wrap gap-2">
-            {filterButtons.map((filter) => (
-              <button
-                key={filter.value}
-                onClick={() => setActiveFilter(filter.label)}
-                className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${
-                  activeFilter === filter.label
-                    ? "bg-amber-500 text-black"
-                    : isDark
-                    ? "bg-[#11141B] text-white/60 hover:bg-white/10"
-                    : "bg-white text-slate-500 hover:bg-slate-100"
-                }`}
-              >
-                {filter.label}
-              </button>
-            ))}
-          </div>
-          
-          <div className="relative">
-            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search by name, location, or type..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={`pl-11 pr-5 py-3 rounded-full text-sm w-64 lg:w-80 outline-none focus:ring-2 focus:ring-amber-500 transition-all ${
-                isDark ? "bg-[#11141B] text-white border-white/10" : "bg-white text-slate-900 border-slate-200"
-              } border`}
-            />
-          </div>
-        </div>
+       <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-10">
+  {/* Filter Buttons - Scrollable on mobile */}
+  <div className="flex items-center gap-2 w-full lg:w-auto overflow-x-auto scrollbar-hide pb-2 lg:pb-0">
+    <div className="flex gap-2 flex-nowrap">
+      {filterButtons.map((filter) => (
+        <button
+          key={filter.value}
+          onClick={() => setActiveFilter(filter.label)}
+          className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-[8px] sm:text-[10px] lg:text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap flex-shrink-0 ${
+            activeFilter === filter.label
+              ? "bg-amber-500 text-black"
+              : isDark
+              ? "bg-[#11141B] text-white/60 hover:bg-white/10"
+              : "bg-white text-slate-500 hover:bg-slate-100"
+          }`}
+        >
+          {filter.label}
+        </button>
+      ))}
+    </div>
+  </div>
+  
+  {/* Search Bar */}
+  <div className="relative w-full lg:w-auto flex-shrink-0">
+    <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+    <input
+      type="text"
+      placeholder="Search by name, location, or type..."
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      className={`pl-11 pr-5 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm w-full lg:w-64 xl:w-80 outline-none focus:ring-2 focus:ring-amber-500 transition-all ${
+        isDark ? "bg-[#11141B] text-white border-white/10" : "bg-white text-slate-900 border-slate-200"
+      } border`}
+    />
+  </div>
+</div>
 
         {/* --- PROPERTY GRID --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

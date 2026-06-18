@@ -347,20 +347,25 @@ const Agentfilter = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py- relative z-20">
         {/* HEADER SECTION */}
-        <div className="flex flex-col md:flex-row justify-between items-center md-5  gap-4">
-          <div className="flex items-center gap-4">
-            <div className="h-1 w-12 bg-amber-52000 rounded-full" />
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-slate-800 dark:text-white">
-              Exclusive <span className="text-amber-500">Properties</span>
-            </h1>
-          </div>
-          <button
-            onClick={() => navigate("/propertylisting")}
-            className="px-8 py-3 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center gap-3 hover:bg-black transition-all shadow-lg"
-          >
-            View All Properties <ArrowRight size={16} />
-          </button>
-        </div>
+  <div className="flex justify-between  mb-7 items-center gap-4 sm:gap-6 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  
+  {/* Left Section - Heading */}
+  <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+    <div className="h-1 w-8 sm:w-10 md:w-12 bg-amber-500 rounded-full flex-shrink-0" />
+    <h1 className="text-base sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-serif font-bold tracking-tight text-slate-800 dark:text-white whitespace-nowrap">
+      Exclusive <span className="text-amber-500">Properties</span>
+    </h1>
+  </div>
+
+  {/* Right Section - Button */}
+  <button
+    onClick={() => navigate("/propertylisting")}
+    className="px-3 sm:px-6 md:px-8 py-1.5 sm:py-2.5 md:py-3 bg-amber-500 text-white rounded-full text-[10px] sm:text-sm md:text-base font-bold flex items-center gap-1.5 sm:gap-3 hover:bg-black transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 flex-shrink-0"
+  >
+    View All Properties 
+    <ArrowRight size={14} className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 flex-shrink-0" />
+  </button>
+</div>
 
         {/* Active Filters Display */}
         {(searchQuery || filters.city || filters.propertytype || filters.bedroom) && (
