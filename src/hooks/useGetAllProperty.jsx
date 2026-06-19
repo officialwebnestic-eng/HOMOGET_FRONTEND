@@ -14,7 +14,7 @@ const useGetAllProperty = (page, limit, filters) => {
   const { user } = useContext(AuthContext);
   const { addToast } = useToast();
 
-  const debouncedFilters = useDebounce(filters, 500); // Reduced from 1000ms for better responsiveness
+  const debouncedFilters = useDebounce(filters, 200); // Reduced from 1000ms for better responsiveness
 
   const fetchProperty = useCallback(async () => {
     setLoading(true);
