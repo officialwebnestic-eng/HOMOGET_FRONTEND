@@ -401,7 +401,6 @@ export default function Navbar() {
         </div>
       </div>
     </div>
-
     {/* Icon - hidden on smallest screens */}
     <div className="hidden xs:flex relative">
       <svg 
