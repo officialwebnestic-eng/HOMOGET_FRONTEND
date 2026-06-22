@@ -136,7 +136,7 @@ const PropertyDetailsPage = () => {
       }
       setLoading(true);
       try {
-        const response = await http.get(`/getpropertybyid/${id}`);
+        const response = await http.get(`/related/${id}`);
         if (response.data.success) {
           setProperty(response.data.data);
         }
