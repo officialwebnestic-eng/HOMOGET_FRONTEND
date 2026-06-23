@@ -105,7 +105,7 @@ const PartnersSlider = () => {
                 >
                   <div className="relative">
                     <img
-                      src={`${BACKEND_URL}agents/${dev.companyLogo}`}
+                      src={`${BACKEND_URL}/developers/${dev.companyLogo}`}
                       alt={dev.companyName}
                       className={`h-8 sm:h-10 md:h-12 w-auto object-contain transition-all duration-500 grayscale hover:grayscale-0 opacity-60 hover:opacity-100 ${isDark ? "brightness-0 invert" : ""}`}
                       onError={(e) => {
