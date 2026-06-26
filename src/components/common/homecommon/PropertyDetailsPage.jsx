@@ -121,6 +121,8 @@ const PropertyDetailsPage = () => {
   const [property, setProperty] = useState(
     location.state?.propertyData || null,
   );
+
+   console.log(property ,"tis is a list check ")
   const [loading, setLoading] = useState(!location.state?.propertyData);
   const [showFullDesc, setShowFullDesc] = useState(false);
 
@@ -300,7 +302,7 @@ const PropertyDetailsPage = () => {
   const propertyTitle = property.propertyTitleEn || property.propertyname;
   const locationName = property.community || property.city || "Dubai";
   const agentName = property.agentId?.name || "Property Consultant";
-  const agentImage = property.agentId?.profileImage || property.agentId?.profilePhoto;
+  const agentImage = property.agent?.profilePhoto || property.agentId?.profilePhoto;
   const images = property.image || [];
    const floorPlan= property.floorPlan || [];
   const videos = property.videos || property.videoTourLink;

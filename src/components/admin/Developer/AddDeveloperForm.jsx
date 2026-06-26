@@ -767,7 +767,6 @@ const DocumentUpload = ({
         className="hidden" 
         accept={accept} 
       />
-      
       {isUploaded && (
         <button
           type="button"

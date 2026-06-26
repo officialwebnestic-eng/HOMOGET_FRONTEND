@@ -386,6 +386,12 @@ export default function Navbar() {
             {/* Right Section with Schedule Appointment Button */}
          {/* Right Section with Schedule Appointment Button */}
 <div className="flex items-center gap-1 sm:gap-2 lg:gap-2 flex-shrink-0">
+  <button 
+    onClick={toggleTheme} 
+    className={`p-1.5 rounded-full transition-all flex-shrink-0 ${isDark ? "text-amber-400 bg-white/5" : "text-slate-600 bg-slate-100"}`}
+  >
+    {isDark ? <SunIcon size={14} /> : <MoonIcon size={14} />}
+  </button>
   
   {/* Schedule Appointment Button - Fully Responsive */}
   <button
@@ -401,8 +407,12 @@ export default function Navbar() {
         </div>
       </div>
     </div>
+    
     {/* Icon - hidden on smallest screens */}
     <div className="hidden xs:flex relative">
+
+       {/* Theme Toggle */}
+  
       <svg 
         xmlns="http://www.w3.org/2000/svg" 
         viewBox="0 0 24 24" 
@@ -425,13 +435,7 @@ export default function Navbar() {
     <div className="hidden sm:flex w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></div>
   </button>
 
-  {/* Theme Toggle */}
-  <button 
-    onClick={toggleTheme} 
-    className={`p-1.5 rounded-full transition-all flex-shrink-0 ${isDark ? "text-amber-400 bg-white/5" : "text-slate-600 bg-slate-100"}`}
-  >
-    {isDark ? <SunIcon size={14} /> : <MoonIcon size={14} />}
-  </button>
+ 
 
   {/* Auth Section */}
   {!isAuthenticated ? (

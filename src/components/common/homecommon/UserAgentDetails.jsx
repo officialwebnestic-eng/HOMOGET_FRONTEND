@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  User, MapPin, Phone, Mail, Calendar, Building2, 
+import {
+  User, MapPin, Phone, Mail, Calendar, Building2,
   Award, Briefcase, Clock, Star, ChevronLeft,
   TrendingUp, Globe, ShieldCheck, BadgeCheck, CreditCard,
   Languages, FileText, Hash, Users, DollarSign, Heart,
@@ -36,13 +36,8 @@ const UserAgentDetails = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+  const API_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000";
 
-  const getImageUrl = (filename) => {
-    if (!filename) return null;
-    if (filename.startsWith('http')) return filename;
-    return `${API_BASE_URL}/agents/${filename}`;
-  };
 
   useEffect(() => {
     const fetchAgent = async () => {
@@ -63,6 +58,10 @@ const UserAgentDetails = () => {
     };
     fetchAgent();
   }, [id, addToast]);
+  
+const getAvatarFallback = (name) => {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Agent')}&background=C5A059&color=fff&bold=true`;
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -72,6 +71,7 @@ const UserAgentDetails = () => {
         ...formData,
         agentId: agent._id
       });
+      
       if (res.data.success) {
         setFormSuccess(true);
         addToast('Message Sent Successfully', 'success');
@@ -93,8 +93,8 @@ const UserAgentDetails = () => {
     if (Array.isArray(data)) return data;
     try {
       return data.replace(/[\\"[\]]/g, '').split(',').map(s => s.trim()).filter(Boolean);
-    } catch (e) { 
-      return []; 
+    } catch (e) {
+      return [];
     }
   };
 
@@ -121,7 +121,7 @@ const UserAgentDetails = () => {
         <div className="text-center">
           <User size={64} className="mx-auto text-slate-400 mb-4" />
           <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>Agent Not Found</h2>
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className="mt-4 px-6 py-2 bg-amber-500 text-black rounded-xl font-bold"
           >
@@ -131,6 +131,7 @@ const UserAgentDetails = () => {
       </div>
     );
   }
+  
 
   const stats = [
     { label: 'Properties Sold', value: agent.totalPropertiesSold || 128, icon: <TrendingUp size={16} /> },
@@ -141,21 +142,21 @@ const UserAgentDetails = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-700 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
-      
+
       {/* Hero Section - Similar to Agent Support */}
       <section className="relative w-full h-[60vh] md:h-[65vh] flex items-center overflow-visible">
         <div className="absolute inset-0 z-0">
-          <img 
-            src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2000&auto=format&fit=crop" 
-            className="w-full h-full object-cover" 
-            alt="Luxury Property" 
+          <img
+            src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2000&auto=format&fit=crop"
+            className="w-full h-full object-cover"
+            alt="Luxury Property"
           />
           <div className={`absolute inset-0 ${isDark ? 'bg-black/60' : 'bg-black/50'}`} />
         </div>
-        
+
         <div className="max-w-[1400px] mx-auto w-full px-6 md:px-12 relative z-20">
-          <motion.div 
-            initial={{ opacity: 0, y: 40 }} 
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
@@ -163,14 +164,14 @@ const UserAgentDetails = () => {
               <Crown size={14} />
               <span className="text-[10px] font-serif tracking-widest uppercase">Elite Agent</span>
             </div>
-            
+
             <h1 className={`text-3xl md:text-5xl lg:text-6xl font-serif font-bold mb-4 text-white`}>
               Meet Your <br />
               <span className="text-amber-500">Luxury Advisor</span>
             </h1>
-          
+
             <p className={`max-w-2xl text-base md:text-lg font-light leading-relaxed mb-8 text-white/80`}>
-              Connect with {agent.name}, a dedicated luxury property consultant specializing in premium 
+              Connect with {agent.name}, a dedicated luxury property consultant specializing in premium
               residential properties and high-yield investments in Dubai.
             </p>
           </motion.div>
@@ -179,7 +180,7 @@ const UserAgentDetails = () => {
 
       {/* Agent Profile Card - Full Width Design */}
       <div className="max-w-7xl mx-auto px-6 -mt-20 relative z-30">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -189,26 +190,23 @@ const UserAgentDetails = () => {
           <div className="relative h-48 md:h-64 bg-gradient-to-r from-amber-500 to-orange-600">
             <div className="absolute inset-0 bg-black/20" />
           </div>
-          
+
           {/* Profile Section */}
           <div className="relative px-6 pb-8">
             {/* Profile Image */}
             <div className="absolute -top-16 left-6">
               <div className="relative">
                 <div className="absolute inset-0 bg-amber-500 rounded-2xl rotate-6" />
-                <img 
-                  src={agent.profilePhotoUrl || agent.profilePhoto || `https://ui-avatars.com/api/?name=${agent.name}&background=C5A059&color=fff&size=150`}
-                  className="relative w-32 h-32 rounded-2xl object-cover border-4 border-white shadow-xl"
-                  alt={agent.name}
-                  onError={(e) => {
-                    e.target.src = `https://ui-avatars.com/api/?name=${agent.name}&background=C5A059&color=fff&size=150`;
-                    setImageError(true);
-                  }}
-                />
+                <img
+                src={agent.profilePhoto 
+  ? `${baseUrl}/agents/${agent.profilePhoto}`
+  : getAvatarFallback(agent.name)}              className="w-24 h-24 rounded-[2rem] object-cover relative z-10 border-2 border-amber-500/20"
+              alt={agent.name}
+            />
                 <div className="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white" />
               </div>
             </div>
-            
+
             {/* Agent Name & Actions */}
             <div className="pt-20 pb-6 border-b border-slate-200 dark:border-white/10">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -223,41 +221,41 @@ const UserAgentDetails = () => {
                     </span>
                   </div>
                 </div>
-                
-              <div className="flex flex-wrap gap-2">
-  <a
-    href={`tel:${agent.phone}`}
-    className="px-4 py-2 bg-amber-500 text-black font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 hover:bg-amber-600 transition-all"
-  >
-    <PhoneCall size={14} /> Call
-  </a>
-  
-  <a
-    href={`https://wa.me/${agent.phone?.replace(/\D/g, '')}`}
-    target="_blank"
-    rel="noreferrer"
-    className="px-4 py-2 bg-green-600 text-white font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 hover:bg-green-700 transition-all"
-  >
-    <FaWhatsapp size={14} /> WhatsApp
-  </a>
-  
-  <a
-    href={`mailto:${agent.email}`}
-    className="px-4 py-2 bg-blue-600 text-white font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 hover:bg-blue-700 transition-all"
-  >
-    <Mail size={14} /> Email
-  </a>
-  
-  <button
-    onClick={() => setIsModalOpen(true)}
-    className="px-4 py-2 bg-slate-800 text-white font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 hover:bg-slate-700 transition-all"
-  >
-    <MessageCircle size={14} /> Message
-  </button>
-</div>
+
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href={`tel:${agent.phone}`}
+                    className="px-4 py-2 bg-amber-500 text-black font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 hover:bg-amber-600 transition-all"
+                  >
+                    <PhoneCall size={14} /> Call
+                  </a>
+
+                  <a
+                    href={`https://wa.me/${agent.phone?.replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-4 py-2 bg-green-600 text-white font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 hover:bg-green-700 transition-all"
+                  >
+                    <FaWhatsapp size={14} /> WhatsApp
+                  </a>
+
+                  <a
+                    href={`mailto:${agent.email}`}
+                    className="px-4 py-2 bg-blue-600 text-white font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 hover:bg-blue-700 transition-all"
+                  >
+                    <Mail size={14} /> Email
+                  </a>
+
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="px-4 py-2 bg-slate-800 text-white font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 hover:bg-slate-700 transition-all"
+                  >
+                    <MessageCircle size={14} /> Message
+                  </button>
+                </div>
               </div>
             </div>
-            
+
             {/* Stats Row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-6 border-b border-slate-200 dark:border-white/10">
               {stats.map((stat, idx) => (
@@ -268,10 +266,10 @@ const UserAgentDetails = () => {
                 </div>
               ))}
             </div>
-            
+
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 py-8">
-              
+
               {/* Left Column - Bio & Details */}
               <div className="lg:col-span-2 space-y-6">
                 {/* About */}
@@ -283,7 +281,7 @@ const UserAgentDetails = () => {
                     {agent.bio || `${agent.name} is a dedicated luxury property consultant with over ${agent.experienceYears || 8} years of experience in the Dubai real estate market. Specializing in premium residential properties and high-yield investments, committed to providing exceptional service and expert guidance to clients seeking their dream homes or investment opportunities.`}
                   </p>
                 </div>
-                
+
                 {/* Professional Details */}
                 <div>
                   <h3 className={`text-lg font-bold mb-3 flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>
@@ -298,7 +296,7 @@ const UserAgentDetails = () => {
                     <DetailItem label="Location" value={agent.city || 'Dubai, UAE'} isDark={isDark} />
                   </div>
                 </div>
-                
+
                 {/* Skills */}
                 {agent.skills && agent.skills.length > 0 && (
                   <div>
@@ -315,7 +313,7 @@ const UserAgentDetails = () => {
                   </div>
                 )}
               </div>
-              
+
               {/* Right Column - Contact & Info */}
               <div className="space-y-6">
                 {/* Contact Card */}
@@ -324,29 +322,29 @@ const UserAgentDetails = () => {
                     <Phone size={16} className="text-amber-500" /> Contact Information
                   </h3>
                   <div className="space-y-3">
-                    <ContactItem 
-                      icon={<PhoneCall size={14} />} 
-                      label="Phone" 
-                      value={agent.phone} 
+                    <ContactItem
+                      icon={<PhoneCall size={14} />}
+                      label="Phone"
+                      value={agent.phone}
                       href={`tel:${agent.phone}`}
                       isDark={isDark}
                     />
-                    <ContactItem 
-                      icon={<Mail size={14} />} 
-                      label="Email" 
-                      value={agent.email} 
+                    <ContactItem
+                      icon={<Mail size={14} />}
+                      label="Email"
+                      value={agent.email}
                       href={`mailto:${agent.email}`}
                       isDark={isDark}
                     />
-                    <ContactItem 
-                      icon={<MapPin size={14} />} 
-                      label="Address" 
-                      value={agent.address || 'Dubai, UAE'} 
+                    <ContactItem
+                      icon={<MapPin size={14} />}
+                      label="Address"
+                      value={agent.address || 'Dubai, UAE'}
                       isDark={isDark}
                     />
                   </div>
                 </div>
-                
+
                 {/* Regulatory Info */}
                 <div className={`p-5 rounded-2xl ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}>
                   <h3 className={`text-sm font-bold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>
@@ -358,11 +356,11 @@ const UserAgentDetails = () => {
                     <RegulatoryItem label="Agent ID" value={agent.agentId || 'N/A'} isDark={isDark} />
                   </div>
                 </div>
-                
+
                 {/* Rating */}
                 <div className={`p-5 rounded-2xl text-center ${isDark ? 'bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20' : 'bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200'}`}>
                   <div className="flex justify-center gap-1 mb-2">
-                    {[1,2,3,4,5].map((star) => (
+                    {[1, 2, 3, 4, 5].map((star) => (
                       <Star key={star} size={18} className="fill-amber-500 text-amber-500" />
                     ))}
                   </div>
@@ -411,7 +409,7 @@ const UserAgentDetails = () => {
                 <>
                   <div className="flex flex-col md:flex-row">
                     <div className="md:w-2/5 bg-gradient-to-br from-amber-500 to-orange-600 p-8 text-white">
-                      <img 
+                      <img
                         src={agent?.profilePhotoUrl || agent?.profilePhoto || `https://ui-avatars.com/api/?name=${agent?.name}&background=C5A059&color=fff`}
                         className="w-24 h-24 rounded-2xl mb-4 border-2 border-white/20"
                         alt={agent?.name}
@@ -430,7 +428,7 @@ const UserAgentDetails = () => {
                         </a>
                       </div>
                     </div>
-                    
+
                     <div className="md:w-3/5 p-8">
                       <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-amber-500 transition">
                         <X size={20} />
@@ -443,7 +441,7 @@ const UserAgentDetails = () => {
                             placeholder="First Name"
                             required
                             value={formData.firstName}
-                            onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                             className={`p-3 rounded-xl border outline-none focus:ring-2 focus:ring-amber-500 ${isDark ? 'bg-slate-800 border-white/10 text-white' : 'bg-slate-50 border-slate-200'}`}
                           />
                           <input
@@ -451,7 +449,7 @@ const UserAgentDetails = () => {
                             placeholder="Last Name"
                             required
                             value={formData.lastName}
-                            onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                             className={`p-3 rounded-xl border outline-none focus:ring-2 focus:ring-amber-500 ${isDark ? 'bg-slate-800 border-white/10 text-white' : 'bg-slate-50 border-slate-200'}`}
                           />
                         </div>
@@ -460,7 +458,7 @@ const UserAgentDetails = () => {
                           placeholder="Email Address"
                           required
                           value={formData.email}
-                          onChange={(e) => setFormData({...formData, email: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                           className={`w-full p-3 rounded-xl border outline-none focus:ring-2 focus:ring-amber-500 ${isDark ? 'bg-slate-800 border-white/10 text-white' : 'bg-slate-50 border-slate-200'}`}
                         />
                         <input
@@ -468,7 +466,7 @@ const UserAgentDetails = () => {
                           placeholder="Phone Number"
                           required
                           value={formData.phone}
-                          onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                           className={`w-full p-3 rounded-xl border outline-none focus:ring-2 focus:ring-amber-500 ${isDark ? 'bg-slate-800 border-white/10 text-white' : 'bg-slate-50 border-slate-200'}`}
                         />
                         <textarea
@@ -476,7 +474,7 @@ const UserAgentDetails = () => {
                           placeholder="Tell us about your property requirements..."
                           required
                           value={formData.message}
-                          onChange={(e) => setFormData({...formData, message: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                           className={`w-full p-3 rounded-xl border outline-none focus:ring-2 focus:ring-amber-500 resize-none ${isDark ? 'bg-slate-800 border-white/10 text-white' : 'bg-slate-50 border-slate-200'}`}
                         />
                         <button

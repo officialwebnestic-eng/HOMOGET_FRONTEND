@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { http } from "../../../axios/axios";
 import { useTheme } from "../../../context/ThemeContext";
 import { useNavigate } from "react-router-dom";
@@ -176,6 +176,14 @@ const AgentPropertyList = () => {
     window.location.href = `mailto:info@homoget.ae?subject=${subject}&body=${body}`;
   };
 
+    const handlePropertyClick = useCallback(
+      (property) => {
+        navigate(`/property/${property._id}`, {
+          state: { propertyData: property },
+        });
+      },
+      [navigate],
+    );
 
   const handleShare = (e, property) => {
     e.stopPropagation();
@@ -306,17 +314,13 @@ const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000/";
               return (
                 <motion.div
                   layout
-                  key={property._id || idx}
+                 key={property._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   whileHover={{ y: -8 }}
                   className={`group rounded-[2.5rem] border overflow-hidden transition-all duration-300 hover:shadow-2xl ${cardBg} cursor-pointer flex flex-col`}
-                  onClick={() =>
-                    navigate(`/property/${property._id}`, {
-                      state: { propertyData: property },
-                    })
-                  }
+                 onClick={() => handlePropertyClick(property)}
                 >
 
                   {/* Image Section */}
@@ -469,38 +473,40 @@ const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000/";
                       </span>
                     </div>
 
-                    {/* Agent Info Section - Enhanced */}
-                    {hasValidAgent && (
-                      <div className="flex items-center gap-3 py-3 mt-2 border-t border-gray-100 dark:border-white/5">
-                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 flex-shrink-0">
-                          {agentImage ? (
-<img 
-  src={`${baseUrl}/agents/${agentImage}`}
-  className=" rounded-[2rem] object-cover relative z-10 border-2 border-amber-500/20"
-  alt="Agent"
-
-/> 
-                      ) : (
-                            <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
-                              <User size={14} />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[8px] font-black uppercase tracking-wider text-slate-400">
-                            Listed by
-                          </p>
-                          <p className={`text-xs font-semibold truncate ${isDark ? "text-white" : "text-slate-900"}`}>
-                            {agentName}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Star size={10} className="text-amber-500 fill-amber-500" />
-                          <span className="text-[9px] font-bold text-slate-500">{agentRating}</span>
-                        </div>
-                      </div>
-                    )}
-
+                {/* Agent Info Section - Enhanced */}
+{hasValidAgent && (
+  <div className="flex items-center gap-3 py-3 mt-2 border-t border-gray-100 dark:border-white/5">
+    <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 flex-shrink-0">
+      {agentImage ? (
+        <img 
+          src={`${baseUrl}/agents/${agentImage}`}
+          className="w-full h-full object-cover"
+          alt={agentName}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = getAvatarFallback(agentName);
+          }}
+        /> 
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
+          <User size={14} />
+        </div>
+      )}
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="text-[8px] font-black uppercase tracking-wider text-slate-400">
+        Listed by
+      </p>
+      <p className={`text-xs font-semibold truncate ${isDark ? "text-white" : "text-slate-900"}`}>
+        {agentName}
+      </p>
+    </div>
+    <div className="flex items-center gap-1">
+      <Star size={10} className="text-amber-500 fill-amber-500" />
+      <span className="text-[9px] font-bold text-slate-500">{agentRating}</span>
+    </div>
+  </div>
+)}
                     {/* Quick Connect Bar */}
                     <div className="flex items-center justify-between pt-3 mt-auto border-t border-gray-100 dark:border-white/5">
                       <div className="flex gap-3">

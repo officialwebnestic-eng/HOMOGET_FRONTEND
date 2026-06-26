@@ -91,23 +91,19 @@ const PartnersSlider = () => {
 
         {/* Slider Container */}
         <div className="relative group mt-8">
-          {/* Gradient Fades */}
-          <div className={`absolute inset-y-0 left-0 w-12 sm:w-16 md:w-24 bg-gradient-to-r ${isDark ? "from-[#0a0a0c]" : "from-white"} to-transparent z-10`} />
-          <div className={`absolute inset-y-0 right-0 w-12 sm:w-16 md:w-24 bg-gradient-to-l ${isDark ? "from-[#0a0a0c]" : "from-white"} to-transparent z-10`} />
-
-          {/* Slider Track */}
+          {/* Slider Track - Removed all blur/gradient divs */}
           <div className="overflow-hidden">
             <div className="partner-slider-track py-6 sm:py-8">
               {doubledPartners.map((dev, index) => (
                 <div
                   key={`${dev._id}-${index}`}
-                  className="flex-shrink-0 w-[150px] sm:w-[180px] md:w-[200px] lg:w-[240px] px-4 sm:px-6 flex items-center justify-center group/logo"
+                  className="flex-shrink-0 w-[200px] sm:w-[240px] md:w-[280px] lg:w-[320px] px-4 sm:px-6 flex items-center justify-center group/logo"
                 >
                   <div className="relative">
                     <img
                       src={`${BACKEND_URL}/developers/${dev.companyLogo}`}
                       alt={dev.companyName}
-                      className={`h-8 sm:h-10 md:h-12 w-auto object-contain transition-all duration-500 grayscale hover:grayscale-0 opacity-60 hover:opacity-100 ${isDark ? "brightness-0 invert" : ""}`}
+                      className={`h-14 sm:h-16 md:h-20 lg:h-24 w-auto object-contain transition-all duration-500 hover:scale-110 ${isDark ? "brightness-0 invert" : ""}`}
                       onError={(e) => {
                         e.target.onerror = null;
                       }}
@@ -125,31 +121,31 @@ const PartnersSlider = () => {
           </div>
         </div>
 
-   <div className="mt-12 sm:mt-16 pt-8 border-t border-slate-200 dark:border-white/10">
-  <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
-    <Badge
-      icon={<ShieldCheck />}
-      title="DLD Regulated"
-      subtitle="Government Approved"
-      color="amber"
-      isDark={isDark}
-    />
-    <Badge
-      icon={<Building2 />}
-      title="Direct Access"
-      subtitle="Premium Developers"
-      color="blue"
-      isDark={isDark}
-    />
-    <Badge
-      icon={<Award />}
-      title="Certified Portfolios"
-      subtitle="100% Verified"
-      color="purple"
-      isDark={isDark}
-    />
-  </div>
-</div>
+        <div className="mt-12 sm:mt-16 pt-8 border-t border-slate-200 dark:border-white/10">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
+            <Badge
+              icon={<ShieldCheck />}
+              title="DLD Regulated"
+              subtitle="Government Approved"
+              color="amber"
+              isDark={isDark}
+            />
+            <Badge
+              icon={<Building2 />}
+              title="Direct Access"
+              subtitle="Premium Developers"
+              color="blue"
+              isDark={isDark}
+            />
+            <Badge
+              icon={<Award />}
+              title="Certified Portfolios"
+              subtitle="100% Verified"
+              color="purple"
+              isDark={isDark}
+            />
+          </div>
+        </div>
       </div>
     </section>
   );
