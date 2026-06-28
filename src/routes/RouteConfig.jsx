@@ -218,9 +218,6 @@ export const BlogRoute = () => {
 
 }
 
-
-
-
 export const BookingRoute = () => {
     return (
         <Route element={<PrivateRoutes />}>
@@ -312,6 +309,8 @@ export const PublicRoutes = () => {
             <Route path="/bookings" element={<CreateBooking />} />
             <Route path="/testimonials" element={<UserTestimonial />} />
             <Route path="/developer" element={<Developer />} />
+                        <Route path="/developer/:id" element={<Developer />} />
+
             <Route path="/commercial" element={<Commercial />} />
           
             <Route path="/mortgage-assistance" element={<Mortgage />} />

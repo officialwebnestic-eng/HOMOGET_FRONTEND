@@ -10,15 +10,15 @@ const PermissionProtectedAction = ({
 }) => {
   const { hasPermission, isLoading, permissions, userRole } = useContext(PermissionContext);
   
-  // Debug in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`🔐 Permission check: ${action}:${module}`, {
-      isLoading,
-      userRole,
-      hasPermission: hasPermission ? hasPermission(action, module) : 'N/A',
-      permissionsCount: permissions?.length
-    });
-  }
+  // // Debug in development
+  // if (process.env.NODE_ENV === 'development') {
+  //   console.log(`🔐 Permission check: ${action}:${module}`, {
+  //     isLoading,
+  //     userRole,
+  //     hasPermission: hasPermission ? hasPermission(action, module) : 'N/A',
+  //     permissionsCount: permissions?.length
+  //   });
+  // }
   
   // Show nothing while loading
   if (isLoading) {

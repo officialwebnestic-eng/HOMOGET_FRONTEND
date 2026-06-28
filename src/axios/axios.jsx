@@ -38,9 +38,6 @@ http.interceptors.request.use(
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log(`✅ [${config.method?.toUpperCase()}] ${config.url} - Token attached`);
-    } else {
-      console.log(`⚠️ [${config.method?.toUpperCase()}] ${config.url} - No token`);
     }
     return config;
   },

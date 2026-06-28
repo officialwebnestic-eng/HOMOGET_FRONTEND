@@ -66,7 +66,7 @@ const AddDeveloperForm = () => {
   const [formData, setFormData] = useState({
     companyName: "",
     tradeLicenseNumber: "",
-    reraRegistrationNumber: "",
+  
     establishedYear: new Date().getFullYear(),
     officialEmail: "",
     contactNumber: "",
@@ -200,9 +200,7 @@ const AddDeveloperForm = () => {
     if (!formData.tradeLicenseNumber.trim()) {
       errors.tradeLicenseNumber = "Trade license number is required";
     }
-    if (!formData.reraRegistrationNumber.trim()) {
-      errors.reraRegistrationNumber = "RERA registration number is required";
-    }
+   
     if (!formData.officialEmail.trim()) {
       errors.officialEmail = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.officialEmail)) {
@@ -478,17 +476,7 @@ const AddDeveloperForm = () => {
                 inputClass={inputClass}
                 inputErrorClass={inputErrorClass}
               />
-              <FormField
-                label="RERA Registration Number"
-                name="reraRegistrationNumber"
-                value={formData.reraRegistrationNumber}
-                onChange={handleChange}
-                placeholder="e.g., ORN: 52933"
-                required
-                error={formErrors.reraRegistrationNumber}
-                inputClass={inputClass}
-                inputErrorClass={inputErrorClass}
-              />
+             
               <div>
                 <label className={labelClass}>Total Projects</label>
                 <div className="relative">

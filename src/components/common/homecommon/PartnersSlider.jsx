@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Award, ShieldCheck, Building2, Sparkles, Globe, Users } from "lucide-react";
 import { http } from "../../../axios/axios";
 import { useTheme } from "../../../context/ThemeContext";
+import { useNavigate } from "react-router-dom"; // ✅ Import useNavigate
 
 const PartnersSlider = () => {
   const [developers, setDevelopers] = useState([]);
   const [loading, setLoading] = useState(true);
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const navigate = useNavigate(); // ✅ Initialize navigate
 
   const BACKEND_URL = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000/agents";
 
@@ -27,6 +29,10 @@ const PartnersSlider = () => {
     fetchDevelopers();
   }, []);
 
+  // ✅ Handle partner click - navigate to developer page with partner ID
+const handlePartnerClick = (dev) => {
+  navigate(`/developer/${dev._id}`); // ✅ Use path parameter instead of query
+};
   const doubledPartners = [...developers, ...developers];
 
   if (loading || developers.length === 0) return null;
@@ -91,7 +97,7 @@ const PartnersSlider = () => {
 
         {/* Slider Container */}
         <div className="relative group mt-8">
-          {/* Slider Track - Removed all blur/gradient divs */}
+          {/* Slider Track */}
           <div className="overflow-hidden">
             <div className="partner-slider-track py-6 sm:py-8">
               {doubledPartners.map((dev, index) => (
@@ -99,7 +105,10 @@ const PartnersSlider = () => {
                   key={`${dev._id}-${index}`}
                   className="flex-shrink-0 w-[200px] sm:w-[240px] md:w-[280px] lg:w-[320px] px-4 sm:px-6 flex items-center justify-center group/logo"
                 >
-                  <div className="relative">
+                  <div 
+                    className="relative cursor-pointer" 
+                    onClick={() => handlePartnerClick(dev)} // ✅ Add click handler
+                  >
                     <img
                       src={`${BACKEND_URL}/developers/${dev.companyLogo}`}
                       alt={dev.companyName}

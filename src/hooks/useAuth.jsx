@@ -19,7 +19,6 @@ export const useAuth = () => {
     return {
       setUserDetails: () => {},
       LoginUser: async (data) => {
-        console.error("Cannot login - AuthProvider missing");
         addToast("Authentication error. Please refresh the page.", "error");
       },
       registerUser: async () => {},
@@ -31,62 +30,83 @@ export const useAuth = () => {
 
   const { setUserDetails } = context;
 
-const LoginUser = async (data) => {
-  try {
-    console.log("🔐 Login attempt with:", data.email);
-    
-    // ✅ Only use withCredentials - no token handling needed
-    const response = await http.post("/loginuser", data, {
-      withCredentials: true,
-    });
+  const LoginUser = async (data) => {
+    try {
+      console.log("🔐 Login attempt with:", data.email);
+      
+      const response = await http.post("/loginuser", data, {
+        withCredentials: true,
+      });
 
-    console.log("📡 Login response:", response.data);
+      console.log("📡 Login response:", response.data);
 
-    if (response.status === 200 && response.data?.success) {
-      const { userData: user } = response.data;
-      
-      // ✅ Store ONLY user info in localStorage (not token)
-      // The token is stored in HTTP-only cookie by the backend
-      const userToStore = {
-        id: user._id,
-        role: user.role,
-        firstname: user.name || user.firstname || "",
-        email: user.email,
-      };
-      localStorage.setItem("user", JSON.stringify(userToStore));
-      
-      // Update auth context
-      if (setUserDetails) {
-        setUserDetails(user);
-      }
-      
-      addToast("Login successful", "success");
+      if (response.status === 200 && response.data?.success) {
+        const { userData: user } = response.data;
+        console.log("👤 User data from login:", user);
+        console.log("🖼️ Profile photo from login:", user?.profilePhoto);
+        console.log("🖼️ Image from login:", user?.image);
 
-      const role = user.role?.toLowerCase().trim();
-      
-      // ✅ Role-based redirection
-      // Small delay to ensure cookie is set
-      setTimeout(() => {
-        if (role === "admin") {
-          // Admin users go to admin dashboard
-          window.location.href = "/admin-dashboard";
-        } else if (role === "agent" || role === "freelancer" || (role !== "admin" && role !== "user")) {
-          // Agents, freelancers, and any other non-admin/non-user roles go to agent dashboard
-          window.location.href = "/agent-dashboard";
-        } else {
-          // Regular users go to homepage
-          window.location.href = "/";
+        // ✅ Store COMPLETE user info in localStorage
+        const userToStore = {
+          id: user._id,
+          role: user.role,
+          firstname: user.name || user.firstname || "",
+          email: user.email,
+          profilePhoto: user.profilePhoto || user.image || "",
+          image: user.image || user.profilePhoto || "",
+          phone: user.phone || "",
+          address: user.address || "",
+          bio: user.bio || "",
+          skills: user.skills || [],
+          // Agent specific fields
+          agentId: user.agentId || "",
+          reraLicenseNumber: user.reraLicenseNumber || "",
+          experienceYears: user.experienceYears || 0,
+          languages: user.languages || [],
+          totalPropertiesSold: user.totalPropertiesSold || 0,
+          totalRevenueGenerated: user.totalRevenueGenerated || 0,
+          visaStatus: user.visaStatus || "",
+          nationality: user.nationality || "",
+          emiratesId: user.emiratesId || "",
+          gender: user.gender || "",
+          isPublic: user.isPublic !== undefined ? user.isPublic : true,
+          isBlocked: user.isBlocked || false,
+          status: user.status || "Active",
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+        };
+        
+        localStorage.setItem("user", JSON.stringify(userToStore));
+        
+        // ✅ Update auth context with COMPLETE user data
+        if (setUserDetails) {
+          console.log("🔄 Setting user details in context:", user);
+          setUserDetails(user);
         }
-      }, 500);
-    } else {
-      addToast(response.data?.message || "Invalid credentials", "error");
+        
+        addToast("Login successful", "success");
+
+        const role = user.role?.toLowerCase().trim();
+        
+        // ✅ Role-based redirection
+        setTimeout(() => {
+          if (role === "admin") {
+            window.location.href = "/admin-dashboard";
+          } else if (role === "agent" || role === "freelancer" || (role !== "admin" && role !== "user")) {
+            window.location.href = "/agent-dashboard";
+          } else {
+            window.location.href = "/";
+          }
+        }, 500);
+      } else {
+        addToast(response.data?.message || "Invalid credentials", "error");
+      }
+    } catch (err) {
+      console.error("❌ Login error:", err);
+      const errorMessage = err.response?.data?.message || "Something went wrong.";
+      addToast(errorMessage, "error");
     }
-  } catch (err) {
-    console.error("❌ Login error:", err);
-    const errorMessage = err.response?.data?.message || "Something went wrong.";
-    addToast(errorMessage, "error");
-  }
-};
+  };
 
   const registerUser = async (data) => {
     try {

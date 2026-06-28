@@ -13,7 +13,10 @@ import ScheduleAppointmentModal from "../../model/ScheduleAppointmentModal";
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { logoutUser, user, isAuthenticated } = useContext(AuthContext);
+
+
   const { toggleSidebar } = useSidebar();
+
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeMegaMenu, setActiveMegaMenu] = useState(null);
@@ -28,6 +31,10 @@ export default function Navbar() {
 
   const showSidebarToggle = isAuthenticated && user?.role !== "user";
 
+
+
+
+
   const navigateWithFilters = (filters) => {
     navigate("/properties", { state: { filters } });
     setActiveMegaMenu(null);
@@ -39,6 +46,13 @@ export default function Navbar() {
     const filters = { offeringType: "Sale", category: "Residential", ...(subCategory && { propertytype: subCategory }) };
     navigateWithFilters(filters);
   };
+
+
+
+
+  // context/AuthContext.jsx - Updated verifyUser function
+
+
 
   const handleRentClick = (subCategory = null) => {
     const filters = { offeringType: "Rent", category: "Residential", ...(subCategory && { propertytype: subCategory }) };
@@ -59,8 +73,8 @@ export default function Navbar() {
     if (!isAuthenticated || user?.role === "user") {
       return ["Home", "About Us", "Buy", "Rent", "Off-Plan", "Resources", "Blogs", "Contact Us"];
     }
-     return []
-  
+    return []
+
   };
 
   const navItems = getNavItems();
@@ -197,7 +211,7 @@ export default function Navbar() {
       <nav className={`sticky top-0 z-[100] backdrop-blur-xl ${isDark ? "bg-[#0a0a0c]/95" : "bg-white/95"} border-b ${isDark ? "border-white/5" : "border-slate-100"}`}>
         <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 lg:h-16 gap-4">
-            
+
             {/* Left Section */}
             <div className="flex items-center gap-2 flex-shrink-0">
               {showSidebarToggle && (
@@ -223,7 +237,7 @@ export default function Navbar() {
                       </Link>
                     );
                   }
-                  
+
                   if (item === "About Us" || item === "Contact Us") {
                     return (
                       <Link key={item} to={item === "About Us" ? "/about-us" : "/contact-us"} className={navLinkClass}>
@@ -231,7 +245,7 @@ export default function Navbar() {
                       </Link>
                     );
                   }
-                  
+
                   if (item === "Blogs") {
                     return (
                       <Link key={item} to="/blog" className={navLinkClass}>
@@ -240,7 +254,7 @@ export default function Navbar() {
                       </Link>
                     );
                   }
-                  
+
                   if (item === "Buy") {
                     return (
                       <div key={item} className="relative" onMouseEnter={() => setActiveMegaMenu("Buy")} onMouseLeave={() => setActiveMegaMenu(null)}>
@@ -280,7 +294,7 @@ export default function Navbar() {
                       </div>
                     );
                   }
-                  
+
                   if (item === "Rent") {
                     return (
                       <div key={item} className="relative" onMouseEnter={() => setActiveMegaMenu("Rent")} onMouseLeave={() => setActiveMegaMenu(null)}>
@@ -320,7 +334,7 @@ export default function Navbar() {
                       </div>
                     );
                   }
-                  
+
                   if (item === "Off-Plan") {
                     return (
                       <div key={item} className="relative" onMouseEnter={() => setActiveMegaMenu("Off-Plan")} onMouseLeave={() => setActiveMegaMenu(null)}>
@@ -360,7 +374,7 @@ export default function Navbar() {
                       </div>
                     );
                   }
-                  
+
                   if (item === "Resources") {
                     return (
                       <div key={item} className="relative" onMouseEnter={() => setActiveMegaMenu("resources")} onMouseLeave={() => setActiveMegaMenu(null)}>
@@ -377,151 +391,184 @@ export default function Navbar() {
                       </div>
                     );
                   }
-                  
+
                   return null;
                 })}
               </div>
             </div>
 
             {/* Right Section with Schedule Appointment Button */}
-         {/* Right Section with Schedule Appointment Button */}
-<div className="flex items-center gap-1 sm:gap-2 lg:gap-2 flex-shrink-0">
-  <button 
-    onClick={toggleTheme} 
-    className={`p-1.5 rounded-full transition-all flex-shrink-0 ${isDark ? "text-amber-400 bg-white/5" : "text-slate-600 bg-slate-100"}`}
-  >
-    {isDark ? <SunIcon size={14} /> : <MoonIcon size={14} />}
-  </button>
-  
-  {/* Schedule Appointment Button - Fully Responsive */}
-  <button
-    onClick={() => setShowAppointmentModal(true)}
-    className="group relative px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-[7px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-wider rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-1 sm:gap-2 overflow-visible flex-shrink-0"
-  >
-    {/* NEW Badge */}
-    <div className="absolute -top-1.5 -right-1 sm:-top-2 sm:-right-2 z-10 overflow-visible">
-      <div className="relative">
-        <div className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75"></div>
-        <div className="relative bg-gradient-to-r from-red-500 to-orange-500 text-white text-[4px] sm:text-[6px] md:text-[7px] font-black px-0.5 sm:px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap">
-          NEW
-        </div>
-      </div>
-    </div>
-    
-    {/* Icon - hidden on smallest screens */}
-    <div className="hidden xs:flex relative">
+            {/* Right Section with Schedule Appointment Button */}
+            <div className="flex items-center gap-1 sm:gap-2 lg:gap-2 flex-shrink-0">
+              <button
+                onClick={toggleTheme}
+                className={`p-1.5 rounded-full transition-all flex-shrink-0 ${isDark ? "text-amber-400 bg-white/5" : "text-slate-600 bg-slate-100"}`}
+              >
+                {isDark ? <SunIcon size={14} /> : <MoonIcon size={14} />}
+              </button>
 
-       {/* Theme Toggle */}
-  
-      <svg 
-        xmlns="http://www.w3.org/2000/svg" 
-        viewBox="0 0 24 24" 
-        fill="currentColor" 
-        className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 group-hover:scale-110 transition-transform"
-      >
-        <path d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 0V3h3m4.5 0v15H6V3.75a.75.75 0 0 1 .75-.75H6m12 15v.75a.75.75 0 0 1-.75.75H6.75a.75.75 0 0 1-.75-.75V18h12Z" />
-      </svg>
-    </div>
-
-    {/* Text variations by screen size */}
-    <span className="relative tracking-wide whitespace-nowrap hidden sm:inline">
-      REQUEST APPOINTMENT
-    </span>
-    <span className="relative tracking-wide whitespace-nowrap sm:hidden">
-      BOOK NOW
-    </span>
-
-    {/* Pulse indicator */}
-    <div className="hidden sm:flex w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></div>
-  </button>
-
- 
-
-  {/* Auth Section */}
-  {!isAuthenticated ? (
-    <Link to="/login" className="px-3 sm:px-4 py-1.5 text-[8px] sm:text-[9px] font-black uppercase tracking-wider rounded-full bg-amber-500 text-white shadow-md hover:bg-amber-600 transition-all flex-shrink-0 whitespace-nowrap">
-      Login
-    </Link>
-  ) : (
-    <div className="relative flex-shrink-0" ref={profileDropdownRef}>
-      {/* Profile button */}
-      <button 
-        onClick={() => setIsProfileOpen(!isProfileOpen)} 
-        className="h-7 w-7 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 border-2 border-white/20 flex items-center justify-center text-white font-bold text-[11px] hover:scale-105 transition-all"
-      >
-        {user?.firstname?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
-      </button>
-      
-      {/* Profile Dropdown */}
-      <AnimatePresence>
-        {isProfileOpen && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-56 rounded-xl border overflow-hidden shadow-2xl bg-white dark:bg-[#161B26] border-slate-200 dark:border-white/10"
-            style={{ zIndex: 9999 }}
-          >
-            <div className="p-3 border-b border-slate-100 dark:border-white/10">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-[11px]">
-                  {user?.firstname?.charAt(0).toUpperCase()}
+              {/* Schedule Appointment Button - Fully Responsive */}
+              <button
+                onClick={() => setShowAppointmentModal(true)}
+                className="group relative px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-[7px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-wider rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-1 sm:gap-2 overflow-visible flex-shrink-0"
+              >
+                {/* NEW Badge */}
+                <div className="absolute -top-1.5 -right-1 sm:-top-2 sm:-right-2 z-10 overflow-visible">
+                  <div className="relative">
+                    <div className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75"></div>
+                    <div className="relative bg-gradient-to-r from-red-500 to-orange-500 text-white text-[4px] sm:text-[6px] md:text-[7px] font-black px-0.5 sm:px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap">
+                      NEW
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-[11px] font-bold truncate">{user?.firstname} {user?.lastname}</p>
-                  <p className="text-[8px] text-slate-500 truncate">{user?.email}</p>
-                </div>
-              </div>
-              <span className="inline-block mt-1.5 px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[6px] font-bold uppercase tracking-wider">
-                {user?.role || "USER"}
-              </span>
-            </div>
-            
-            <div className="p-1">
-              {user?.role === "user" && (
-                <>
-                  <Link to="/user-profile" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
-                    <User size={12} className="text-amber-500" /> Profile
-                  </Link>
-                  <Link to="/my-properties" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
-                    <Home size={12} className="text-amber-500" /> My Properties
-                  </Link>
-                  <Link to="/wishlist" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
-                    <Heart size={12} className="text-amber-500" /> Wishlist
-                  </Link>
-                </>
-              )}
 
-              {user?.role !== "user" && (
-                <Link to={`/${user?.role?.toLowerCase()}-dashboard`} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
-                  <Home size={12} className="text-amber-500" /> Dashboard
+                {/* Icon - hidden on smallest screens */}
+                <div className="hidden xs:flex relative">
+
+                  {/* Theme Toggle */}
+
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 group-hover:scale-110 transition-transform"
+                  >
+                    <path d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 0V3h3m4.5 0v15H6V3.75a.75.75 0 0 1 .75-.75H6m12 15v.75a.75.75 0 0 1-.75.75H6.75a.75.75 0 0 1-.75-.75V18h12Z" />
+                  </svg>
+                </div>
+
+                {/* Text variations by screen size */}
+                <span className="relative tracking-wide whitespace-nowrap hidden sm:inline">
+                  REQUEST APPOINTMENT
+                </span>
+                <span className="relative tracking-wide whitespace-nowrap sm:hidden">
+                  BOOK NOW
+                </span>
+
+                {/* Pulse indicator */}
+                <div className="hidden sm:flex w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></div>
+              </button>
+
+
+
+              {/* Auth Section */}
+              {!isAuthenticated ? (
+                <Link to="/login" className="px-3 sm:px-4 py-1.5 text-[8px] sm:text-[9px] font-black uppercase tracking-wider rounded-full bg-amber-500 text-white shadow-md hover:bg-amber-600 transition-all flex-shrink-0 whitespace-nowrap">
+                  Login
                 </Link>
+              ) : (
+              <div className="relative flex-shrink-0" ref={profileDropdownRef}>
+  {/* Profile button */}
+  <button
+    onClick={() => setIsProfileOpen(!isProfileOpen)}
+    className="h-7 w-7 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 border-2 border-white/20 flex items-center justify-center text-white font-bold text-[11px] hover:scale-105 transition-all overflow-hidden"
+  >
+  {user?.profilePhoto || user?.image ? (
+      <img 
+        src={user?.profilePhoto || user?.image} 
+        alt={user?.firstname || 'User'}
+        className="w-full h-full object-cover"
+        onError={(e) => {
+          console.error("❌ Image failed to load in navbar:", user?.profilePhoto || user?.image);
+          e.target.onerror = null;
+          e.target.style.display = 'none';
+          const parent = e.target.parentElement;
+          const fallback = document.createElement('span');
+          fallback.className = 'text-white font-bold text-[11px]';
+          fallback.textContent = user?.firstname?.charAt(0).toUpperCase() || 'U';
+          parent.appendChild(fallback);
+        }}
+      />
+    ) : (
+      user?.firstname?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'
+    )}
+  </button>
+
+  {/* Profile Dropdown */}
+  <AnimatePresence>
+    {isProfileOpen && (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+        transition={{ duration: 0.2 }}
+        className="absolute right-0 mt-2 w-56 rounded-xl border overflow-hidden shadow-2xl bg-white dark:bg-[#161B26] border-slate-200 dark:border-white/10"
+        style={{ zIndex: 9999 }}
+      >
+        <div className="p-3 border-b border-slate-100 dark:border-white/10">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-[11px] overflow-hidden flex-shrink-0">
+              {user?.profilePhoto || user?.image ? (
+                <img 
+                  src={user?.profilePhoto || user?.image} 
+                  alt={user?.firstname || 'User'}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.style.display = 'none';
+                    const parent = e.target.parentElement;
+                    const fallback = document.createElement('span');
+                    fallback.className = 'text-white font-bold text-[11px]';
+                    fallback.textContent = user?.firstname?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase();
+                    parent.appendChild(fallback);
+                  }}
+                />
+              ) : (
+                user?.firstname?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()
+              )}
+            </div>
+            <div className="flex-1">
+              <p className="text-[11px] font-bold truncate">{user?.firstname} {user?.lastname}</p>
+              <p className="text-[8px] text-slate-500 truncate">{user?.email}</p>
+            </div>
+          </div>
+          <span className="inline-block mt-1.5 px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[6px] font-bold uppercase tracking-wider">
+            {user?.role || "USER"}
+          </span>
+        </div>
+
+        <div className="p-1">
+          {user?.role === "user" && (
+            <>
+              <Link to="/user-profile" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+                <User size={12} className="text-amber-500" /> Profile
+              </Link>
+
+              <Link to="/wishlist" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+                <Heart size={12} className="text-amber-500" /> Wishlist
+              </Link>
+            </>
+          )}
+
+          <Link to="/user-profile" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+            <Settings size={12} className="text-amber-500" /> Account Settings
+          </Link>
+
+          {user?.role !== "user" && (
+            <Link to={`/${user?.role?.toLowerCase()}-dashboard`} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
+              <Home size={12} className="text-amber-500" /> Dashboard
+            </Link>
+          )}
+
+          <div className="border-t my-1 border-slate-100 dark:border-white/10" />
+          <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold text-red-500 hover:bg-red-500/10 transition-all">
+            <LogOut size={12} /> Sign Out
+          </button>
+        </div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+</div>
               )}
 
-              <Link to="/settings" className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-amber-500/10 transition-all" onClick={() => setIsProfileOpen(false)}>
-                <Settings size={12} className="text-amber-500" /> Settings
-              </Link>
-              
-              <div className="border-t my-1 border-slate-100 dark:border-white/10" />
-              <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold text-red-500 hover:bg-red-500/10 transition-all">
-                <LogOut size={12} /> Sign Out
+              {/* Mobile Menu Toggle */}
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="lg:hidden p-1.5 text-current flex-shrink-0"
+              >
+                <Bars3Icon className="h-6 w-6" />
               </button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )}
-
-  {/* Mobile Menu Toggle */}
-  <button 
-    onClick={() => setIsMobileMenuOpen(true)} 
-    className="lg:hidden p-1.5 text-current flex-shrink-0"
-  >
-    <Bars3Icon className="h-6 w-6" />
-  </button>
-</div>
           </div>
         </div>
       </nav>
@@ -542,18 +589,18 @@ export default function Navbar() {
                 <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-4 space-y-1">
               {/* Home */}
               <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="block py-3 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
                 Home
               </Link>
-              
+
               {/* About Us */}
               <Link to="/about-us" onClick={() => setIsMobileMenuOpen(false)} className="block py-3 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
                 About Us
               </Link>
-              
+
               {/* Buy Dropdown */}
               <MobileDropdown
                 title="Buy"
@@ -588,7 +635,7 @@ export default function Navbar() {
                   </button>
                 </div>
               </MobileDropdown>
-              
+
               {/* Rent Dropdown */}
               <MobileDropdown
                 title="Rent"
@@ -623,7 +670,7 @@ export default function Navbar() {
                   </button>
                 </div>
               </MobileDropdown>
-              
+
               {/* Off-Plan Dropdown */}
               <MobileDropdown
                 title="Off-Plan"
@@ -658,7 +705,7 @@ export default function Navbar() {
                   </button>
                 </div>
               </MobileDropdown>
-              
+
               {/* Resources Dropdown */}
               <MobileDropdown
                 title="Resources"
@@ -673,12 +720,12 @@ export default function Navbar() {
                   ))}
                 </div>
               </MobileDropdown>
-              
+
               {/* Contact Us */}
               <Link to="/contact-us" onClick={() => setIsMobileMenuOpen(false)} className="block py-3 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
                 Contact Us
               </Link>
-              
+
               {/* Careers */}
               <Link to="/careers" onClick={() => setIsMobileMenuOpen(false)} className="block py-3 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/10">
                 Careers <span className="ml-1 bg-amber-500 text-black text-[6px] px-1.5 py-0.5 rounded-full font-bold">HIRING</span>

@@ -176,7 +176,7 @@ const AgentPropertyList = () => {
     window.location.href = `mailto:info@homoget.ae?subject=${subject}&body=${body}`;
   };
 
-    const handlePropertyClick = useCallback(
+    const handlePropertyClick = useCallback (
       (property) => {
         navigate(`/property/${property._id}`, {
           state: { propertyData: property },
