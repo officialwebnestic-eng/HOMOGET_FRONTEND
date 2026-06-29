@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { http } from "../axios/axios";
 import { useTheme } from "../context/ThemeContext";
 import { useSearchParams, useNavigate, useParams } from "react-router-dom";
+import ScheduleAppointmentModal from "../model/ScheduleAppointmentModal";
 
 const Developer = () => {
   const [developers, setDevelopers] = useState([]);
@@ -14,6 +15,7 @@ const Developer = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDeveloper, setSelectedDeveloper] = useState(null);
   const [filteredDevelopers, setFilteredDevelopers] = useState([]);
+  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [searchParams] = useSearchParams();
@@ -22,7 +24,6 @@ const Developer = () => {
 
   const BaseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000";
   
-  // ✅ Get partner ID from either query params or path params
   const partnerId = searchParams.get('partner') || id;
 
   useEffect(() => {
@@ -30,8 +31,7 @@ const Developer = () => {
       try {
         setLoading(true);
         
-        // ✅ If partnerId exists and looks like a valid ID, try to fetch it directly
-        if (partnerId && partnerId.length === 24) { // MongoDB ObjectId is 24 characters
+        if (partnerId && partnerId.length === 24) {
           try {
             const response = await http.get(`/developers/${partnerId}`);
             if (response.data.success) {
@@ -44,17 +44,14 @@ const Developer = () => {
             }
           } catch (error) {
             console.error("Error fetching single developer:", error);
-            // Fall through to fetch all
           }
         }
         
-        // ✅ Fetch all developers (fallback or when no partnerId)
         const response = await http.get("/developers");
         if (response.data.success) {
           const allDevelopers = response.data.data;
           setDevelopers(allDevelopers);
           
-          // If partnerId exists but single fetch failed, try filtering from all
           if (partnerId) {
             const filtered = allDevelopers.filter(dev => dev._id === partnerId);
             setFilteredDevelopers(filtered);
@@ -77,7 +74,6 @@ const Developer = () => {
     fetchDevelopers();
   }, [partnerId]);
 
-  // ✅ Filter developers based on search term
   useEffect(() => {
     const baseList = partnerId ? developers.filter(dev => dev._id === partnerId) : developers;
     const filtered = baseList.filter((dev) =>
@@ -87,7 +83,6 @@ const Developer = () => {
     setFilteredDevelopers(filtered);
   }, [searchTerm, developers, partnerId]);
 
-  // Helper function to get developer image
   const getDeveloperImage = (developer) => {
     const imagePath = developer.profilePhoto || developer.companyLogo || developer.image;
     if (!imagePath) return null;
@@ -97,20 +92,17 @@ const Developer = () => {
     return `${BaseUrl}/developers/${imagePath}`;
   };
 
-  // ✅ Handle closing modal and navigating back
-  const handleCloseModal = () => {
-    setSelectedDeveloper(null);
-    // If we came from a partner link, navigate back to all developers
-    if (partnerId) {
-      navigate('/developer');
-    }
+  // Handle Request Catalog click - opens appointment modal
+  const handleRequestCatalog = () => {
+    setSelectedDeveloper(null); // Close developer modal
+    setShowAppointmentModal(true); // Open appointment modal
   };
 
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-[#0a0a0c] text-white" : "bg-slate-50 text-slate-900"}`}>
 
       {/* --- HERO SECTION --- */}
-      <section className="relative min-h-[50vh] md:min-h-[60vh] flex items-center overflow-hidden">
+      <section className="relative min-h-[40vh] md:min-h-[50vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <motion.img
             initial={{ scale: 1.1 }}
@@ -137,7 +129,6 @@ const Developer = () => {
               <span className="text-amber-500 italic">{partnerId ? "PARTNER" : "HORIZONS."}</span>
             </h1>
 
-            {/* Show back button if partner is filtered */}
             {partnerId && (
               <button
                 onClick={() => navigate('/developer')}
@@ -147,7 +138,6 @@ const Developer = () => {
               </button>
             )}
 
-            {/* Search Bar */}
             <div className="max-w-xl relative group mt-4">
               <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-700"></div>
               <div className={`relative flex items-center rounded-lg border transition-all ${isDark ? "bg-[#11141B] border-white/10" : "bg-white border-slate-200 shadow-sm"}`}>
@@ -168,11 +158,9 @@ const Developer = () => {
         </div>
       </section>
 
-    
-
       {/* --- DEVELOPER GRID --- */}
-      <section className="max-w-7xl mx-auto py-24 px-6">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+      <section className="max-w-7xl mx-auto py-16 px-6">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
           <div>
             <h2 className={`text-3xl md:text-4xl font-serif font-bold tracking-tight ${isDark ? "text-white" : "text-slate-800"}`}>
               {partnerId ? "Featured " : "The "} <span className="text-amber-500">Portfolio</span>
@@ -197,7 +185,7 @@ const Developer = () => {
             <p className="text-sm text-slate-500">Try adjusting your search criteria</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <AnimatePresence mode="popLayout">
               {filteredDevelopers.map((dev) => (
                 <motion.div
@@ -226,7 +214,7 @@ const Developer = () => {
                   </div>
 
                   <div className="p-6">
-                    <h3 className="text-xl font-bold tracking-tight mb-1 uppercase group-hover:text-amber-500 transition-colors">
+                    <h3 className="text-xl font-serif font-bold tracking-tight mb-1 uppercase group-hover:text-amber-500 transition-colors">
                       {dev.companyName}
                     </h3>
                     <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-4 flex items-center gap-1">
@@ -240,7 +228,7 @@ const Developer = () => {
                       </div>
                       <div className="text-right">
                         <p className="text-[8px] text-slate-500 font-bold uppercase tracking-wider mb-1">Projects</p>
-                        <p className="text-sm font-bold">{dev.totalProjects || "50+"}+</p>
+                        <p className="text-sm font-serif font-bold">{dev.totalProjects || "50+"}+</p>
                       </div>
                     </div>
 
@@ -255,7 +243,7 @@ const Developer = () => {
         )}
       </section>
 
-      {/* Developer Modal */}
+      {/* ========== UPDATED FULL WIDTH MODAL ========== */}
       <AnimatePresence>
         {selectedDeveloper && (
           <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
@@ -268,81 +256,109 @@ const Developer = () => {
             />
 
             <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 30 }}
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              className={`relative w-full max-w-4xl max-h-[85vh] overflow-y-auto rounded-2xl border shadow-2xl ${isDark ? "bg-[#11141B] border-white/10" : "bg-white border-slate-200"}`}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className={`relative w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-3xl border shadow-2xl ${isDark ? "bg-[#11141B] border-white/10" : "bg-white border-slate-200"}`}
             >
+              {/* Close Button */}
               <button
                 onClick={() => setSelectedDeveloper(null)}
-                className="absolute top-4 right-4 p-2 bg-amber-500 text-black rounded-full hover:scale-105 transition-all z-20 shadow-md"
+                className="absolute top-4 right-4 z-30 p-2.5 bg-amber-500 text-black rounded-full hover:scale-105 transition-all shadow-lg"
               >
-                <X size={18} />
+                <X size={20} />
               </button>
 
+              {/* Full Width Content */}
               <div className="flex flex-col lg:flex-row">
-                {/* Left Side - Brand */}
-                <div className={`lg:w-2/5 p-8 flex flex-col items-center justify-center border-r ${isDark ? "border-white/10 bg-black/20" : "border-slate-100 bg-slate-50"}`}>
-                  <img
-                    src={getDeveloperImage(selectedDeveloper) || `${BaseUrl}/developers/${selectedDeveloper.companyLogo}`}
-                    className="w-40 h-40 object-contain drop-shadow-md"
-                    alt={selectedDeveloper.companyName}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedDeveloper.companyName)}&background=C5A059&color=fff&bold=true&size=100`;
-                    }}
-                  />
-                  <div className="w-full mt-8 space-y-3">
+                {/* Left Side - Brand (40%) */}
+                <div className={`lg:w-2/5 p-8 lg:p-10 flex flex-col items-center justify-center border-b lg:border-b-0 lg:border-r ${isDark ? "border-white/10 bg-black/20" : "border-slate-100 bg-slate-50"}`}>
+                  <div className="w-48 h-48 rounded-2xl overflow-hidden bg-white/5 flex items-center justify-center p-6">
+                    <img
+                      src={getDeveloperImage(selectedDeveloper) || `${BaseUrl}/developers/${selectedDeveloper.companyLogo}`}
+                      className="w-full h-full object-contain drop-shadow-xl"
+                      alt={selectedDeveloper.companyName}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedDeveloper.companyName)}&background=C5A059&color=fff&bold=true&size=200`;
+                      }}
+                    />
+                  </div>
+                  
+                  <div className="w-full mt-6 space-y-3">
                     <div className={`p-4 rounded-xl border ${isDark ? "bg-white/5 border-white/5" : "bg-white border-slate-200"}`}>
-                      <p className="text-amber-500 text-[9px] font-bold uppercase tracking-wider mb-1">RERA License</p>
-                      <p className="text-sm font-bold">{selectedDeveloper.reraRegistrationNumber || "N/A"}</p>
+                      <p className="text-amber-500 text-[8px] font-black uppercase tracking-wider mb-1">Company Status</p>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 size={14} className="text-emerald-500" />
+                        <span className="text-sm font-serif font-bold">Active Entity</span>
+                      </div>
                     </div>
                     <div className={`p-4 rounded-xl border ${isDark ? "bg-white/5 border-white/5" : "bg-white border-slate-200"}`}>
-                      <p className="text-amber-500 text-[9px] font-bold uppercase tracking-wider mb-1">Total Projects</p>
-                      <p className="text-sm font-bold">{selectedDeveloper.totalProjects || "50+"} Completed</p>
+                      <p className="text-amber-500 text-[8px] font-black uppercase tracking-wider mb-1">Total Projects</p>
+                      <p className="text-2xl font-serif font-bold">{selectedDeveloper.totalProjects || "50+"}</p>
+                      <p className="text-[9px] text-slate-400">Completed Developments</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Side - Details */}
-                <div className="lg:w-3/5 p-8 space-y-6">
+                {/* Right Side - Details (60%) */}
+                <div className="lg:w-3/5 p-8 lg:p-10 space-y-6">
                   <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="w-8 h-px bg-amber-500"></span>
-                      <span className="text-amber-500 text-[8px] font-bold uppercase tracking-wider">Developer Registry</span>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="w-10 h-0.5 bg-amber-500"></span>
+                      <span className="text-amber-500 text-[8px] font-black uppercase tracking-wider">Developer Registry</span>
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-serif font-bold tracking-tight">{selectedDeveloper.companyName}</h2>
+                    <h2 className="text-3xl lg:text-4xl font-serif font-bold tracking-tight">
+                      {selectedDeveloper.companyName}
+                    </h2>
                     <div className="flex flex-wrap gap-2 mt-3">
-                      <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-[9px] font-bold uppercase border border-emerald-500/20">Active Entity</span>
-                      <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 text-[9px] font-bold uppercase border border-blue-500/20">DLD Approved</span>
+                      <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-[8px] font-bold uppercase border border-emerald-500/20">
+                        Active Entity
+                      </span>
+                      <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 text-[8px] font-bold uppercase border border-blue-500/20">
+                        DLD Approved
+                      </span>
+                      <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 text-[8px] font-bold uppercase border border-amber-500/20">
+                        Premium Partner
+                      </span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500"><MapPin size={16} /></div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                      <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
+                        <MapPin size={16} />
+                      </div>
                       <div>
-                        <p className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Headquarters</p>
-                        <p className="text-xs font-medium">{selectedDeveloper.officeAddress || "Dubai, UAE"}</p>
+                        <p className="text-[7px] font-black uppercase tracking-wider text-slate-400">Headquarters</p>
+                        <p className="text-sm font-serif font-medium">{selectedDeveloper.officeAddress || "Dubai, UAE"}</p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500"><Phone size={16} /></div>
+                    <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                      <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
+                        <Globe size={16} />
+                      </div>
                       <div>
-                        <p className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Contact</p>
-                        <p className="text-xs font-medium">{selectedDeveloper.contactNumber || "+971 XX XXX XXXX"}</p>
+                        <p className="text-[7px] font-black uppercase tracking-wider text-slate-400">Contact</p>
+                        <p className="text-sm font-serif font-medium">{selectedDeveloper.contactNumber || "+971 XX XXX XXXX"}</p>
                         <p className="text-xs text-slate-400">{selectedDeveloper.officialEmail || "info@example.com"}</p>
                       </div>
                     </div>
                   </div>
 
                   <div className={`p-6 rounded-xl border ${isDark ? "bg-white/5 border-white/5" : "bg-slate-50 border-slate-100"}`}>
-                    <p className="text-[8px] font-bold text-amber-500 uppercase tracking-wider mb-2">Company Narrative</p>
-                    <p className="text-sm italic leading-relaxed">
-                      {selectedDeveloper.details || "A leading real estate developer in Dubai, known for excellence and innovation."}
+                    <p className="text-[7px] font-black text-amber-500 uppercase tracking-wider mb-2">Company Narrative</p>
+                    <p className="text-sm font-serif leading-relaxed italic">
+                      {selectedDeveloper.details || "A leading real estate developer in Dubai, known for excellence and innovation in creating iconic residential and commercial spaces that redefine urban living."}
                     </p>
                   </div>
 
-                  <button className="w-full py-4 bg-amber-500 text-black font-bold uppercase text-[10px] tracking-wider rounded-xl shadow-md hover:bg-amber-600 transition-all">
+                  {/* ✅ Only Request Catalog Button - Opens Appointment Modal */}
+                  <button 
+                    onClick={handleRequestCatalog}
+                    className="w-full py-3.5 bg-amber-500 text-black font-serif font-bold uppercase text-[10px] tracking-wider rounded-xl shadow-md hover:bg-amber-600 transition-all"
+                  >
                     Request Project Catalog
                   </button>
                 </div>
@@ -351,6 +367,13 @@ const Developer = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* ✅ Schedule Appointment Modal */}
+      <ScheduleAppointmentModal
+        isOpen={showAppointmentModal}
+        onClose={() => setShowAppointmentModal(false)}
+        isDark={isDark}
+      />
     </div>
   );
 };

@@ -37,7 +37,23 @@ const UserAgentDetails = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const API_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000";
+  const baseUrl = API_BASE_URL; // For backward compatibility
 
+  // ✅ Helper function to get image URL
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    // If it's already a full URL, return it
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    // Otherwise, construct the full URL
+    return `${API_BASE_URL}/agents/${imagePath}`;
+  };
+
+  // ✅ Avatar fallback function
+  const getAvatarFallback = (name) => {
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Agent')}&background=C5A059&color=fff&bold=true`;
+  };
 
   useEffect(() => {
     const fetchAgent = async () => {
@@ -45,7 +61,7 @@ const UserAgentDetails = () => {
         const response = await http.get(`/getpublicagent/${id}`, { withCredentials: true });
         if (response.data.success) {
           const agentData = response.data.data;
-          // Add image URL
+          // ✅ Add image URL using the helper function
           agentData.profilePhotoUrl = getImageUrl(agentData.profilePhoto);
           setAgent(agentData);
         }
@@ -58,10 +74,6 @@ const UserAgentDetails = () => {
     };
     fetchAgent();
   }, [id, addToast]);
-  
-const getAvatarFallback = (name) => {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Agent')}&background=C5A059&color=fff&bold=true`;
-};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -131,7 +143,6 @@ const getAvatarFallback = (name) => {
       </div>
     );
   }
-  
 
   const stats = [
     { label: 'Properties Sold', value: agent.totalPropertiesSold || 128, icon: <TrendingUp size={16} /> },
@@ -143,7 +154,7 @@ const getAvatarFallback = (name) => {
   return (
     <div className={`min-h-screen transition-colors duration-700 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
 
-      {/* Hero Section - Similar to Agent Support */}
+      {/* Hero Section */}
       <section className="relative w-full h-[60vh] md:h-[65vh] flex items-center overflow-visible">
         <div className="absolute inset-0 z-0">
           <img
@@ -198,11 +209,16 @@ const getAvatarFallback = (name) => {
               <div className="relative">
                 <div className="absolute inset-0 bg-amber-500 rounded-2xl rotate-6" />
                 <img
-                src={agent.profilePhoto 
-  ? `${baseUrl}/agents/${agent.profilePhoto}`
-  : getAvatarFallback(agent.name)}              className="w-24 h-24 rounded-[2rem] object-cover relative z-10 border-2 border-amber-500/20"
-              alt={agent.name}
-            />
+                  src={agent.profilePhoto 
+                    ? getImageUrl(agent.profilePhoto)
+                    : getAvatarFallback(agent.name)}
+                  className="w-24 h-24 rounded-[2rem] object-cover relative z-10 border-2 border-amber-500/20"
+                  alt={agent.name}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = getAvatarFallback(agent.name);
+                  }}
+                />
                 <div className="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white" />
               </div>
             </div>
@@ -225,7 +241,7 @@ const getAvatarFallback = (name) => {
                 <div className="flex flex-wrap gap-2">
                   <a
                     href={`tel:${agent.phone}`}
-                    className="px-4 py-2 bg-amber-500 text-black font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 hover:bg-amber-600 transition-all"
+                    className="px-4 py-2 bg-amber-500 text-black font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 hover:bg-amber-600 transition-all rounded-xl"
                   >
                     <PhoneCall size={14} /> Call
                   </a>
@@ -234,21 +250,21 @@ const getAvatarFallback = (name) => {
                     href={`https://wa.me/${agent.phone?.replace(/\D/g, '')}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-4 py-2 bg-green-600 text-white font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 hover:bg-green-700 transition-all"
+                    className="px-4 py-2 bg-green-600 text-white font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 hover:bg-green-700 transition-all rounded-xl"
                   >
                     <FaWhatsapp size={14} /> WhatsApp
                   </a>
 
                   <a
                     href={`mailto:${agent.email}`}
-                    className="px-4 py-2 bg-blue-600 text-white font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 hover:bg-blue-700 transition-all"
+                    className="px-4 py-2 bg-blue-600 text-white font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 hover:bg-blue-700 transition-all rounded-xl"
                   >
                     <Mail size={14} /> Email
                   </a>
 
                   <button
                     onClick={() => setIsModalOpen(true)}
-                    className="px-4 py-2 bg-slate-800 text-white font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 hover:bg-slate-700 transition-all"
+                    className="px-4 py-2 bg-slate-800 text-white font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 hover:bg-slate-700 transition-all rounded-xl"
                   >
                     <MessageCircle size={14} /> Message
                   </button>
@@ -410,9 +426,15 @@ const getAvatarFallback = (name) => {
                   <div className="flex flex-col md:flex-row">
                     <div className="md:w-2/5 bg-gradient-to-br from-amber-500 to-orange-600 p-8 text-white">
                       <img
-                        src={agent?.profilePhotoUrl || agent?.profilePhoto || `https://ui-avatars.com/api/?name=${agent?.name}&background=C5A059&color=fff`}
-                        className="w-24 h-24 rounded-2xl mb-4 border-2 border-white/20"
+                        src={agent?.profilePhoto 
+                          ? getImageUrl(agent?.profilePhoto)
+                          : getAvatarFallback(agent?.name)}
+                        className="w-24 h-24 rounded-2xl mb-4 border-2 border-white/20 object-cover"
                         alt={agent?.name}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = getAvatarFallback(agent?.name);
+                        }}
                       />
                       <h3 className="text-xl font-bold mb-1">{agent?.name}</h3>
                       <p className="text-sm opacity-90 mb-4">{agent?.role || 'Property Consultant'}</p>
