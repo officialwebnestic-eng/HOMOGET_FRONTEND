@@ -32,6 +32,7 @@ import GlobalWhatsAppChat from "./components/common/homecommon/GlobalWhatsaapCha
 import CookieBanner from "./components/common/homecommon/CookieBanner";
 import GoogleAnalytics from "./components/common/homecommon/GoogleAnalytics";
 import FacebookPixel from "./components/common/homecommon/FacebookPixel";
+import LandingPage from "./components/LandingPage/LandingPage";
 
 const ScrollToTop = () => {
 
@@ -96,9 +97,10 @@ function App() {
 
         </Route>
         {/* Website Routes */}
+        <Route path="/book-your-property" element={<LandingPage />} />
         <Route path="/*" element={<AllRoutes />} />
       </Routes>
-
+       
       <GlobalWhatsAppChat />
       <CookieBanner />
 

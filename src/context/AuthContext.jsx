@@ -103,15 +103,11 @@ export const AuthProvider = ({ children }) => {
           }
           return null;
         });
-        
-        console.log("📡 Auth check response:", res?.data);
+  
         
         if (res?.data?.success && res.data.user) {
           const backendUser = res.data.user;
-          console.log("👤 Backend user data:", backendUser);
-          console.log("🖼️ Backend profile photo:", backendUser?.profilePhoto);
-          
-          // ✅ Use backend data (it has the full profile)
+         
           const userObj = {
             id: backendUser.id || backendUser._id || "",
             firstname: backendUser.name?.split(" ")[0] || backendUser.firstname || "",
@@ -140,10 +136,6 @@ export const AuthProvider = ({ children }) => {
             createdAt: backendUser.createdAt,
             updatedAt: backendUser.updatedAt,
           };
-          
-          console.log("✅ Setting user from backend:", userObj);
-          console.log("🖼️ Profile photo from backend:", userObj.profilePhoto);
-          
           setUser(userObj);
           setIsAuthenticated(true);
           localStorage.setItem("user", JSON.stringify(userObj));
@@ -166,7 +158,6 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
       }
     };
-
     verifyUser();
   }, []);
 
@@ -177,8 +168,6 @@ export const AuthProvider = ({ children }) => {
       setUserDetails,
       logoutUser,
       loading,
-      
-      
     }),
     [user, isAuthenticated, loading, setUserDetails]
   );

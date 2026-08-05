@@ -23,17 +23,11 @@ export default function Navbar() {
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
-
   const navigate = useNavigate();
   const location = useLocation();
   const profileDropdownRef = useRef();
   const isDark = theme === "dark";
-
   const showSidebarToggle = isAuthenticated && user?.role !== "user";
-
-
-
-
 
   const navigateWithFilters = (filters) => {
     navigate("/properties", { state: { filters } });
@@ -46,14 +40,8 @@ export default function Navbar() {
     const filters = { offeringType: "Sale", category: "Residential", ...(subCategory && { propertytype: subCategory }) };
     navigateWithFilters(filters);
   };
-
-
-
-
+  
   // context/AuthContext.jsx - Updated verifyUser function
-
-
-
   const handleRentClick = (subCategory = null) => {
     const filters = { offeringType: "Rent", category: "Residential", ...(subCategory && { propertytype: subCategory }) };
     navigateWithFilters(filters);
