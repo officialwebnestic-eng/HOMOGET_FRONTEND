@@ -18,37 +18,32 @@
 
   <!-- Primary SEO -->
   <title>
-    Dubai Real Estate Brokerage & Property Portal | HOMOGET
+    Dubai Off-Plan Properties, Luxury Homes & Real Estate Investment | HOMOGET
   </title>
 
   <meta
     name="title"
-    content="Dubai Real Estate Brokerage & Property Portal | HOMOGET"
+    content="Dubai Off-Plan Properties, Luxury Homes & Real Estate Investment | HOMOGET"
   />
 
   <meta
     name="description"
-    content="HOMOGET is a Dubai real estate brokerage and property portal where verified agents list luxury villas, apartments, off-plan projects, and commercial properties across Dubai."
+    content="Explore prime off-plan projects, luxury villas, apartments, and high-ROI investment properties in Dubai. Connect with verified brokers and agents on HOMOGET."
   />
 
   <meta
     name="keywords"
     content="
-    Dubai real estate,
-    Dubai property portal,
-    Dubai real estate brokerage,
-    property listings Dubai,
-    real estate agents Dubai,
+    Dubai off-plan properties,
+    Dubai real estate investment,
     luxury villas Dubai,
     apartments for sale Dubai,
-    off-plan properties Dubai,
-    Dubai investment properties,
+    Dubai property portal,
+    off-plan projects Dubai,
     commercial properties Dubai,
-    UAE real estate,
-    Dubai property consultants,
+    real estate agents Dubai,
     buy property in Dubai,
-    Dubai homes,
-    Dubai property marketplace
+    high ROI property investment Dubai
     "
   />
 
@@ -70,8 +65,24 @@
   <!-- Canonical -->
   <link
     rel="canonical"
+    id="dynamic-canonical"
     href="https://homoget.ae/"
   />
+  <script>
+    // Dynamic clean canonical updater for React Single Page Application
+    (function() {
+      let cleanUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
+      if (cleanUrl.endsWith('/') && cleanUrl !== window.location.protocol + '//' + window.location.host + '/') {
+        cleanUrl = cleanUrl.slice(0, -1);
+      }
+      window.addEventListener('DOMContentLoaded', () => {
+        const canonicalElement = document.getElementById('dynamic-canonical');
+        if (canonicalElement) {
+          canonicalElement.setAttribute('href', cleanUrl);
+        }
+      });
+    })();
+  </script>
 
   <!-- Language -->
   <meta
@@ -110,12 +121,12 @@
 
   <meta
     property="og:title"
-    content="Dubai Real Estate Brokerage & Property Portal | HOMOGET"
+    content="Dubai Off-Plan Properties, Luxury Homes & Real Estate Investment | HOMOGET"
   />
 
   <meta
     property="og:description"
-    content="Browse Dubai property listings from verified real estate agents. Find villas, apartments, off-plan projects, and commercial properties across Dubai."
+    content="Discover exclusive off-plan launches, luxury properties, and high-yield investment opportunities across Dubai with verified real estate experts."
   />
 
   <meta
@@ -151,12 +162,12 @@
 
   <meta
     name="twitter:title"
-    content="Dubai Real Estate Brokerage & Property Portal | HOMOGET"
+    content="Dubai Off-Plan Properties, Luxury Homes & Real Estate Investment | HOMOGET"
   />
 
   <meta
     name="twitter:description"
-    content="Find luxury villas, apartments, off-plan projects, and commercial properties in Dubai with HOMOGET."
+    content="Browse top-tier off-plan developments, luxury villas, and smart investment properties in Dubai through HOMOGET."
   />
 
   <meta
@@ -208,7 +219,7 @@
 
     "image": "https://homoget.ae/og-banner.jpg",
 
-    "description": "Dubai real estate brokerage and property portal with verified real estate agents, luxury villas, apartments, off-plan projects, and commercial properties.",
+    "description": "Dubai real estate portal specializing in off-plan developments, luxury villas, apartments, and high-yield investment properties with verified agents.",
 
     "telephone": "+971-585919585",
 
@@ -272,9 +283,7 @@
   }
   </script>
 
-  <!-- Google Analytics -->
-  <!-- Replace G-XXXXXXXXXX with your actual GA4 ID -->
-
+  <!-- Google Analytics (GA4) -->
   <script
     async
     src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"
@@ -292,6 +301,16 @@
     gtag('config', 'G-XXXXXXXXXX');
   </script>
 
+  <!-- Google Ads Tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18395999570"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'AW-18395999570');
+  </script>
+
 </head>
 
 <body>
@@ -301,8 +320,6 @@
 
   <!-- Google Maps API -->
   <!-- Restrict API key to homoget.ae domain -->
-
-
 
   <!-- React Entry -->
   <script
