@@ -1,55 +1,128 @@
-import React, { useState, useEffect, useRef } from "react";
+// components/home/AgentHero.jsx
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   MapPin,
-  Filter,
   ChevronDown,
   X,
   Loader2,
   Building2,
   Landmark,
   Home as HomeIcon,
-  Sparkles,
-  Zap,
   SlidersHorizontal,
-  TrendingUp,
-  Heart,
   Star,
-  Shield,
-  Clock,
   Brain,
-  ThumbsUp,
-  Grid3x3,
-  List
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { http } from "../../../axios/axios";
 import FilterSidebar from "../FilterSidebar";
-import SortBar from "./SortBar ";
 
+/* ------------------------------------------------------------------ */
+/*  CONSTANTS                                                          */
+/* ------------------------------------------------------------------ */
+const EMPTY_FILTERS = {
+  minPrice: "",
+  maxPrice: "",
+  bedroom: "",
+  bathroom: "",
+  propertytype: [],
+  furnishingType: "",
+  minSquarefoot: "",
+  maxSquarefoot: "",
+  amenities: [],
+  keywords: [],
+  has360Tour: "",
+  hasVideoTour: "",
+};
+
+const FILTER_SCALAR_KEYS = [
+  "bedroom",
+  "bathroom",
+  "minPrice",
+  "maxPrice",
+  "city",
+  "furnishingType",
+  "minSquarefoot",
+  "maxSquarefoot",
+  "has360Tour",
+  "hasVideoTour",
+];
+
+const PRICE_SHORTCUTS = [
+  { label: "500k", value: 500000 },
+  { label: "1M", value: 1000000 },
+  { label: "2M", value: 2000000 },
+  { label: "5M", value: 5000000 },
+  { label: "10M", value: 10000000 },
+];
+
+/* ------------------------------------------------------------------ */
+/*  FALLBACK RECOMMENDATIONS (used if API fails)                       */
+/* ------------------------------------------------------------------ */
+const fallbackRecommendations = (query) => {
+  const q = (query || "").toLowerCase();
+  const results = [];
+
+  if (/(luxury|premium|villa)/.test(q)) {
+    results.push({
+      type: "Luxury Villas",
+      locations: ["Palm Jumeirah", "Emirates Hills", "Al Barari"],
+      priceRange: "AED 5M – 50M+",
+      roi: "5–7%",
+      matchScore: 95,
+      description: "Premium luxury villas with private beaches",
+    });
+  }
+
+  if (/(beach|sea view|waterfront)/.test(q)) {
+    results.push({
+      type: "Beachfront Apartments",
+      locations: ["Dubai Marina", "JBR", "La Mer"],
+      priceRange: "AED 1.5M – 10M",
+      roi: "6–8%",
+      matchScore: 92,
+      description: "Stunning sea view apartments",
+    });
+  }
+
+  if (results.length === 0) {
+    results.push({
+      type: "Popular Properties",
+      locations: ["Downtown Dubai", "Dubai Marina", "Business Bay"],
+      priceRange: "AED 500K – 5M",
+      roi: "6–9%",
+      matchScore: 80,
+      description: "Most sought-after properties in Dubai",
+    });
+  }
+
+  return results;
+};
+
+/* ------------------------------------------------------------------ */
+/*  COMPONENT                                                          */
+/* ------------------------------------------------------------------ */
 const AgentHero = ({
   propertyList = [],
-  filters,
-  handleFilterChange,
-  showFilters,
-  setShowFilters,
-  filterFields,
-  getUniqueValues,
-  searchQuery: externalSearchQuery,
+  filters = EMPTY_FILTERS,
+  handleFilterChange = () => {},
+  showFilters = false,
+  setShowFilters = () => {},
+  searchQuery: externalSearchQuery = "",
   setSearchQuery: externalSetSearchQuery,
   onSuggestionClick: externalOnSuggestionClick,
   onSearchButtonClick: externalOnSearchButtonClick,
   onApplyFilters,
   onClearFilters,
-  currentSort,
-  onSortChange,
-  viewMode,
-  onViewModeChange,
-  totalResults
+  totalResults = 0,
 }) => {
   const navigate = useNavigate();
-  const [internalSearchQuery, setInternalSearchQuery] = useState(externalSearchQuery || "");
+
+  /* ---------------- State ---------------- */
+  const [internalSearchQuery, setInternalSearchQuery] = useState(
+    externalSearchQuery || ""
+  );
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [locationSuggestions, setLocationSuggestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -57,185 +130,158 @@ const AgentHero = ({
   const [aiSuggestions, setAiSuggestions] = useState([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const inputRef = useRef(null);
-  const suggestionRef = useRef(null);
-  const sidebarRef = useRef(null);
-  const debounceTimerRef = useRef(null);
   const [videoError, setVideoError] = useState(false);
 
-  // ========== GOOGLE GEMINI API ==========
-  const GEMINI_API_KEY = "AIzaSyCZ7WFdsYoZrT79QaJsXT5wu5yA5yT8IDQ";
-  const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
+  const inputRef = useRef(null);
+  const suggestionRef = useRef(null);
+  const debounceTimerRef = useRef(null);
 
-  // Handle click outside to close sidebar
+  /* ---------------- Sync external → internal ---------------- */
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showFilters && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-        setShowFilters(false);
-      }
-    };
-    
-    if (showFilters) {
-      document.addEventListener("mousedown", handleClickOutside);
+    if (
+      externalSearchQuery !== undefined &&
+      externalSearchQuery !== internalSearchQuery
+    ) {
+      setInternalSearchQuery(externalSearchQuery);
     }
-    
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showFilters, setShowFilters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalSearchQuery]);
 
-  // Handle escape key to close sidebar
+  /* ---------------- Close suggestions on outside click ---------------- */
   useEffect(() => {
-    const handleEscapeKey = (event) => {
-      if (event.key === "Escape" && showFilters) {
-        setShowFilters(false);
+    if (!showSuggestions) return;
+
+    const onDocClick = (event) => {
+      if (
+        suggestionRef.current &&
+        !suggestionRef.current.contains(event.target)
+      ) {
+        setShowSuggestions(false);
       }
     };
-    
-    document.addEventListener("keydown", handleEscapeKey);
-    return () => {
-      document.removeEventListener("keydown", handleEscapeKey);
-    };
-  }, [showFilters, setShowFilters]);
 
-  // Get AI recommendations
-  const getGeminiRecommendations = async (query) => {
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [showSuggestions]);
+
+  /* ---------------- Escape closes suggestions ---------------- */
+  useEffect(() => {
+    if (!showSuggestions) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setShowSuggestions(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [showSuggestions]);
+
+  /* ================================================================ */
+  /*  AI RECOMMENDATIONS                                              */
+  /*  ⚠️  TODO: move this to backend /api/ai/recommendations          */
+  /*     Right now the browser hits Gemini directly — the key will    */
+  /*     be visible in DevTools. Rotate the key & proxy via your      */
+  /*     own server as soon as possible.                              */
+  /* ================================================================ */
+  const getGeminiRecommendations = useCallback(async (query, signal) => {
     if (!query || query.length < 2) return [];
-    
+
+    // ⚠️ Prefer calling your own backend. Example:
+    // const res = await http.post("/ai/recommendations", { query }, { signal });
+    // return res.data.recommendations || [];
+    //
+    // The direct-call fallback below keeps things working for now.
+
     try {
       const prompt = `You are a Dubai real estate expert. Based on the user search: "${query}", provide 3 property recommendations in JSON format only, no extra text. Use this exact structure:
-      {
-        "recommendations": [
-          {
-            "type": "property type name",
-            "locations": ["location1", "location2"],
-            "priceRange": "price range in AED",
-            "roi": "expected ROI percentage",
-            "matchScore": 85,
-            "description": "short description"
-          }
-        ]
-      }`;
-      
-      const response = await fetch(GEMINI_API_URL, {
+{
+  "recommendations": [
+    {
+      "type": "property type name",
+      "locations": ["location1", "location2"],
+      "priceRange": "price range in AED",
+      "roi": "expected ROI percentage",
+      "matchScore": 85,
+      "description": "short description"
+    }
+  ]
+}`;
+
+      // NOTE: Replace with your own backend call.
+      const apiKey = import.meta?.env?.VITE_GEMINI_KEY || "";
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+
+      const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal,
         body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 800,
-          }
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 800 },
         }),
       });
-      
+
       const data = await response.json();
-      
-      if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-        const text = data.candidates[0].content.parts[0].text;
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          return parsed.recommendations || [];
-        }
-      }
-      return fallbackRecommendations(query);
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) return fallbackRecommendations(query);
+
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) return fallbackRecommendations(query);
+
+      const parsed = JSON.parse(jsonMatch[0]);
+      return parsed.recommendations || fallbackRecommendations(query);
     } catch (error) {
-      console.error("Gemini API error:", error);
+      if (error.name === "AbortError") return [];
+      console.error("AI recommendations error:", error);
       return fallbackRecommendations(query);
     }
-  };
+  }, []);
 
-  // Fallback recommendations
-  const fallbackRecommendations = (query) => {
-    const recommendations = [];
-    const queryLower = query.toLowerCase();
-    
-    if (queryLower.includes("luxury") || queryLower.includes("premium") || queryLower.includes("villa")) {
-      recommendations.push({
-        type: "Luxury Villas",
-        locations: ["Palm Jumeirah", "Emirates Hills", "Al Barari"],
-        priceRange: "AED 5M - 50M+",
-        roi: "5-7%",
-        matchScore: 95,
-        description: "Premium luxury villas with private beaches"
-      });
-    }
-    
-    if (queryLower.includes("beach") || queryLower.includes("sea view")) {
-      recommendations.push({
-        type: "Beachfront Apartments",
-        locations: ["Dubai Marina", "JBR", "La Mer"],
-        priceRange: "AED 1.5M - 10M",
-        roi: "6-8%",
-        matchScore: 92,
-        description: "Stunning sea view apartments"
-      });
-    }
-    
-    if (recommendations.length === 0) {
-      recommendations.push({
-        type: "Popular Properties",
-        locations: ["Downtown Dubai", "Dubai Marina", "Business Bay"],
-        priceRange: "AED 500K - 5M",
-        roi: "6-9%",
-        matchScore: 80,
-        description: "Most sought-after properties in Dubai"
-      });
-    }
-    
-    return recommendations;
-  };
-
-  // Fetch AI suggestions
+  /* ---------------- Fetch AI suggestions on debounce ---------------- */
   useEffect(() => {
-    const fetchAiSuggestions = async () => {
-      if (!internalSearchQuery || internalSearchQuery.length < 2 || !aiMode) {
-        setAiSuggestions([]);
-        return;
-      }
-      
+    if (!aiMode || internalSearchQuery.length < 2) {
+      setAiSuggestions([]);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
       setIsAiLoading(true);
       try {
-        const suggestions = await getGeminiRecommendations(internalSearchQuery);
-        setAiSuggestions(suggestions.length > 0 ? suggestions : fallbackRecommendations(internalSearchQuery));
-      } catch (error) {
-        console.error("AI suggestions error:", error);
-        setAiSuggestions(fallbackRecommendations(internalSearchQuery));
+        const suggestions = await getGeminiRecommendations(
+          internalSearchQuery,
+          controller.signal
+        );
+        setAiSuggestions(
+          suggestions.length > 0
+            ? suggestions
+            : fallbackRecommendations(internalSearchQuery)
+        );
       } finally {
         setIsAiLoading(false);
       }
+    }, 800);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
     };
-    
-    const debounce = setTimeout(fetchAiSuggestions, 800);
-    return () => clearTimeout(debounce);
-  }, [internalSearchQuery, aiMode]);
+  }, [internalSearchQuery, aiMode, getGeminiRecommendations]);
 
-  // Sync internal state with external prop
-  useEffect(() => {
-    if (externalSearchQuery !== undefined) {
-      setInternalSearchQuery(externalSearchQuery);
-    }
-  }, [externalSearchQuery]);
-
-  // ========== LOCATION SEARCH USING YOUR BACKEND API ==========
-  const searchLocations = async (query) => {
-    if (query.trim().length < 2) {
+  /* ---------------- Location search (backend) ---------------- */
+  const searchLocations = useCallback(async (query) => {
+    if (!query || query.trim().length < 2) {
       setLocationSuggestions([]);
       setShowSuggestions(false);
       return;
     }
-    
+
     setIsLoading(true);
     try {
-      const response = await http.get(`/locations/search?query=${encodeURIComponent(query)}`);
+      const response = await http.get(
+        `/locations/search?query=${encodeURIComponent(query)}`
+      );
       const result = response.data;
-      
-      if (result && result.success && result.data) {
+
+      if (result?.success && Array.isArray(result.data)) {
         setLocationSuggestions(result.data);
         setShowSuggestions(true);
       } else {
@@ -249,49 +295,50 @@ const AgentHero = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  // Handle input change with debounce
+  /* ---------------- Input change with debounce ---------------- */
   const handleInputChange = (e) => {
     const value = e.target.value;
     setInternalSearchQuery(value);
     setSelectedIndex(-1);
-    
-    if (externalSetSearchQuery) {
-      externalSetSearchQuery(value);
-    }
-    
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-    
-    debounceTimerRef.current = setTimeout(() => {
-      searchLocations(value);
-    }, 400);
+
+    externalSetSearchQuery?.(value);
+
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => searchLocations(value), 400);
   };
 
-  // Handle keyboard navigation
+  /* ---------------- Keyboard nav in suggestion list ---------------- */
   const handleKeyDown = (e) => {
-    if (!showSuggestions || locationSuggestions.length === 0) return;
-    
-    switch (e.key) {
-      case 'ArrowDown':
+    if (!showSuggestions || locationSuggestions.length === 0) {
+      if (e.key === "Enter") {
         e.preventDefault();
-        setSelectedIndex(prev =>
+        handleSearch();
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setSelectedIndex((prev) =>
           prev < locationSuggestions.length - 1 ? prev + 1 : prev
         );
         break;
-      case 'ArrowUp':
+      case "ArrowUp":
         e.preventDefault();
-        setSelectedIndex(prev => prev > 0 ? prev - 1 : -1);
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
         break;
-      case 'Enter':
+      case "Enter":
         e.preventDefault();
         if (selectedIndex >= 0 && locationSuggestions[selectedIndex]) {
           handleLocationSelect(locationSuggestions[selectedIndex]);
+        } else {
+          handleSearch();
         }
         break;
-      case 'Escape':
+      case "Escape":
         setShowSuggestions(false);
         break;
       default:
@@ -303,138 +350,131 @@ const AgentHero = ({
     setInternalSearchQuery(location.name);
     setShowSuggestions(false);
     setSelectedIndex(-1);
-    
-    if (externalSetSearchQuery) {
-      externalSetSearchQuery(location.name);
-    }
-    if (externalOnSuggestionClick) {
-      externalOnSuggestionClick(location.name);
-    }
-    
+
+    externalSetSearchQuery?.(location.name);
+    externalOnSuggestionClick?.(location.name);
+
     setLocationSuggestions([]);
-  };
-
-  // Get icon based on location type
-  const getLocationIcon = (type) => {
-    switch (type) {
-      case 'COMMUNITY': return <HomeIcon size={14} />;
-      case 'SUBCOMMUNITY': return <MapPin size={14} />;
-      case 'TOWER': return <Building2 size={14} />;
-      case 'BUILDING': return <Building2 size={14} />;
-      case 'LANDMARK': return <Landmark size={14} />;
-      default: return <MapPin size={14} />;
-    }
-  };
-
-  // Get badge info for location type
-  const getBadgeInfo = (type) => {
-    switch (type) {
-      case 'COMMUNITY':
-        return { color: "bg-emerald-500/20 text-emerald-500", text: "Community" };
-      case 'SUBCOMMUNITY':
-        return { color: "bg-blue-500/20 text-blue-500", text: "Area" };
-      case 'TOWER':
-        return { color: "bg-amber-500/20 text-amber-500", text: "Tower" };
-      case 'BUILDING':
-        return { color: "bg-purple-500/20 text-purple-500", text: "Building" };
-      case 'LANDMARK':
-        return { color: "bg-rose-500/20 text-rose-500", text: "Landmark" };
-      default:
-        return { color: "bg-slate-500/20 text-slate-400", text: "Location" };
-    }
-  };
-
-  // MAIN SEARCH HANDLER
-  const handleSearch = () => {
-    const searchTerm = internalSearchQuery.trim();
-    
-    const queryParams = new URLSearchParams();
-    
-    if (searchTerm) {
-      queryParams.append('search', searchTerm);
-    }
-    
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value && value !== "" && value !== "all") {
-          if (Array.isArray(value) && value.length > 0) {
-            queryParams.append(key, value.join(','));
-          } else if (typeof value === 'string' && value !== "") {
-            queryParams.append(key, value);
-          }
-        }
-      });
-    }
-    
-    if (externalOnSearchButtonClick) {
-      externalOnSearchButtonClick();
-    } else if (externalOnSuggestionClick) {
-      externalOnSuggestionClick(searchTerm);
-    }
-    
-    const queryString = queryParams.toString();
-    navigate(`/properties${queryString ? `?${queryString}` : ''}`);
-    
-    setShowSuggestions(false);
   };
 
   const handleClearSearch = () => {
     setInternalSearchQuery("");
     setLocationSuggestions([]);
     setSelectedIndex(-1);
-    if (externalSetSearchQuery) {
-      externalSetSearchQuery("");
-    }
+    externalSetSearchQuery?.("");
     inputRef.current?.focus();
   };
 
-  const activeFiltersCount = () => {
-    if (!filters) return 0;
-    let count = 0;
-    if (filters.propertytype?.length) count += filters.propertytype.length;
-    if (filters.bedroom) count++;
-    if (filters.bathroom) count++;
-    if (filters.minPrice) count++;
-    if (filters.maxPrice) count++;
-    if (filters.city) count++;
-    return count;
+  /* ---------------- Icons + badges ---------------- */
+  const getLocationIcon = (type) => {
+    switch (type) {
+      case "COMMUNITY":
+        return <HomeIcon size={14} />;
+      case "SUBCOMMUNITY":
+        return <MapPin size={14} />;
+      case "TOWER":
+      case "BUILDING":
+        return <Building2 size={14} />;
+      case "LANDMARK":
+        return <Landmark size={14} />;
+      default:
+        return <MapPin size={14} />;
+    }
   };
 
-  const hasActiveFilters = activeFiltersCount() > 0;
+  const getBadgeInfo = (type) => {
+    switch (type) {
+      case "COMMUNITY":
+        return { color: "bg-emerald-500/20 text-emerald-500", text: "Community" };
+      case "SUBCOMMUNITY":
+        return { color: "bg-blue-500/20 text-blue-500", text: "Area" };
+      case "TOWER":
+        return { color: "bg-amber-500/20 text-amber-500", text: "Tower" };
+      case "BUILDING":
+        return { color: "bg-purple-500/20 text-purple-500", text: "Building" };
+      case "LANDMARK":
+        return { color: "bg-rose-500/20 text-rose-500", text: "Landmark" };
+      default:
+        return { color: "bg-slate-500/20 text-slate-400", text: "Location" };
+    }
+  };
+
+  /* ---------------- Query string builder ---------------- */
+  const buildQueryString = useCallback(
+    (term = internalSearchQuery, f = filters) => {
+      const params = new URLSearchParams();
+
+      if (term?.trim()) params.append("search", term.trim());
+
+      if (f) {
+        Object.entries(f).forEach(([key, value]) => {
+          if (!value || value === "" || value === "all") return;
+          if (Array.isArray(value)) {
+            if (value.length) params.append(key, value.join(","));
+          } else {
+            params.append(key, value);
+          }
+        });
+      }
+
+      return params.toString();
+    },
+    [internalSearchQuery, filters]
+  );
+
+  /* ---------------- Search + filter handlers ---------------- */
+  const handleSearch = useCallback(() => {
+    const qs = buildQueryString();
+
+    externalOnSearchButtonClick?.(internalSearchQuery);
+
+    if (!externalOnSearchButtonClick) {
+      navigate(`/properties${qs ? `?${qs}` : ""}`);
+    }
+
+    setShowSuggestions(false);
+  }, [
+    buildQueryString,
+    externalOnSearchButtonClick,
+    internalSearchQuery,
+    navigate,
+  ]);
 
   const handleFilterApply = () => {
-    if (onApplyFilters) {
-      onApplyFilters();
-    }
     setShowFilters(false);
-    const queryParams = new URLSearchParams();
-    if (internalSearchQuery) {
-      queryParams.append('search', internalSearchQuery);
-    }
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value && value !== "" && value !== "all") {
-          if (Array.isArray(value) && value.length > 0) {
-            queryParams.append(key, value.join(','));
-          } else if (typeof value === 'string' && value !== "") {
-            queryParams.append(key, value);
-          }
-        }
-      });
-    }
-    const queryString = queryParams.toString();
-    navigate(`/properties${queryString ? `?${queryString}` : ''}`);
+    onApplyFilters?.();
+    const qs = buildQueryString();
+    navigate(`/properties${qs ? `?${qs}` : ""}`);
   };
 
   const handleFilterClear = () => {
-    if (onClearFilters) {
-      onClearFilters();
-    }
+    onClearFilters?.();
   };
 
+  /* ---------------- Active filter badge count ---------------- */
+  const activeFiltersCount = useMemo(() => {
+    if (!filters) return 0;
+    let count = 0;
+
+    if (filters.propertytype?.length) count += filters.propertytype.length;
+    if (filters.amenities?.length) count += filters.amenities.length;
+    if (filters.keywords?.length) count += filters.keywords.length;
+
+    FILTER_SCALAR_KEYS.forEach((k) => {
+      if (filters[k]) count++;
+    });
+
+    return count;
+  }, [filters]);
+
+  const hasActiveFilters = activeFiltersCount > 0;
+
+  /* ================================================================ */
+  /*  RENDER                                                          */
+  /* ================================================================ */
   return (
     <div className="relative min-h-[75vh] md:min-h-[80vh] flex items-center justify-center overflow-visible z-[40]">
-      {/* BACKGROUND - Video with fallback */}
+      {/* ---------------- Background ---------------- */}
       <div className="absolute inset-0 z-0">
         {!videoError ? (
           <video
@@ -442,13 +482,14 @@ const AgentHero = ({
             loop
             muted
             playsInline
+            preload="metadata"
             className="w-full h-full object-cover"
             poster="https://images.pexels.com/photos/280229/pexels-photo-280229.jpeg?auto=compress&cs=tinysrgb&w=1920"
             onError={() => setVideoError(true)}
           >
-            <source 
-              src="https://media.istockphoto.com/id/1735292197/video/american-neighborhood-during-golden-hour-sunset-aerial-shot-of-duplex-houses-and-homes-drone.jpg?b=1&s=640x640&k=20&c=5klZ8BMF8DOFRhfzZdx79xPfDGAFAPss2jTgCqRBplM=" 
-              type="video/mp4" 
+            <source
+              src="https://media.istockphoto.com/id/1735292197/video/american-neighborhood-during-golden-hour-sunset-aerial-shot-of-duplex-houses-and-homes-drone.jpg?b=1&s=640x640&k=20&c=5klZ8BMF8DOFRhfzZdx79xPfDGAFAPss2jTgCqRBplM="
+              type="video/mp4"
             />
           </video>
         ) : (
@@ -456,18 +497,18 @@ const AgentHero = ({
             src="https://images.pexels.com/photos/280229/pexels-photo-280229.jpeg?auto=compress&cs=tinysrgb&w=1920"
             alt="Dubai Skyline"
             className="w-full h-full object-cover"
+            loading="eager"
           />
         )}
-        {/* Gradient Overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30" />
       </div>
 
-      {/* CONTENT */}
+      {/* ---------------- Content ---------------- */}
       <div className="relative z-10 w-full max-w-5xl mx-auto px-4">
-        {/* TITLE */}
+        {/* Title */}
         <div className="text-center mb-8 md:mb-10">
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -475,7 +516,7 @@ const AgentHero = ({
           >
             Homoget<span className="text-amber-500">.</span>
           </motion.h1>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
@@ -485,94 +526,113 @@ const AgentHero = ({
           </motion.p>
         </div>
 
-        {/* SEARCH BAR CONTAINER */}
-        <div className="w-full max-w-3xl mx-auto relative" ref={suggestionRef}>
-          {/* Main Search Bar */}
-          <motion.div 
+        {/* Search bar container */}
+        <div
+          className="w-full max-w-3xl mx-auto relative"
+          ref={suggestionRef}
+        >
+          {/* Main search bar */}
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             className="relative"
           >
             <div className="relative flex flex-wrap items-center w-full bg-white/95 dark:bg-slate-900/95 rounded-2xl shadow-xl border border-white/20 focus-within:ring-2 focus-within:ring-amber-500/30 transition-all">
-              
-              {/* Search Icon */}
-              <div className="absolute left-4 top-1/2 -translate-y-1/2">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
                 <Search className="w-4 h-4 text-slate-400" />
               </div>
-              
-              {/* Search Input */}
+
               <input
                 ref={inputRef}
                 type="text"
                 value={internalSearchQuery}
                 onFocus={() => {
-                  if (locationSuggestions.length > 0 && internalSearchQuery.length >= 2) {
+                  if (
+                    locationSuggestions.length > 0 &&
+                    internalSearchQuery.length >= 2 &&
+                    !aiMode
+                  ) {
                     setShowSuggestions(true);
                   }
                 }}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder="Search by community, tower, or area..."
+                aria-label="Search properties"
+                autoComplete="off"
                 className="flex-1 min-w-[150px] bg-transparent pl-11 pr-2 py-3.5 text-slate-800 dark:text-white outline-none text-sm md:text-base placeholder:text-slate-600 placeholder:text-xs md:placeholder:text-sm"
               />
 
-              {/* Action Buttons */}
               <div className="flex items-center gap-1 px-2">
-                {/* AI Mode Toggle */}
+                {/* AI toggle */}
                 <button
-                  onClick={() => setAiMode(!aiMode)}
+                  type="button"
+                  onClick={() => {
+                    setAiMode((v) => !v);
+                    setShowSuggestions(false);
+                  }}
+                  aria-pressed={aiMode}
                   className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all ${
-                    aiMode 
-                      ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md" 
+                    aiMode
+                      ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md"
                       : "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
                   }`}
                 >
                   <Brain className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-medium hidden sm:inline">AI</span>
+                  <span className="text-[10px] font-medium hidden sm:inline">
+                    AI
+                  </span>
                 </button>
 
-                {/* Filter Button */}
+                {/* Filter button */}
                 <button
+                  type="button"
                   onClick={() => setShowFilters(true)}
+                  aria-label="Open filters"
                   className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all ${
                     hasActiveFilters
-                      ? "bg-amber-500 text-white" 
+                      ? "bg-amber-500 text-white"
                       : "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
                   }`}
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-medium hidden sm:inline">Filter</span>
+                  <span className="text-[10px] font-medium hidden sm:inline">
+                    Filter
+                  </span>
                   {hasActiveFilters && (
                     <span className="w-4 h-4 rounded-full bg-amber-600 text-white text-[8px] flex items-center justify-center">
-                      {activeFiltersCount()}
+                      {activeFiltersCount}
                     </span>
                   )}
                 </button>
 
-                {/* Clear Button */}
+                {/* Clear */}
                 {internalSearchQuery && (
                   <button
+                    type="button"
                     onClick={handleClearSearch}
+                    aria-label="Clear search"
                     className="p-1.5 rounded-full hover:bg-slate-100 transition-colors"
                   >
                     <X className="w-3.5 h-3.5 text-slate-400 hover:text-amber-500 transition-colors" />
                   </button>
                 )}
 
-                {/* Search Button */}
+                {/* Search button */}
                 <button
+                  type="button"
                   onClick={handleSearch}
                   className="ml-1 px-4 md:px-5 py-1.5 rounded-full bg-amber-500 text-black font-semibold text-[10px] md:text-[11px] tracking-wide hover:bg-black hover:text-white transition-all shadow-sm whitespace-nowrap"
                 >
-                  <span className="hidden xs:inline">Search</span>
-                  <Search className="inline xs:hidden w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Search</span>
+                  <Search className="inline sm:hidden w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
           </motion.div>
 
-          {/* AI SUGGESTIONS */}
+          {/* AI suggestions */}
           <AnimatePresence>
             {aiMode && internalSearchQuery.length >= 2 && (
               <motion.div
@@ -583,45 +643,63 @@ const AgentHero = ({
               >
                 <div className="flex items-center gap-2 mb-2">
                   <Brain className="w-3.5 h-3.5 text-purple-400" />
-                  <span className="text-[9px] text-purple-300 font-medium">AI Smart Recommendations</span>
+                  <span className="text-[9px] text-purple-300 font-medium">
+                    AI Smart Recommendations
+                  </span>
                 </div>
-                
+
                 {isAiLoading ? (
                   <div className="flex items-center justify-center py-4 bg-white/5 rounded-xl">
                     <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
-                    <span className="text-[9px] text-purple-300 ml-2">Analyzing...</span>
+                    <span className="text-[9px] text-purple-300 ml-2">
+                      Analyzing...
+                    </span>
                   </div>
                 ) : aiSuggestions.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {aiSuggestions.map((rec, idx) => (
-                      <div
-                        key={idx}
-                        className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl p-3 border border-purple-500/30 hover:border-purple-500/50 transition-all cursor-pointer"
+                    {aiSuggestions.map((rec) => (
+                      <button
+                        key={`${rec.type}-${rec.matchScore}`}
+                        type="button"
                         onClick={() => {
                           setInternalSearchQuery(rec.type);
-                          handleSearch();
+                          setAiMode(false);
+                          externalSetSearchQuery?.(rec.type);
+                          navigate(
+                            `/properties?search=${encodeURIComponent(rec.type)}`
+                          );
                         }}
+                        className="text-left bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl p-3 border border-purple-500/30 hover:border-purple-500/50 transition-all"
                       >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className="text-xs font-bold text-white">{rec.type}</h4>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <h4 className="text-xs font-bold text-white truncate">
+                              {rec.type}
+                            </h4>
                             {rec.locations && (
-                              <p className="text-[8px] text-purple-300 mt-1">
-                                📍 {Array.isArray(rec.locations) ? rec.locations.slice(0, 2).join(", ") : rec.locations}
+                              <p className="text-[8px] text-purple-300 mt-1 truncate">
+                                📍{" "}
+                                {Array.isArray(rec.locations)
+                                  ? rec.locations.slice(0, 2).join(", ")
+                                  : rec.locations}
                               </p>
                             )}
                             {rec.priceRange && (
-                              <p className="text-[7px] text-purple-400/70">💰 {rec.priceRange}</p>
+                              <p className="text-[7px] text-purple-400/70 truncate">
+                                💰 {rec.priceRange}
+                              </p>
                             )}
                           </div>
                           {rec.matchScore && (
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1 shrink-0">
                               <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-                              <span className="text-[8px] font-bold text-amber-400">{rec.matchScore}%</span>
+                              <span className="text-[8px] font-bold text-amber-400">
+                                {rec.matchScore}%
+                              </span>
                             </div>
                           )}
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 ) : null}
@@ -629,7 +707,7 @@ const AgentHero = ({
             )}
           </AnimatePresence>
 
-          {/* LOCATION SUGGESTIONS DROPDOWN */}
+          {/* Location suggestions */}
           <AnimatePresence>
             {showSuggestions && !aiMode && (
               <motion.div
@@ -639,7 +717,9 @@ const AgentHero = ({
                 className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-xl shadow-xl border overflow-hidden z-[999]"
               >
                 <div className="px-4 py-2 border-b bg-slate-50 dark:bg-slate-800/50">
-                  <p className="text-[8px] font-bold uppercase text-amber-500">Popular Locations in Dubai</p>
+                  <p className="text-[8px] font-bold uppercase text-amber-500">
+                    Popular Locations in Dubai
+                  </p>
                 </div>
 
                 {isLoading ? (
@@ -653,24 +733,27 @@ const AgentHero = ({
                       return (
                         <button
                           key={location.id || index}
+                          type="button"
                           onClick={() => handleLocationSelect(location)}
                           className={`w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors border-b last:border-0 group ${
-                            selectedIndex === index ? 'bg-amber-500/10' : ''
+                            selectedIndex === index ? "bg-amber-500/10" : ""
                           }`}
                         >
                           <div className="flex items-start gap-3">
                             <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center group-hover:text-amber-500">
                               {getLocationIcon(location.type)}
                             </div>
-                            <div className="flex-1">
-                              <p className="font-medium text-sm group-hover:text-amber-500">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm group-hover:text-amber-500 truncate">
                                 {location.name}
                               </p>
-                              <p className="text-[10px] text-slate-500 mt-0.5">
+                              <p className="text-[10px] text-slate-500 mt-0.5 truncate">
                                 {location.path_name || location.title}
                               </p>
                               <div className="flex items-center gap-2 mt-1">
-                                <span className={`text-[7px] px-1.5 py-0.5 rounded-full ${badge.color}`}>
+                                <span
+                                  className={`text-[7px] px-1.5 py-0.5 rounded-full ${badge.color}`}
+                                >
                                   {badge.text}
                                 </span>
                                 {location.type && (
@@ -692,21 +775,16 @@ const AgentHero = ({
           </AnimatePresence>
         </div>
 
-        {/* FILTER SIDEBAR COMPONENT */}
-        <div ref={sidebarRef}>
-          <FilterSidebar
-            isOpen={showFilters}
-            onClose={() => setShowFilters(false)}
-            filters={filters}
-            onFilterChange={handleFilterChange}
-            onApplyFilters={handleFilterApply}
-            onClearFilters={handleFilterClear}
-            propertyCount={totalResults || propertyList.length}
-            filterFields={filterFields}
-            getUniqueValues={getUniqueValues}
-            propertyList={propertyList}
-          />
-        </div>
+        {/* Filter sidebar */}
+        <FilterSidebar
+          isOpen={showFilters}
+          onClose={() => setShowFilters(false)}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onApplyFilters={handleFilterApply}
+          onClearFilters={handleFilterClear}
+          propertyCount={totalResults || propertyList.length}
+        />
       </div>
     </div>
   );
