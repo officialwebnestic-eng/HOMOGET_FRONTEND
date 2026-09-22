@@ -373,7 +373,7 @@ const PropertyListing = () => {
     
     
     <SEO
-  title="Properties for Sale & Off-Plan in UAE | Apartments, Villas & More - HOMOGET"
+  title="Properties for Sale in Dubai | Villas, Apartments & Penthouses | HOMOGET"
   description="Explore all properties for sale and upcoming off-plan projects in the UAE. Browse apartments, luxury villas, townhouses, and penthouses across Dubai and Abu Dhabi."
   keywords={[
     "off plan properties UAE",

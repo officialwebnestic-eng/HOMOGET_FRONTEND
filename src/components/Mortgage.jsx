@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   Landmark, ArrowUpRight, ShieldCheck, Award,
-  Phone, Mail, User, CheckCircle2, TrendingUp,
+  Phone, Mail, User, CheckCircle2, TrendingUp, Wallet, Calendar,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import SEO from "./Seo/SEO";
@@ -45,10 +45,6 @@ const MAX_PRICE = 50_000_000;
 /* ------------------------------------------------------------------ */
 const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
 
-/**
- * Standard amortization monthly payment
- * M = P · r(1+r)^n / ((1+r)^n − 1)
- */
 const calcMonthlyPayment = (principal, annualRatePercent, years) => {
   const P = Number(principal);
   const r = Number(annualRatePercent) / 100 / 12;
@@ -60,14 +56,94 @@ const calcMonthlyPayment = (principal, annualRatePercent, years) => {
   return (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
 };
 
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
+/*  NumericInputWithUnit — full-width field with prefix/suffix        */
+/* ================================================================== */
+const NumericInputWithUnit = ({
+  value,
+  onCommit,
+  min,
+  max,
+  step = 1,
+  prefix,          // e.g. "AED"
+  suffix,          // e.g. "%"
+  isDark,
+  className = "",
+}) => {
+  const [draft, setDraft] = useState(String(value ?? ""));
+  const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    if (!isFocused) setDraft(String(value ?? ""));
+  }, [value, isFocused]);
+
+  const commit = () => {
+    const parsed = Number(String(draft).replace(/,/g, "")) || 0;
+    const clamped = clamp(parsed, min, max);
+    onCommit(clamped);
+    setDraft(String(clamped));
+  };
+
+  return (
+    <div
+      className={`flex items-center w-full h-12 rounded-xl border transition-all
+        ${isDark
+          ? "bg-neutral-800 border-white/10 focus-within:border-amber-500/60 focus-within:ring-2 focus-within:ring-amber-500/20"
+          : "bg-slate-50 border-slate-200 focus-within:border-amber-500/60 focus-within:ring-2 focus-within:ring-amber-500/20"
+        } ${className}`}
+    >
+      {prefix && (
+        <span
+          className={`h-full px-3 flex items-center text-[11px] font-black uppercase tracking-widest rounded-l-xl
+            ${isDark ? "bg-neutral-900/60 text-amber-500" : "bg-white text-amber-600"}`}
+        >
+          {prefix}
+        </span>
+      )}
+
+      <input
+        type="number"
+        inputMode="numeric"
+        step={step}
+        value={draft}
+        onFocus={() => setIsFocused(true)}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => {
+          setIsFocused(false);
+          commit();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit();
+            e.currentTarget.blur();
+          }
+        }}
+        className={`flex-1 h-full px-3 bg-transparent font-bold text-base outline-none
+          ${isDark ? "text-white" : "text-slate-900"}`}
+      />
+
+      {suffix && (
+        <span
+          className={`h-full px-3 flex items-center text-sm font-black rounded-r-xl
+            ${isDark ? "bg-neutral-900/60 text-amber-500" : "bg-white text-amber-600"}`}
+        >
+          {suffix}
+        </span>
+      )}
+    </div>
+  );
+};
+
+/* ================================================================== */
 /*  COMPONENT                                                          */
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
 const Mortgage = () => {
   /* -------------------- State -------------------- */
   const [residency, setResidency] = useState("UAE resident");
   const [price, setPrice] = useState(1_200_000);
-  const [downPayment, setDownPayment] = useState(240_000); // 20%
+  const [downPayment, setDownPayment] = useState(240_000);
+  const [loanAmount, setLoanAmount] = useState(960_000);
   const [rate, setRate] = useState(3.75);
   const [years, setYears] = useState(25);
 
@@ -77,55 +153,66 @@ const Mortgage = () => {
 
   const rules = RESIDENCY_RULES[residency];
 
+  /* ---------------- Theme (uses Tailwind dark class) ---------------- */
+  // If you have a ThemeContext, replace this with useTheme(). Here we rely on Tailwind's dark: variant.
+  const isDark =
+    typeof document !== "undefined" &&
+    document.documentElement.classList.contains("dark");
+
   /* ================================================================ */
-  /*  KEY FIX: on residency change, recalc down payment from CURRENT   */
-  /*           PERCENT, not from the old amount. Price stays the same. */
+  /*  EFFECT: residency change → enforce min down payment              */
   /* ================================================================ */
   useEffect(() => {
     setDownPayment((prev) => {
       const minDown = Math.round((price * rules.minDownPercent) / 100);
       const currentPercent = price > 0 ? (prev / price) * 100 : rules.minDownPercent;
 
-      // Bump up to new minimum if the user was under it
       if (currentPercent < rules.minDownPercent) return minDown;
-
-      // Otherwise keep the same percentage against the same price
       return Math.round((currentPercent / 100) * price);
     });
 
     setRate((prev) => clamp(prev, rules.minRate, rules.maxRate));
-  }, [residency, price, rules.minDownPercent, rules.minRate, rules.maxRate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [residency, rules.minDownPercent, rules.minRate, rules.maxRate]);
+
+  /* ================================================================ */
+  /*  EFFECT: keep loanAmount in sync with price − downPayment         */
+  /* ================================================================ */
+  useEffect(() => {
+    const impliedLoan = Math.max(price - downPayment, 0);
+    setLoanAmount(impliedLoan);
+  }, [price, downPayment]);
 
   /* -------------------- Derived values -------------------- */
   const {
     monthlyPayment,
-    loanAmount,
     totalInterest,
     totalPayable,
     downPaymentPercent,
+    ltvPercent,
   } = useMemo(() => {
-    const dp = Number(downPayment) || 0;
     const p = Number(price) || 0;
-    const loan = Math.max(p - dp, 0);
+    const dp = Number(downPayment) || 0;
+    const loan = Number(loanAmount) || 0;
+
     const monthly = calcMonthlyPayment(loan, rate, years);
     const total = monthly * years * 12;
 
     return {
       monthlyPayment: monthly > 0 ? Math.round(monthly) : 0,
-      loanAmount: loan,
       totalInterest: Math.max(total - loan, 0),
       totalPayable: Math.round(total),
       downPaymentPercent: p > 0 ? ((dp / p) * 100).toFixed(0) : "0",
+      ltvPercent: p > 0 ? ((loan / p) * 100).toFixed(0) : "0",
     };
-  }, [price, downPayment, rate, years]);
+  }, [price, downPayment, loanAmount, rate, years]);
 
   /* -------------------- Handlers -------------------- */
-  const handlePriceChange = useCallback(
-    (val) => {
-      const clamped = clamp(Number(val) || 0, MIN_PRICE, MAX_PRICE);
+  const handlePriceCommit = useCallback(
+    (newPrice) => {
+      const clamped = clamp(newPrice, MIN_PRICE, MAX_PRICE);
       setPrice(clamped);
 
-      // Preserve down payment % relative to new price, keep >= min
       setDownPayment((prev) => {
         const currentPercent =
           price > 0 ? (prev / price) * 100 : rules.minDownPercent;
@@ -136,11 +223,25 @@ const Mortgage = () => {
     [price, rules.minDownPercent]
   );
 
-  const handleDownPaymentChange = (val) => {
-    const minDown = (price * rules.minDownPercent) / 100;
-    const maxDown = price * 0.9;
-    setDownPayment(clamp(Number(val) || 0, minDown, maxDown));
+  const handleDownPaymentCommit = (newDp) => {
+    const minDown = Math.round((price * rules.minDownPercent) / 100);
+    const maxDown = Math.round(price * 0.9);
+    const clamped = clamp(newDp, minDown, maxDown);
+    setDownPayment(clamped);
   };
+
+  const handleLoanAmountCommit = (newLoan) => {
+    const maxLoan = Math.round(price * (1 - rules.minDownPercent / 100));
+    const clamped = clamp(newLoan, 0, maxLoan);
+    setLoanAmount(clamped);
+    setDownPayment(Math.max(price - clamped, 0));
+  };
+
+  const handleRateCommit = (newRate) =>
+    setRate(clamp(newRate, rules.minRate, rules.maxRate));
+
+  const handleYearsCommit = (newYears) =>
+    setYears(clamp(newYears, 1, rules.maxTenure));
 
   const handleFormChange = (field) => (e) =>
     setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -148,15 +249,9 @@ const Mortgage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.phone) return;
-    // TODO: POST to your CRM
     console.log("Lead:", {
       ...form,
-      residency,
-      price,
-      downPayment,
-      rate,
-      years,
-      monthlyPayment,
+      residency, price, downPayment, loanAmount, rate, years, monthlyPayment,
     });
     setSubmitted(true);
   };
@@ -316,25 +411,31 @@ const Mortgage = () => {
             <div className="lg:col-span-2 space-y-5">
               {/* Purchase Price */}
               <div className="bg-white dark:bg-neutral-900 p-5 md:p-6 rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm">
-                <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+                <div className="flex justify-between items-center mb-3">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
-                    <Landmark size={13} className="text-amber-500" /> Purchase Price (AED)
+                    <Landmark size={13} className="text-amber-500" /> Purchase Price
                   </label>
-                  <input
-                    type="number"
-                    value={price}
-                    onChange={(e) => handlePriceChange(e.target.value)}
-                    className="w-36 text-right text-base font-black bg-transparent border-b-2 border-amber-500/40 focus:border-amber-500 outline-none dark:text-white"
-                  />
+                  <span className="text-[11px] font-black text-amber-500">
+                    AED {Number(price).toLocaleString()}
+                  </span>
                 </div>
+                <NumericInputWithUnit
+                  value={price}
+                  onCommit={handlePriceCommit}
+                  min={MIN_PRICE}
+                  max={MAX_PRICE}
+                  step={50_000}
+                  prefix="AED"
+                  isDark={isDark}
+                />
                 <input
                   type="range"
                   min={MIN_PRICE}
                   max={MAX_PRICE}
                   step={50_000}
                   value={price}
-                  onChange={(e) => handlePriceChange(e.target.value)}
-                  className="w-full h-1.5 bg-slate-100 dark:bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                  className="w-full mt-4 h-1.5 bg-slate-100 dark:bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
                 />
                 <div className="flex justify-between text-[9px] text-slate-400 font-bold mt-2 uppercase tracking-widest">
                   <span>AED {MIN_PRICE.toLocaleString()}</span>
@@ -353,11 +454,14 @@ const Mortgage = () => {
                       {downPaymentPercent}% · min {rules.minDownPercent}%
                     </span>
                   </div>
-                  <input
-                    type="number"
+                  <NumericInputWithUnit
                     value={downPayment}
-                    onChange={(e) => handleDownPaymentChange(e.target.value)}
-                    className="w-full p-3 bg-slate-50 dark:bg-neutral-800 rounded-xl border border-slate-200 dark:border-white/5 font-bold text-base dark:text-white mb-3 outline-none focus:ring-2 ring-amber-500/40"
+                    onCommit={handleDownPaymentCommit}
+                    min={Math.round((price * rules.minDownPercent) / 100)}
+                    max={Math.round(price * 0.9)}
+                    step={10_000}
+                    prefix="AED"
+                    isDark={isDark}
                   />
                   <input
                     type="range"
@@ -365,48 +469,83 @@ const Mortgage = () => {
                     max={price * 0.9}
                     step={10_000}
                     value={downPayment}
-                    onChange={(e) => handleDownPaymentChange(e.target.value)}
-                    className="w-full h-1 bg-slate-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                    onChange={(e) => setDownPayment(Number(e.target.value))}
+                    className="w-full mt-4 h-1 bg-slate-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
                   />
+                  <div className="flex justify-between text-[9px] text-slate-400 font-bold mt-2 uppercase tracking-widest">
+                    <span>{rules.minDownPercent}% min</span>
+                    <span>90% max</span>
+                  </div>
                 </div>
 
                 {/* Interest Rate */}
                 <div className="bg-white dark:bg-neutral-900 p-5 md:p-6 rounded-3xl border border-slate-200 dark:border-white/10">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-3">
-                    Interest Rate (%)
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      step="0.01"
-                      min={rules.minRate}
-                      max={rules.maxRate}
-                      value={rate}
-                      onChange={(e) =>
-                        setRate(clamp(Number(e.target.value) || 0, rules.minRate, rules.maxRate))
-                      }
-                      className="w-full p-3 bg-slate-50 dark:bg-neutral-800 rounded-xl border border-slate-200 dark:border-white/5 font-bold text-base dark:text-white outline-none focus:ring-2 ring-amber-500/40"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 font-black text-slate-400">
-                      %
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                      Interest Rate
+                    </label>
+                    <span className="text-[11px] font-black text-amber-500">
+                      {rate}%
                     </span>
                   </div>
-                  <p className="text-[9px] text-slate-400 font-bold mt-2 uppercase tracking-widest">
+                  <NumericInputWithUnit
+                    value={rate}
+                    onCommit={handleRateCommit}
+                    min={rules.minRate}
+                    max={rules.maxRate}
+                    step={0.01}
+                    suffix="%"
+                    isDark={isDark}
+                  />
+                  <p className="text-[9px] text-slate-400 font-bold mt-3 uppercase tracking-widest">
                     Range: {rules.minRate}% – {rules.maxRate}%
                   </p>
                 </div>
               </div>
 
+              {/* Loan Amount */}
+              <div className="bg-white dark:bg-neutral-900 p-5 md:p-6 rounded-3xl border border-slate-200 dark:border-white/10">
+                <div className="flex justify-between items-center mb-3">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                    <Wallet size={13} className="text-amber-500" /> Loan Amount
+                  </label>
+                  <span className="text-[11px] font-black text-amber-500">
+                    LTV: {ltvPercent}%
+                  </span>
+                </div>
+                <NumericInputWithUnit
+                  value={loanAmount}
+                  onCommit={handleLoanAmountCommit}
+                  min={0}
+                  max={Math.round(price * (1 - rules.minDownPercent / 100))}
+                  step={10_000}
+                  prefix="AED"
+                  isDark={isDark}
+                />
+                <p className="text-[9px] text-slate-400 font-bold mt-3 uppercase tracking-widest">
+                  Max LTV for {residency}: {100 - rules.minDownPercent}%
+                </p>
+              </div>
+
               {/* Loan Period */}
               <div className="bg-white dark:bg-neutral-900 p-5 md:p-6 rounded-3xl border border-slate-200 dark:border-white/10">
                 <div className="flex justify-between items-center mb-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                    Loan Period (Years)
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                    <Calendar size={13} className="text-amber-500" /> Loan Period
                   </label>
-                  <span className="text-base font-black text-amber-500">
-                    {years} yrs
+                  <span className="text-[11px] font-black text-amber-500">
+                    {years} years
                   </span>
                 </div>
+                <NumericInputWithUnit
+                  value={years}
+                  onCommit={handleYearsCommit}
+                  min={1}
+                  max={rules.maxTenure}
+                  step={1}
+                  suffix="yrs"
+                  isDark={isDark}
+                />
                 <input
                   type="range"
                   min={1}
@@ -414,7 +553,7 @@ const Mortgage = () => {
                   step={1}
                   value={years}
                   onChange={(e) => setYears(Number(e.target.value))}
-                  className="w-full h-1.5 bg-slate-100 dark:bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                  className="w-full mt-4 h-1.5 bg-slate-100 dark:bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
                 />
                 <div className="flex justify-between text-[9px] text-slate-400 font-bold mt-2 uppercase tracking-widest">
                   <span>1 yr</span>
@@ -446,7 +585,7 @@ const Mortgage = () => {
                   </div>
                   <div className="flex justify-between items-center text-[10px] font-black uppercase">
                     <span className="opacity-60">Loan Amount</span>
-                    <span>AED {loanAmount.toLocaleString()}</span>
+                    <span>AED {Number(loanAmount).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between items-center text-[10px] font-black uppercase">
                     <span className="opacity-60">Total Interest</span>
@@ -482,7 +621,6 @@ const Mortgage = () => {
                       Check Your Eligibility
                     </h3>
 
-                    {/* Name */}
                     <div className="relative">
                       <User
                         size={15}
@@ -498,7 +636,6 @@ const Mortgage = () => {
                       />
                     </div>
 
-                    {/* Email */}
                     <div className="relative">
                       <Mail
                         size={15}
@@ -514,7 +651,6 @@ const Mortgage = () => {
                       />
                     </div>
 
-                    {/* Phone */}
                     <div className="flex gap-2">
                       <div className="flex items-center gap-1.5 px-3 py-3 bg-slate-50 dark:bg-neutral-800 rounded-xl border border-slate-200 dark:border-white/5 font-black text-xs dark:text-white">
                         🇦🇪 +971
