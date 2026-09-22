@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const setUserDetails = useCallback((userData) => {
-    console.log("🔄 Setting user details:", userData);
+
     
     const profilePhoto = userData?.profilePhoto || userData?.image || "";
     const image = userData?.image || userData?.profilePhoto || "";
@@ -47,8 +47,7 @@ export const AuthProvider = ({ children }) => {
       updatedAt: userData.updatedAt,
     };
     
-    console.log("✅ User object set:", userObj);
-    console.log("🖼️ Profile photo in userObj:", userObj.profilePhoto);
+ 
     
     setUser(userObj);
     setIsAuthenticated(true);
@@ -63,7 +62,6 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(false);
         localStorage.removeItem("user");
         addToast("Logged out successfully", "success");
-        window.location.href = "/login";
       }
     } catch (err) {
       console.error("Logout error:", err);
@@ -82,7 +80,6 @@ export const AuthProvider = ({ children }) => {
           try {
             const parsedUser = JSON.parse(storedUser);
             if (parsedUser && parsedUser.id) {
-              console.log("📦 Loaded user from localStorage:", parsedUser);
               setUser(parsedUser);
               setIsAuthenticated(true);
               // Don't set loading to false yet - we'll verify with backend
@@ -98,7 +95,7 @@ export const AuthProvider = ({ children }) => {
           withCredentials: true 
         }).catch(err => {
           if (err.response?.status === 401) {
-            console.log("⚠️ Cookie expired or invalid");
+        
             document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
           }
           return null;
