@@ -16,6 +16,7 @@ import useGetAllProperty from "../../hooks/useGetAllProperty";
 import FilterSidebar from './FilterSidebar';
 import SortBar from './homecommon/SortBar ';
 import CurrencyDisplay from './homecommon/CurrencyDisplay';
+import SEO from '../Seo/SEO';
 
 // Helper functions for property type detection
 const isOffPlan = (property) => {
@@ -362,7 +363,38 @@ const PropertyListing = () => {
   };
 
   return (
+
+
+
+
+
+    <>
+    
+    
+    
+    <SEO
+  title="Properties for Sale & Off-Plan in UAE | Apartments, Villas & More - HOMOGET"
+  description="Explore all properties for sale and upcoming off-plan projects in the UAE. Browse apartments, luxury villas, townhouses, and penthouses across Dubai and Abu Dhabi."
+  keywords={[
+    "off plan properties UAE",
+    "properties for sale in UAE",
+    "buy off plan Dubai",
+    "villas and apartments for sale UAE",
+    "Dubai real estate listings",
+    "UAE investment properties",
+  ]}
+  url="/properties"
+  ogTitle="Properties for Sale & Off-Plan Projects in UAE - HOMOGET"
+  ogDescription="Find your next home or investment. Browse all ready and off-plan apartments, villas, and townhouses for sale across the UAE."
+/>
+
+   
+
     <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0c]' : 'bg-slate-50'}`}>
+
+
+
+
       
 
 
@@ -913,6 +945,7 @@ const PropertyListing = () => {
         />
       </div>
     </div>
+     </>
   );
 };
 

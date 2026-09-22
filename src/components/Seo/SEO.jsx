@@ -39,10 +39,8 @@ function SEO({
       <title>{fullTitle}</title>
       <meta name="description" content={safeDescription} />
       <meta name="keywords" content={keywordsString} />
-      
       {/* Robots */}
       <meta name="robots" content="index, follow, max-image-preview:large" />
-
       {/* Open Graph */}
       <meta property="og:title" content={ogTitle || fullTitle} />
       <meta property="og:description" content={ogDescription || safeDescription} />
