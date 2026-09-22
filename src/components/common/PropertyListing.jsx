@@ -388,15 +388,9 @@ const PropertyListing = () => {
   ogDescription="Find your next home or investment. Browse all ready and off-plan apartments, villas, and townhouses for sale across the UAE."
 />
 
-   
+
 
     <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0c]' : 'bg-slate-50'}`}>
-
-
-
-
-      
-
 
 <section className="relative w-full h-[60vh] md:h-[65vh] flex items-center overflow-visible">
   <div className="absolute inset-0 z-0">

@@ -40,7 +40,8 @@ import {
   Camera,
   HeartIcon,
   AlertTriangle,
-  QrCode
+  QrCode,
+  Wallet
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { useTheme } from "../../../context/ThemeContext";
@@ -76,6 +77,84 @@ const isCommercial = (property) => {
 const isRent = (property) => {
   return property?.offeringType === "Rent";
 };
+
+
+
+
+
+/* ================================================================== */
+/*  OFF-PLAN MINI INFO — only shows Category + Property Type           */
+/* ================================================================== */
+const OffPlanMiniInfo = ({ property, isDark }) => {
+  // Only show fields that actually have data
+  const items = [
+    {
+      label: "Off-Plan Category",
+      value: property.offPlanCategory,
+      icon: <Building size={14} className="text-purple-500" />,
+    },
+    {
+      label: "Property Type",
+      value: property.propertytype,
+      icon: <Home size={14} className="text-amber-500" />,
+    },
+    {
+      label: "Handover Date",
+      value: property.deliveryDate
+        ? new Date(property.deliveryDate).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+        : null,
+      icon: <Calendar size={14} className="text-blue-500" />,
+    },
+    {
+      label: "Completion",
+      value:
+        property.completionPercentage != null
+          ? `${property.completionPercentage}%`
+          : null,
+      icon: <Sparkles size={14} className="text-pink-500" />,
+    },
+    {
+      label: "Payment Plan",
+      value: property.paymentPlan,
+      icon: <Wallet size={14} className="text-emerald-500" />,
+    },
+  ].filter((i) => i.value); // ← Only keep items with actual data
+
+  if (items.length === 0) return null;
+
+  return (
+    <div
+      className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 p-4 rounded-2xl border ${
+        isDark
+          ? "bg-purple-500/[0.03] border-purple-500/20"
+          : "bg-purple-50/40 border-purple-200"
+      }`}
+    >
+      {items.map((item) => (
+        <div key={item.label} className="flex items-start gap-2.5">
+          <div
+            className={`p-2 rounded-lg flex-shrink-0 ${
+              isDark ? "bg-white/5" : "bg-white"
+            }`}
+          >
+            {item.icon}
+          </div>
+          <div className="min-w-0">
+            <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
+              {item.label}
+            </p>
+            <p className="text-xs font-bold truncate">{item.value}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 
 const PropertyDetailsPage = () => {
   const { id } = useParams();
@@ -741,12 +820,21 @@ const PropertyDetailsPage = () => {
 })()}
           {/* Nearby Locations */}
           <NearbyLocations property={property} isDark={isDark} />
+
+
+
+           {isOffPlanProperty && (
+            <OffPlanMiniInfo property={property} isDark={isDark} />
+          )}
+
           
           {/* Technical Specs */}
           <section>
             <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-600 mb-6 md:mb-8 flex items-center gap-2">
               <ShieldCheck size={12} /> Technical Specifications
             </h3>
+               {/* ============ OFF-PLAN MINI INFO (only if off-plan) ============ */}
+         
 
             {isOffPlanProperty ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -788,6 +876,8 @@ const PropertyDetailsPage = () => {
               </div>
             )}
           </section>
+
+          
           
 
           {/* Off-Plan Progress Bar */}
