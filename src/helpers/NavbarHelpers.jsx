@@ -1,5 +1,5 @@
   export const sidebarLinks = [
-  { name: "MORTGAGE", href: "/mortgage-assistance", badge: "NEW" },
+  { name: "MORTGAGE", href: "/mortgage-calculator" },
   
   { name: "PROPERTY LISTING", href: "/properties" },
   { name: "FIND AGENT", href: "/real-estate-agents" },

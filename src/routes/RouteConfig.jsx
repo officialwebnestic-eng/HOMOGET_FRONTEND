@@ -313,7 +313,7 @@ export const PublicRoutes = () => {
 
             <Route path="/commercial" element={<Commercial />} />
           
-            <Route path="/mortgage-assistance" element={<Mortgage />} />
+            <Route path="/mortgage-calculator" element={<Mortgage />} />
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/measurement" element={<Measurement />} />
             <Route path="/calculator" element={<RentVsBuy />} />
