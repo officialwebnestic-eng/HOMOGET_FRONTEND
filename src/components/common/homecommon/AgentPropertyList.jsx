@@ -466,8 +466,8 @@ const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || "http://localhost:3000/";
       <ArrowUpRight size={20} />
     </button>
   </div>
-       <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/5 dark:bg-white/10">
-                      <MapPin size={10} className="text-amber-500" />
+       <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full ">
+                      <MapPin size={50} className="text-amber-500" />
                       <span className="text-[9px] font-bold uppercase tracking-wide text-black dark:text-white">
                         {locationQuery}
                       </span>

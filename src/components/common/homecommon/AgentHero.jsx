@@ -730,7 +730,7 @@ const AgentHero = ({
                   <div className="max-h-[320px] overflow-y-auto">
                     {locationSuggestions.map((location, index) => {
                       const badge = getBadgeInfo(location.type);
-                      return (
+                      return (  
                         <button
                           key={location.id || index}
                           type="button"

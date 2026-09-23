@@ -315,7 +315,7 @@ return (
                 {/* Image Section */}
                 <div className="relative h-40 sm:h-44 md:h-48 overflow-hidden">
                   <img 
-                    src={project.image?.[0] || "https://images.pexels.com/photos/2587054/pexels-photo-2587054.jpeg"} 
+                    src={project.image?.[0] ||""} 
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                     alt={project.propertyname} 
                   />

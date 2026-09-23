@@ -41,7 +41,7 @@ const HomePage = () => {
         twitterDescription="Browse premium villas, apartments, and investment properties in Dubai through HOMOGET."
       />
 
-      <AgentHero />
+  
       <Agentfilter />
       <AgentPropertyList />
       <OffPlan />

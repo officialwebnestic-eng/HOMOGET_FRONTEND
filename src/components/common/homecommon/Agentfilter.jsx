@@ -455,7 +455,7 @@ const Agentfilter = () => {
                       </div>
                       <div className="flex items-center gap-2 text-sm text-slate-500 mb-2">
                         <MapPin size={14} />
-                        <span>{location}, UAE</span>
+                        <span>{location}</span>
                       </div>
                       <div className="flex items-center gap-4 mb-3">
                         <div className="flex items-center gap-1"><BedDouble size={14} /> {property.bedroom || 0}</div>
@@ -489,7 +489,7 @@ const Agentfilter = () => {
                   {/* Image Container */}
                   <div className="relative h-72 w-full overflow-hidden">
                     <img
-                      src={property.image?.[0] || "https://images.pexels.com/photos/2587054/pexels-photo-2587054.jpeg"}
+                      src={property.image?.[0] || ""}
                       alt={propertyTitle}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
@@ -578,14 +578,13 @@ const Agentfilter = () => {
          
          <div className="inline-flex py-4 items-center gap-1.5">
   {/* Animated location pin */}
-  <MapPin size={12} className="text-amber-500 dark:text-amber-400 drop-shadow-sm" />
+  <MapPin size={50} className="text-amber-500 dark:text-amber-400 drop-shadow-sm" />
   
-  <span className="text-[10px] font-black uppercase tracking-wider text-black dark:text-white">
+  <span className="text-[10px] font-black  uppercase tracking-wider text-black dark:text-white">
     {locationQuery}
   </span>
   
   {/* Small decorative slash */}
-  <span className="text-amber-500 dark:text-amber-400 font-black text-[10px]">/</span>
 </div>
                     {/* Agent Info Bar */}
                     <div className="flex items-center gap-3 py-3 mt-2 border-t border-gray-100 dark:border-white/5">

@@ -7,10 +7,8 @@ import {
   ProfileRoutes,
   PropertyRoutes,
   BlogRoute,
- 
+
   BookingRoute,
-
-
   InqueryRoutes,
   CustomersReviews,
   PublicRoutes,
@@ -37,23 +35,23 @@ const AllRoutes = () => {
         <>
           {/* ADMIN ROUTES - Hardcoded role */}
           {role === "admin" && AdminRoutes()}
-          
+
           {/* DYNAMIC ROLE ROUTES - All non-admin, non-user roles */}
           {role && role !== "admin" && role !== "user" && (
-            
+
             <>
               {agentDashboardRoute()}
               {AgentRoutes()}
               {ProfileRoutes()}
               {PropertyRoutes()}
               {BlogRoute()}
-             
+
               {BookingRoute()}
-            
+
               {InqueryRoutes()}
               {CustomersReviews()}
               {AgentCallSupport()}
-            
+
 
 
             </>
