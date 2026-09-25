@@ -301,7 +301,7 @@ return (
             const agentImage = project.agentId?.profilePhoto;
             const agentRating = project.agentId?.rating || 4.8;
             const propertyTitle = project.propertyTitleEn || project.propertyname;
-            
+
             return (
               <motion.div 
                 key={project._id}
@@ -314,7 +314,7 @@ return (
               >
                 {/* Image Section */}
                 <div className="relative h-40 sm:h-44 md:h-48 overflow-hidden">
-                  <img 
+                  <img          
                     src={project.image?.[0] ||""} 
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                     alt={project.propertyname} 

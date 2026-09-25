@@ -12,6 +12,7 @@ import SEO from "../Seo/SEO";
 
 const HomePage = () => {
   return (
+    
     <div>
       {/* Dynamic SEO — Global Dubai real estate keywords, no off-plan focus */}
       <SEO
@@ -23,8 +24,8 @@ const HomePage = () => {
           "buy property in Dubai",
           "Dubai apartments for sale",
           "property investment in Dubai",
-           "off-plan property in Dubai",
-            "off-plan project in Dubai",
+          "off-plan property in Dubai",
+          "off-plan project in Dubai",
           "Dubai villas",
           "property investment Dubai",
           "real estate agency Dubai",
@@ -41,7 +42,7 @@ const HomePage = () => {
         twitterDescription="Browse premium villas, apartments, and investment properties in Dubai through HOMOGET."
       />
 
-  
+
       <Agentfilter />
       <AgentPropertyList />
       <OffPlan />
