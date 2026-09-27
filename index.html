@@ -1,197 +1,352 @@
+```html
 <!doctype html>
 <html lang="en">
+  <head>
+    <!-- =========================
+         Basic
+    ========================== -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
-<head>
+    <!-- =========================
+         Primary SEO
+    ========================== -->
+    <title>
+      Property for Sale in Dubai | Off Plan Properties & Luxury Homes | HOMOGET
+    </title>
 
-  <!-- Basic -->
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="title"
+      content="Property for Sale in Dubai | Off Plan Properties & Luxury Homes | HOMOGET"
+    />
 
-  <!-- Primary SEO (static fallback — overwritten by SEO.jsx on route change) -->
-  <title>	Property for Sale in Dubai | Off Plan Properties & Luxury Homes | HOMOGET</title>
+    <meta
+      name="description"
+      content="Explore prime off-plan projects, luxury villas, apartments, and high-ROI investment properties in Dubai. Connect with verified brokers and agents on HOMOGET."
+    />
 
-  <meta
-    name="title"
-    content="	Property for Sale in Dubai | Off Plan Properties & Luxury Homes | HOMOGET"
-  />
+    <meta
+      name="keywords"
+      content="Dubai off-plan properties, Dubai real estate investment, luxury villas Dubai, apartments for sale Dubai, Dubai property portal, off-plan projects Dubai, commercial properties Dubai, real estate agents Dubai, buy property in Dubai, high ROI property investment Dubai"
+    />
 
-  <meta
-    name="description"
-    content="Explore prime off-plan projects, luxury villas, apartments, and high-ROI investment properties in Dubai. Connect with verified brokers and agents on HOMOGET."
-  />
+    <meta name="author" content="HOMOGET" />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large"
+    />
+    <meta name="googlebot" content="index, follow" />
 
-  <meta
-    name="keywords"
-    content="Dubai off-plan properties, Dubai real estate investment, luxury villas Dubai, apartments for sale Dubai, Dubai property portal, off-plan projects Dubai, commercial properties Dubai, real estate agents Dubai, buy property in Dubai, high ROI property investment Dubai"
-  />
+    <!-- =========================
+         Canonical
+    ========================== -->
+    <link
+      rel="canonical"
+      id="dynamic-canonical"
+      href="https://www.homoget.ae/"
+    />
 
-  <meta name="author" content="HOMOGET" />
+    <script>
+      (function () {
+        var cleanPath = window.location.pathname.replace(/\/+$/, "");
+        var cleanUrl =
+          window.location.protocol +
+          "//" +
+          window.location.host +
+          (cleanPath || "/");
 
-  <meta name="robots" content="index, follow, max-image-preview:large" />
-  <meta name="googlebot" content="index, follow" />
+        window.addEventListener("DOMContentLoaded", function () {
+          var el = document.getElementById("dynamic-canonical");
 
-  <!-- Dynamic Canonical (updated per route) -->
-  <link rel="canonical" id="dynamic-canonical" href="https://www.homoget.ae/" />
-  <script>
-    (function () {
-      var cleanUrl =
-        window.location.protocol +
-        '//' +
-        window.location.host +
-        window.location.pathname.replace(/\/+$/, '') || '/';
-      window.addEventListener('DOMContentLoaded', function () {
-        var el = document.getElementById('dynamic-canonical');
-        if (el) el.setAttribute('href', cleanUrl);
-      });
-    })();
-  </script>
+          if (el) {
+            el.setAttribute("href", cleanUrl);
+          }
+        });
+      })();
+    </script>
 
-  <!-- Language & Theme -->
-  <meta http-equiv="content-language" content="en" />
-  <meta name="theme-color" content="#ffffff" />
+    <!-- =========================
+         Language & Theme
+    ========================== -->
+    <meta http-equiv="content-language" content="en" />
+    <meta name="theme-color" content="#ffffff" />
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/favicon.png" />
-  <link rel="apple-touch-icon" href="/favicon.png" />
+    <!-- =========================
+         Favicon
+    ========================== -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
 
-  <!-- Open Graph (static fallback — overwritten by SEO.jsx) -->
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="HOMOGET" />
-  <meta
-    property="og:title"
-    content="Dubai Off-Plan Properties, Luxury Homes & Real Estate Investment | HOMOGET"
-  />
-  <meta
-    property="og:description"
-    content="Discover exclusive off-plan launches, luxury properties, and high-yield investment opportunities across Dubai with verified real estate experts."
-  />
-  <meta property="og:url" content="https://www.homoget.ae/" />
-  <meta property="og:image" content="https://www.homoget.ae/og-banner.jpg" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:locale" content="en_US" />
+    <!-- =========================
+         Open Graph
+    ========================== -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="HOMOGET" />
 
-  <!-- Twitter (static fallback) -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta
-    name="twitter:title"
-    content="Dubai Off-Plan Properties, Luxury Homes & Real Estate Investment | HOMOGET"
-  />
-  <meta
-    name="twitter:description"
-    content="Browse top-tier off-plan developments, luxury villas, and smart investment properties in Dubai through HOMOGET."
-  />
-  <meta name="twitter:image" content="https://www.homoget.ae/og-banner.jpg" />
+    <meta
+      property="og:title"
+      content="Dubai Off-Plan Properties, Luxury Homes & Real Estate Investment | HOMOGET"
+    />
 
-  <!-- Preconnect -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preconnect" href="https://unpkg.com" />
+    <meta
+      property="og:description"
+      content="Discover exclusive off-plan launches, luxury properties, and high-yield investment opportunities across Dubai with verified real estate experts."
+    />
 
-  <!-- Google Fonts -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-    rel="stylesheet"
-  />
+    <meta
+      property="og:url"
+      content="https://www.homoget.ae/"
+    />
 
-  <!-- Remix Icons -->
-  <link
-    href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css"
-    rel="stylesheet"
-  />
+    <meta
+      property="og:image"
+      content="https://www.homoget.ae/og-banner.jpg"
+    />
 
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
-  />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_US" />
 
-  <!-- Structured Data: RealEstateAgent -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "RealEstateAgent",
-    "name": "HOMOGET",
-    "url": "https://www.homoget.ae",
-    "logo": "https://www.homoget.ae/companylogo.png",
-    "image": "https://www.homoget.ae/og-banner.jpg",
-    "description": "Dubai real estate portal specializing in off-plan developments, luxury villas, apartments, and high-yield investment properties with verified agents.",
-    "telephone": "+971-585919585",
-    "priceRange": "$$$",
-    "areaServed": { "@type": "City", "name": "Dubai" },
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Dubai",
-      "addressCountry": "AE"
-    },
-    "sameAs": [
-      "https://www.facebook.com/",
-      "https://www.instagram.com/",
-      "https://www.linkedin.com/"
-    ]
-  }
-  </script>
+    <!-- =========================
+         Twitter
+    ========================== -->
+    <meta name="twitter:card" content="summary_large_image" />
 
-  <!-- Structured Data: WebSite -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "HOMOGET",
-    "url": "https://www.homoget.ae",
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": "https://www.homoget.ae/search?q={search_term_string}",
-      "query-input": "required name=search_term_string"
-    }
-  }
-  </script>
+    <meta
+      name="twitter:title"
+      content="Dubai Off-Plan Properties, Luxury Homes & Real Estate Investment | HOMOGET"
+    />
 
-  <!-- Structured Data: Organization -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "HOMOGET",
-    "url": "https://www.homoget.ae",
-    "logo": "https://www.homoget.ae/companylogo.png",
-    "sameAs": [
-      "https://www.facebook.com/",
-      "https://www.instagram.com/",
-      "https://www.linkedin.com/"
-    ]
-  }
-  </script>
+    <meta
+      name="twitter:description"
+      content="Browse top-tier off-plan developments, luxury villas, and smart investment properties in Dubai through HOMOGET."
+    />
 
-  <!-- Google Analytics (GA4) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX');
-  </script>
+    <meta
+      name="twitter:image"
+      content="https://www.homoget.ae/og-banner.jpg"
+    />
 
-  <!-- Google Ads Tag -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18395999570"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'AW-18395999570');
-  </script>
+    <!-- =========================
+         Preconnect
+    ========================== -->
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
 
-</head>
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
 
-<body>
+    <link
+      rel="preconnect"
+      href="https://unpkg.com"
+    />
 
-  <!-- React Root -->
-  <div id="root"></div>
+    <!-- =========================
+         Google Fonts
+    ========================== -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
 
-  <!-- React Entry -->
-  <script type="module" src="/src/main.jsx"></script>
+    <!-- =========================
+         Remix Icons
+    ========================== -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css"
+      rel="stylesheet"
+    />
 
-</body>
+    <!-- =========================
+         Leaflet CSS
+    ========================== -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+    />
 
+    <!-- =========================================================
+         META PIXEL
+         Pixel ID: 1530050135834616
+    ========================================================== -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {
+        if(f.fbq)return;
+        n=f.fbq=function(){
+          n.callMethod ?
+          n.callMethod.apply(n,arguments) :
+          n.queue.push(arguments)
+        };
+
+        if(!f._fbq)f._fbq=n;
+
+        n.push=n;
+        n.loaded=!0;
+        n.version='2.0';
+        n.queue=[];
+
+        t=b.createElement(e);
+        t.async=!0;
+        t.src=v;
+
+        s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)
+      }(
+        window,
+        document,
+        'script',
+        'https://connect.facebook.net/en_US/fbevents.js'
+      );
+
+      fbq('init', '1530050135834616');
+      fbq('track', 'PageView');
+    </script>
+
+    <!-- =========================
+         Structured Data:
+         Real Estate Agent
+    ========================== -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "RealEstateAgent",
+        "name": "HOMOGET",
+        "url": "https://www.homoget.ae",
+        "logo": "https://www.homoget.ae/companylogo.png",
+        "image": "https://www.homoget.ae/og-banner.jpg",
+        "description": "Dubai real estate portal specializing in off-plan developments, luxury villas, apartments, and high-yield investment properties with verified agents.",
+        "telephone": "+971-585919585",
+        "priceRange": "$$$",
+        "areaServed": {
+          "@type": "City",
+          "name": "Dubai"
+        },
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Dubai",
+          "addressCountry": "AE"
+        },
+        "sameAs": [
+          "https://www.facebook.com/",
+          "https://www.instagram.com/",
+          "https://www.linkedin.com/"
+        ]
+      }
+    </script>
+
+    <!-- =========================
+         Structured Data:
+         WebSite
+    ========================== -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "HOMOGET",
+        "url": "https://www.homoget.ae",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://www.homoget.ae/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
+
+    <!-- =========================
+         Structured Data:
+         Organization
+    ========================== -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "HOMOGET",
+        "url": "https://www.homoget.ae",
+        "logo": "https://www.homoget.ae/companylogo.png",
+        "sameAs": [
+          "https://www.facebook.com/",
+          "https://www.instagram.com/",
+          "https://www.linkedin.com/"
+        ]
+      }
+    </script>
+
+    <!-- =========================================================
+         GOOGLE ANALYTICS 4
+         Replace G-XXXXXXXXXX with your real GA4 Measurement ID
+    ========================================================== -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"
+    ></script>
+
+    <script>
+      window.dataLayer = window.dataLayer || [];
+
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+
+      gtag("js", new Date());
+
+      gtag("config", "G-XXXXXXXXXX");
+    </script>
+
+    <!-- =========================================================
+         GOOGLE ADS TAG
+         Conversion ID: AW-18395999570
+    ========================================================== -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=AW-18395999570"
+    ></script>
+
+    <script>
+      window.dataLayer = window.dataLayer || [];
+
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+
+      gtag("js", new Date());
+
+      gtag("config", "AW-18395999570");
+    </script>
+  </head>
+
+  <body>
+    <!-- =========================================================
+         META PIXEL NOSCRIPT
+    ========================================================== -->
+    <noscript>
+      <img
+        height="1"
+        width="1"
+        style="display:none"
+        alt=""
+        src="https://www.facebook.com/tr?id=1530050135834616&ev=PageView&noscript=1"
+      />
+    </noscript>
+
+    <!-- =========================
+         React Root
+    ========================== -->
+    <div id="root"></div>
+
+    <!-- =========================
+         React Entry
+    ========================== -->
+    <script
+      type="module"
+      src="/src/main.jsx"
+    ></script>
+  </body>
 </html>
+```
