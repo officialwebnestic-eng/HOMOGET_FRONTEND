@@ -22,10 +22,6 @@ import useInquiry from "../../hooks/useInquiry";
  import { trackLeadConversion } from "../tracking"
 
 
- 
-
-
-
 // ============================================
 // Budget parser — mirrors backend logic
 // ============================================
@@ -53,6 +49,7 @@ const parseBudgetPreview = (input) => {
     return `${fmt(min)} – ${fmt(max)}`;
   }
 
+
   const single = str.match(/([\d.,]+)\s*([KM]?)/i);
   if (single) {
     const val = parseFloat(single[1].replace(/,/g, "")) * mult(single[2]);
@@ -60,6 +57,7 @@ const parseBudgetPreview = (input) => {
   }
   return null;
 };
+
 
 // ============================================
 // Mock location suggestions (hero search)

@@ -1,10 +1,6 @@
 // src/utils/tracking.js
 
-/**
- * Fire a Google Ads conversion event.
- * Conversion ID: AW-18439695400
- * Conversion Label: o4sJCMSbo5sdEKjY3dhE
- */
+
 export function trackLeadConversion() {
   if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
     window.gtag('event', 'conversion', {
