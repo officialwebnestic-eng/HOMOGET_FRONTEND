@@ -19,6 +19,12 @@ import {
   Calendar,
 } from "lucide-react";
 import useInquiry from "../../hooks/useInquiry";
+ import { trackLeadConversion } from "../tracking"
+
+
+ 
+
+
 
 // ============================================
 // Budget parser — mirrors backend logic
@@ -97,17 +103,20 @@ export default function LandingPage() {
     description: "",
   });
 
-  // ---- Hook ----
   const { create, loading, error } = useInquiry(
-    {},
-    {
-      autoFetch: false,
-      onSuccess: () => {
-        setFormSubmitted(true);
-        scrollToForm();
-      },
-    }
-  );
+  {},
+  {
+    autoFetch: false,
+    onSuccess: () => {
+      
+      trackLeadConversion(); // Google Ads
+       
+
+      setFormSubmitted(true);
+      scrollToForm();
+    },
+  }
+);
 
   // ============================================
   // ⭐ Central Scroll-to-Form handler
