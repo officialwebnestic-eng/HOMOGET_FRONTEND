@@ -27,7 +27,7 @@ import useInquiry from "../../hooks/useInquiry";
 // ============================================
 const parseBudgetPreview = (input) => {
   if (!input) return null;
-  const str = String(input).trim().tosssssUpperCase();
+  const str = String(input).trim().toUpperCase();
   const currencyMatch = str.match(/(AED|USD|EUR|GBP|INR)/);
   const currency = currencyMatch ? currencyMatch[1] : "AED";
   const mult = (t) =>
@@ -48,7 +48,6 @@ const parseBudgetPreview = (input) => {
     const max = parseFloat(range[3].replace(/,/g, "")) * mult(range[4]);
     return `${fmt(min)} – ${fmt(max)}`;
   }
-
 
   const single = str.match(/([\d.,]+)\s*([KM]?)/i);
   if (single) {
